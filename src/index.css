@@ -1,0 +1,656 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME SYSTEM — Variables CSS para modo oscuro y claro
+   El tema se controla mediante data-theme="dark|light" en <html>
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── DARK (default) ── */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Backgrounds */
+  --bg-base:        #09090b;
+  --bg-surface:     rgba(0, 0, 0, 0.60);
+  --bg-card:        rgba(11, 16, 21, 0.60);
+  --bg-card-strong: rgba(11, 16, 21, 0.80);
+  --bg-input:       rgba(0, 0, 0, 0.40);
+  --bg-header:      rgba(0, 0, 0, 0.20);
+  --bg-overlay:     rgba(0, 0, 0, 0.60);
+  --bg-bottom-nav:  rgba(15, 23, 42, 0.95);
+  --bg-subtle:      rgba(255, 255, 255, 0.03);
+  --bg-muted:       rgba(255, 255, 255, 0.05);
+  --bg-medium:      rgba(255, 255, 255, 0.10);
+
+  /* Borders */
+  --border:         rgba(255, 255, 255, 0.05);
+  --border-subtle:  rgba(255, 255, 255, 0.04);
+  --border-medium:  rgba(255, 255, 255, 0.10);
+  --border-strong:  rgba(255, 255, 255, 0.20);
+
+  /* Text */
+  --text-primary:   #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted:     #64748b;
+  --text-strong:    #ffffff;
+
+  /* Glow */
+  --glow-indigo:    rgba(99, 102, 241, 0.10);
+  --glow-emerald:   rgba(16, 185, 129, 0.10);
+
+  /* Scrollbar */
+  --scrollbar-track: rgba(0, 0, 0, 0.20);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.10);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.20);
+}
+
+/* ── LIGHT ── */
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Backgrounds */
+  --bg-base:        #f1f5f9;
+  --bg-surface:     rgba(255, 255, 255, 0.90);
+  --bg-card:        rgba(255, 255, 255, 0.85);
+  --bg-card-strong: rgba(255, 255, 255, 0.95);
+  --bg-input:       rgba(255, 255, 255, 0.90);
+  --bg-header:      rgba(255, 255, 255, 0.80);
+  --bg-overlay:     rgba(0, 0, 0, 0.30);
+  --bg-bottom-nav:  rgba(241, 245, 249, 0.97);
+  --bg-subtle:      rgba(0, 0, 0, 0.02);
+  --bg-muted:       rgba(0, 0, 0, 0.04);
+  --bg-medium:      rgba(0, 0, 0, 0.07);
+
+  /* Borders */
+  --border:         rgba(0, 0, 0, 0.07);
+  --border-subtle:  rgba(0, 0, 0, 0.05);
+  --border-medium:  rgba(0, 0, 0, 0.10);
+  --border-strong:  rgba(0, 0, 0, 0.18);
+
+  /* Text */
+  --text-primary:   #0f172a;
+  --text-secondary: #475569;
+  --text-muted:     #64748b;
+  --text-strong:    #0f172a;
+
+  /* Glow */
+  --glow-indigo:    rgba(99, 102, 241, 0.07);
+  --glow-emerald:   rgba(16, 185, 129, 0.07);
+
+  /* Scrollbar */
+  --scrollbar-track: rgba(0, 0, 0, 0.06);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+}
+
+/* ── GLOBAL SMOOTH TRANSITION ──
+   Timing unificado: 280ms ease para que TODOS los elementos
+   cambien al mismo tiempo al alternar tema oscuro/claro.
+── */
+
+/* El elemento raíz también transiciona para cubrir el fondo del viewport */
+html.theme-transitioning {
+  transition:
+    background-color 0.28s ease,
+    color 0.28s ease;
+}
+
+.theme-transitioning div,
+.theme-transitioning section,
+.theme-transitioning article,
+.theme-transitioning aside,
+.theme-transitioning header,
+.theme-transitioning footer,
+.theme-transitioning main,
+.theme-transitioning nav,
+.theme-transitioning p,
+.theme-transitioning span,
+.theme-transitioning h1,
+.theme-transitioning h2,
+.theme-transitioning h3,
+.theme-transitioning h4,
+.theme-transitioning h5,
+.theme-transitioning h6,
+.theme-transitioning label,
+.theme-transitioning li,
+.theme-transitioning ul,
+.theme-transitioning ol,
+.theme-transitioning button,
+.theme-transitioning a,
+.theme-transitioning input,
+.theme-transitioning select,
+.theme-transitioning textarea,
+.theme-transitioning td,
+.theme-transitioning th,
+.theme-transitioning tr,
+.theme-transitioning table,
+.theme-transitioning thead,
+.theme-transitioning tbody {
+  transition:
+    background-color 0.28s ease,
+    border-color 0.28s ease,
+    color 0.28s ease,
+    box-shadow 0.28s ease,
+    opacity 0.28s ease !important;
+}
+
+/* Never animate these — no visual theme change & wastes GPU */
+img, svg, canvas, video, iframe {
+  transition: none !important;
+}
+
+/* Clases de animación de Tailwind: no interferir */
+.animate-spin, .animate-pulse, .animate-bounce,
+[class*="animate-"] {
+  transition: none !important;
+}
+
+/* Scroll containers: transitions here cause scroll jank */
+.overflow-auto, .overflow-y-auto, .overflow-x-auto,
+.overflow-scroll, .overflow-y-scroll, .overflow-x-scroll,
+.custom-scrollbar {
+  transition: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TAILWIND CLASS OVERRIDES — light mode
+   These target the exact Tailwind utility classes used in JSX
+   ══════════════════════════════════════════════════════════════ */
+
+/* --- Backgrounds: black/opacity variants --- */
+[data-theme="light"] .bg-black\/20  { background-color: rgba(255,255,255,0.80) !important; }
+[data-theme="light"] .bg-black\/25  { background-color: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .bg-black\/30  { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .bg-black\/40  { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .bg-black\/50  { background-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .bg-black\/60  { background-color: rgba(255,255,255,0.90) !important; }
+[data-theme="light"] .bg-black\/80  { background-color: rgba(255,255,255,0.93) !important; }
+[data-theme="light"] .bg-black\/90  { background-color: rgba(255,255,255,0.96) !important; }
+
+/* --- Backgrounds: white/opacity variants --- */
+[data-theme="light"] .bg-white\/\[0\.01\] { background-color: rgba(0,0,0,0.015) !important; }
+[data-theme="light"] .bg-white\/\[0\.015\] { background-color: rgba(0,0,0,0.02) !important; }
+[data-theme="light"] .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,0.02) !important; }
+[data-theme="light"] .bg-white\/\[0\.03\] { background-color: rgba(0,0,0,0.02) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(0,0,0,0.03) !important; }
+[data-theme="light"] .bg-white\/\[0\.05\] { background-color: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .bg-white\/\[0\.08\] { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .bg-white\/3   { background-color: rgba(0,0,0,0.02) !important; }
+[data-theme="light"] .bg-white\/5   { background-color: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .bg-white\/10  { background-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .bg-white\/15  { background-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .bg-white\/20  { background-color: rgba(0,0,0,0.10) !important; }
+
+/* --- Backgrounds: custom hex colors (match cards, tables, etc.) --- */
+[data-theme="light"] .bg-\[\#09090b\]    { background-color: #f1f5f9 !important; }
+[data-theme="light"] .bg-\[\#0b1015\]    { background-color: #f8fafc !important; }
+[data-theme="light"] .bg-\[\#0d1117\]    { background-color: #f0f4fa !important; }
+[data-theme="light"] .bg-\[\#0f172a\]    { background-color: #e2e8f0 !important; }
+[data-theme="light"] .bg-\[\#121820\]    { background-color: #e8edf5 !important; }
+[data-theme="light"] .bg-\[\#1a1b1e\]    { background-color: #eef2f7 !important; }
+
+/* Tailwind generates opacity modifiers as CSS custom property on background-color,
+   so we override using the generated class names with opacity suffix */
+[data-theme="light"] .bg-\[\#09090b\]\/80  { background-color: rgba(241,245,249,0.92) !important; }
+[data-theme="light"] .bg-\[\#0b1015\]\/60  { background-color: rgba(255,255,255,0.85) !important; }
+[data-theme="light"] .bg-\[\#0b1015\]\/80  { background-color: rgba(255,255,255,0.92) !important; }
+[data-theme="light"] .bg-\[\#0f172a\]\/95  { background-color: rgba(241,245,249,0.97) !important; }
+
+/* --- Glow blobs --- */
+[data-theme="light"] .bg-indigo-600\/10  { background-color: rgba(99,102,241,0.06) !important; }
+[data-theme="light"] .bg-emerald-600\/10 { background-color: rgba(16,185,129,0.06) !important; }
+
+/* --- Borders --- */
+[data-theme="light"] .border-white\/\[0\.03\] { border-color: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .border-white\/\[0\.04\] { border-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .border-white\/\[0\.05\] { border-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .border-white\/\[0\.07\] { border-color: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .border-white\/5    { border-color: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .border-white\/10   { border-color: rgba(0,0,0,0.09) !important; }
+[data-theme="light"] .border-white\/20   { border-color: rgba(0,0,0,0.14) !important; }
+[data-theme="light"] .border-white\/30   { border-color: rgba(0,0,0,0.18) !important; }
+
+/* --- Text colors --- */
+[data-theme="light"] .text-slate-100  { color: #0f172a !important; }
+[data-theme="light"] .text-slate-200  { color: #1e293b !important; }
+[data-theme="light"] .text-slate-300  { color: #334155 !important; }
+[data-theme="light"] .text-slate-400  { color: #475569 !important; }
+[data-theme="light"] .text-slate-500  { color: #64748b !important; }
+[data-theme="light"] .text-slate-600  { color: #475569 !important; }
+[data-theme="light"] .text-white      { color: #0f172a !important; }
+
+/* --- Hover overrides --- */
+[data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover { background-color: rgba(0,0,0,0.02) !important; }
+[data-theme="light"] .hover\:bg-white\/5:hover   { background-color: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover  { background-color: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .hover\:text-white:hover    { color: #0f172a !important; }
+[data-theme="light"] .hover\:text-slate-200:hover { color: #1e293b !important; }
+
+/* --- Custom Hero Gradients --- */
+[data-theme="light"] .from-\[\#1a0d00\] { --tw-gradient-from: #fff5eb !important; --tw-gradient-to: rgba(255,245,235,0) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+[data-theme="light"] .via-\[\#0d0d0d\] { --tw-gradient-via: #ffffff !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important; }
+[data-theme="light"] .to-\[\#0b1015\] { --tw-gradient-to: #f8fafc !important; }
+
+/* --- Standings table thead gradient (LeagueTablaView) --- */
+[data-theme="light"] .from-\[\#1a2330\] {
+  --tw-gradient-from: #e2e8f0 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+[data-theme="light"] .to-\[\#121820\] {
+  --tw-gradient-to: #eef2f7 !important;
+}
+
+/* --- Divide borders (white/opacity used as row separators) --- */
+[data-theme="light"] .divide-white\/\[0\.05\] > * + * { border-color: rgba(0,0,0,0.07) !important; }
+[data-theme="light"] .divide-white\/\[0\.04\] > * + * { border-color: rgba(0,0,0,0.05) !important; }
+
+/* --- Wordle and KeepieUppie Custom Overrides --- */
+[data-theme="light"] .bg-\[\#0b0f19\]\/90 { background-color: rgba(255, 255, 255, 0.90) !important; }
+[data-theme="light"] .bg-\[\#0e1424\] { background-color: #ffffff !important; }
+[data-theme="light"] .bg-\[\#090d16\] { background-color: rgba(255, 255, 255, 0.90) !important; }
+
+[data-theme="light"] .bg-black\/70 { background-color: rgba(255, 255, 255, 0.85) !important; }
+[data-theme="light"] .bg-black\/85 { background-color: rgba(255, 255, 255, 0.90) !important; }
+
+[data-theme="light"] .text-amber-400 { color: #b45309 !important; }
+[data-theme="light"] .text-amber-500 { color: #d97706 !important; }
+[data-theme="light"] .bg-amber-500\/10 { background-color: rgba(245, 158, 11, 0.08) !important; }
+[data-theme="light"] .border-amber-500\/20 { border-color: rgba(245, 158, 11, 0.25) !important; }
+
+[data-theme="light"] .text-orange-400 { color: #c2410c !important; }
+[data-theme="light"] .text-orange-300 { color: #9a3412 !important; }
+[data-theme="light"] .bg-orange-500\/10 { background-color: rgba(249, 115, 22, 0.08) !important; }
+[data-theme="light"] .border-orange-500\/30 { border-color: rgba(249, 115, 22, 0.25) !important; }
+
+[data-theme="light"] .text-emerald-400 { color: #059669 !important; }
+[data-theme="light"] .bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.08) !important; }
+[data-theme="light"] .bg-emerald-500\/15 { background-color: rgba(16, 185, 129, 0.12) !important; }
+[data-theme="light"] .border-emerald-500\/20 { border-color: rgba(16, 185, 129, 0.25) !important; }
+
+[data-theme="light"] .text-rose-400 { color: #dc2626 !important; }
+[data-theme="light"] .bg-rose-500\/10 { background-color: rgba(244, 63, 94, 0.08) !important; }
+[data-theme="light"] .border-rose-500\/20 { border-color: rgba(244, 63, 94, 0.25) !important; }
+
+[data-theme="light"] .bg-red-500\/20 { background-color: rgba(239, 68, 68, 0.12) !important; }
+[data-theme="light"] .border-red-500\/30 { border-color: rgba(239, 68, 68, 0.25) !important; }
+[data-theme="light"] .text-red-400 { color: #dc2626 !important; }
+
+/* --- CS2 Component Overrides --- */
+[data-theme="light"] .cs2-date-nav { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .cs2-nav-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06); color: var(--text-secondary); }
+[data-theme="light"] .cs2-nav-btn:hover { background: rgba(234,88,12,0.1); border-color: rgba(234,88,12,0.3); color: #ea580c; }
+[data-theme="light"] .cs2-date-value { color: var(--text-strong); }
+[data-theme="light"] .cs2-card { background: var(--bg-card); border-color: var(--border-medium); }
+[data-theme="light"] .cs2-card-live { background: linear-gradient(145deg, rgba(254,242,242,0.9), rgba(254,226,226,0.8)); border-color: rgba(239,68,68,0.3); }
+[data-theme="light"] .cs2-team-name { color: var(--text-strong); }
+[data-theme="light"] .cs2-team-logo { background: rgba(0,0,0,0.03); border-color: var(--border); }
+[data-theme="light"] .cs2-winner .cs2-team-name { color: #ea580c; text-shadow: none; }
+[data-theme="light"] .cs2-score-box { background: rgba(0,0,0,0.04); border-color: var(--border); }
+[data-theme="light"] .cs2-score { color: var(--text-strong); }
+[data-theme="light"] .cs2-vs { background: rgba(0,0,0,0.04); border-color: var(--border); color: var(--text-muted); }
+[data-theme="light"] .cs2-footer { border-top-color: var(--border); color: var(--text-muted); }
+[data-theme="light"] .cs2-state-box { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.06); color: var(--text-muted); }
+[data-theme="light"] .cs2-group-header-finished { background: rgba(0,0,0,0.03); border-color: var(--border); color: var(--text-muted); }
+[data-theme="light"] .cs2-group-count { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.04); color: inherit; }
+[data-theme="light"] .cs2-badge-finished { background: rgba(0,0,0,0.04); border-color: var(--border); color: var(--text-muted); }
+[data-theme="light"] .cs2-group-header-upcoming { background: rgba(234,88,12,0.05); border-color: rgba(234,88,12,0.1); color: #ea580c; }
+[data-theme="light"] .cs2-event-name { color: var(--text-secondary); }
+[data-theme="light"] .cs2-badge-format { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.15); color: #4f46e5; }
+[data-theme="light"] .cs2-badge-upcoming { background: rgba(234,88,12,0.08); border-color: rgba(234,88,12,0.15); color: #ea580c; }
+
+/* ── SCROLLBARS ── */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ── MUNDIAL SPECIAL HIGH-AESTHETIC STYLE ── */
+@keyframes mundial-gold-glow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.25), 0 0 20px rgba(239, 68, 68, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 30px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    border-color: rgba(16, 185, 129, 0.5);
+  }
+}
+
+@keyframes mundial-rainbow-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float-icon {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.1); }
+}
+
+.mundial-menu-item {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12) 0%, rgba(239, 68, 68, 0.12) 50%, rgba(16, 185, 129, 0.12) 100%) !important;
+  background-size: 200% 200% !important;
+  border: 1px solid rgba(251, 191, 36, 0.25) !important;
+  color: #fbbf24 !important; /* Gold text */
+  animation: mundial-gold-glow 3s infinite ease-in-out, mundial-rainbow-bg 6s infinite ease-in-out !important;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease !important;
+}
+
+.mundial-menu-item:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.22) 0%, rgba(239, 68, 68, 0.22) 50%, rgba(16, 185, 129, 0.22) 100%) !important;
+  background-size: 200% 200% !important;
+  color: #ffffff !important;
+  border-color: rgba(251, 191, 36, 0.6) !important;
+  transform: translateY(-1px);
+}
+
+.mundial-menu-item.active-mundial {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.28) 0%, rgba(239, 68, 68, 0.28) 50%, rgba(16, 185, 129, 0.28) 100%) !important;
+  background-size: 200% 200% !important;
+  color: #ffffff !important;
+  border-color: rgba(251, 191, 36, 0.7) !important;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), 0 0 35px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
+  animation: mundial-gold-glow 2.5s infinite ease-in-out, mundial-rainbow-bg 4s infinite ease-in-out !important;
+}
+
+.mundial-menu-item .mundial-icon {
+  display: inline-block;
+  animation: float-icon 3s infinite ease-in-out;
+}
+
+/* Light mode overrides for the special mundial item */
+[data-theme="light"] .mundial-menu-item {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18) 0%, rgba(239, 68, 68, 0.12) 50%, rgba(16, 185, 129, 0.18) 100%) !important;
+  border-color: rgba(217, 119, 6, 0.4) !important;
+  color: #b45309 !important; /* Dark gold/amber text */
+}
+
+[data-theme="light"] .mundial-menu-item:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.28) 0%, rgba(239, 68, 68, 0.18) 50%, rgba(16, 185, 129, 0.28) 100%) !important;
+  color: #78350f !important;
+  border-color: rgba(217, 119, 6, 0.7) !important;
+}
+
+[data-theme="light"] .mundial-menu-item.active-mundial {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.35) 0%, rgba(239, 68, 68, 0.25) 50%, rgba(16, 185, 129, 0.35) 100%) !important;
+  border-color: rgba(217, 119, 6, 0.8) !important;
+  color: #78350f !important;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), 0 0 30px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* ── MUNDIAL PODIUM PREDICTIONS CARD ── */
+.podium-card {
+  background: linear-gradient(135deg, rgba(18, 24, 32, 0.9) 0%, rgba(27, 23, 37, 0.9) 50%, rgba(18, 26, 34, 0.9) 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.2) !important;
+  box-shadow: 0 15px 50px rgba(245, 158, 11, 0.15) !important;
+}
+
+.podium-card-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.podium-card-input:focus {
+  border-color: #f59e0b !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.podium-card-static {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+
+/* Light mode overrides for podium card */
+[data-theme="light"] .podium-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 15px 50px rgba(245, 158, 11, 0.08) !important;
+}
+
+[data-theme="light"] .podium-card-input {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .podium-card-input:focus {
+  border-color: #d97706 !important;
+  background: rgba(0, 0, 0, 0.01) !important;
+}
+
+[data-theme="light"] .podium-card-static {
+  background: rgba(0, 0, 0, 0.02) !important;
+  border-color: rgba(0, 0, 0, 0.04) !important;
+  color: #0f172a !important;
+}
+
+/* ── THEMATIC WARNING BANNER & BADGES ── */
+.warning-banner {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.25) !important;
+  color: #fcd34d !important;
+}
+
+.deadline-badge {
+  background-color: rgba(245, 158, 11, 0.2) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fcd34d !important;
+}
+
+.deadline-badge-expired {
+  background-color: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #fca5a5 !important;
+}
+
+.gold-label {
+  color: #fbbf24 !important;
+}
+
+.silver-label {
+  color: #cbd5e1 !important;
+}
+
+.bronze-label {
+  color: #f97316 !important;
+}
+
+/* Light mode overrides for warnings and labels */
+[data-theme="light"] .warning-banner {
+  background-color: rgba(251, 191, 36, 0.12) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+  color: #78350f !important;
+}
+
+[data-theme="light"] .deadline-badge {
+  background-color: rgba(251, 191, 36, 0.15) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+  color: #78350f !important;
+}
+
+[data-theme="light"] .deadline-badge-expired {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(220, 38, 38, 0.25) !important;
+  color: #991b1b !important;
+}
+
+[data-theme="light"] .gold-label {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .silver-label {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .bronze-label {
+  color: #9a3412 !important;
+}
+
+/* ── STANDINGS GROUP HEADER CONTAINER ── */
+.group-header-container {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* ── STANDINGS GROUP HEADER GRADIENT ── */
+.group-header-gradient {
+  background: linear-gradient(to right, #ffffff, #94a3b8) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+[data-theme="light"] .group-header-gradient {
+  background: linear-gradient(to right, #0f172a, #475569) !important;
+  background-clip: text !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* ── MUNDIAL ANIMATED SMOKE BACKGROUND ── */
+@keyframes smoke-float-1 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.18; }
+  33% { transform: translate3d(15vw, 10vh, 0) scale(1.25) rotate(120deg); opacity: 0.26; }
+  66% { transform: translate3d(-10vw, 20vh, 0) scale(0.9) rotate(240deg); opacity: 0.14; }
+  100% { transform: translate3d(0, 0, 0) scale(1) rotate(360deg); opacity: 0.18; }
+}
+
+@keyframes smoke-float-2 {
+  0% { transform: translate3d(0, 0, 0) scale(1.15) rotate(360deg); opacity: 0.14; }
+  50% { transform: translate3d(-20vw, -15vh, 0) scale(0.9) rotate(180deg); opacity: 0.22; }
+  100% { transform: translate3d(0, 0, 0) scale(1.15) rotate(0deg); opacity: 0.14; }
+}
+
+@keyframes smoke-float-3 {
+  0% { transform: translate3d(0, 0, 0) scale(0.95) rotate(0deg); opacity: 0.20; }
+  50% { transform: translate3d(25vw, -5vh, 0) scale(1.2) rotate(270deg); opacity: 0.28; }
+  100% { transform: translate3d(0, 0, 0) scale(0.95) rotate(360deg); opacity: 0.20; }
+}
+
+.mundial-smoke-container {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: #040608;
+  transition: opacity 0.4s ease-in-out, visibility 0.4s;
+  opacity: 1;
+  visibility: visible;
+}
+
+.mundial-smoke-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+
+/* Red Smoke */
+.mundial-smoke-red {
+  top: -10%;
+  left: 20%;
+  width: 60vw;
+  height: 60vh;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.85) 0%, rgba(239, 68, 68, 0.32) 45%, rgba(239, 68, 68, 0) 90%) !important;
+  animation: smoke-float-1 25s infinite ease-in-out;
+}
+
+/* Green Smoke */
+.mundial-smoke-green {
+  bottom: -15%;
+  right: 15%;
+  width: 65vw;
+  height: 65vh;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.85) 0%, rgba(16, 185, 129, 0.32) 45%, rgba(16, 185, 129, 0) 90%) !important;
+  animation: smoke-float-2 30s infinite ease-in-out;
+}
+
+/* Blue Smoke */
+.mundial-smoke-blue {
+  top: 30%;
+  left: -10%;
+  width: 55vw;
+  height: 55vh;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.90) 0%, rgba(59, 130, 246, 0.36) 45%, rgba(59, 130, 246, 0) 90%) !important;
+  animation: smoke-float-3 28s infinite ease-in-out;
+}
+
+/* Light mode styling for the mundial smoke background */
+[data-theme="light"] .mundial-smoke-container {
+  background-color: var(--bg-base);
+  opacity: 1;
+  visibility: visible;
+}
+
+[data-theme="light"] .mundial-smoke-blob {
+  mix-blend-mode: normal;
+}
+
+[data-theme="light"] .mundial-smoke-red {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.65) 0%, rgba(239, 68, 68, 0.26) 45%, rgba(239, 68, 68, 0) 90%) !important;
+}
+
+[data-theme="light"] .mundial-smoke-green {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.65) 0%, rgba(16, 185, 129, 0.26) 45%, rgba(16, 185, 129, 0) 90%) !important;
+}
+
+[data-theme="light"] .mundial-smoke-blue {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.70) 0%, rgba(59, 130, 246, 0.30) 45%, rgba(59, 130, 246, 0) 90%) !important;
+}
+
+/* ── MODAL ANIMATIONS ── */
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-modal-fade-in {
+  animation: modal-fade-in 0.2s ease-out forwards;
+}
+
+.animate-modal-scale-in {
+  animation: modal-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+
+
+
+
