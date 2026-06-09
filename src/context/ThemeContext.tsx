@@ -35,7 +35,12 @@ function applyTheme(theme: Theme) {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theme') as Theme | null;
+    let stored: Theme | null = null;
+    try {
+      stored = localStorage.getItem('theme') as Theme | null;
+    } catch (e) {
+      console.warn('localStorage is not available:', e);
+    }
     const resolved = stored
       ? stored
       : window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -47,7 +52,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
+    try {
+      localStorage.setItem('theme', theme);
+    } catch (e) {
+      console.warn('localStorage is not available:', e);
+    }
     // applyTheme ya fue llamado en toggleTheme, pero lo hacemos también
     // en el efecto por si el estado cambia desde otro lugar
     applyTheme(theme);

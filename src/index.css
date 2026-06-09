@@ -650,6 +650,16 @@ img, svg, canvas, video, iframe {
   animation: modal-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+/* ── MOBILE / iOS PERFORMANCE OPTIMIZATION (Prevent GPU OOM & Crashes) ── */
+@media (max-width: 1024px) {
+  /* Disable backdrop-filter on all elements on mobile/tablet (which covers all iPhones)
+     to prevent GPU out-of-memory crashes and scrolling freezes on WebKit (iOS Safari/Chrome). */
+  * {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
 
 
 

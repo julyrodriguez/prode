@@ -473,7 +473,12 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     
     const loadPodium = async () => {
       // 1. Intentar cargar desde localStorage primero para velocidad
-      const cached = localStorage.getItem(`podium_pred_${user.uid}`);
+      let cached = null;
+      try {
+        cached = localStorage.getItem(`podium_pred_${user.uid}`);
+      } catch (e) {
+        console.warn('localStorage is not available:', e);
+      }
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
@@ -503,7 +508,9 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
             setPodiumChampion(c);
             setPodiumRunnerUp(r);
             setPodiumThirdPlace(t);
-            localStorage.setItem(`podium_pred_${user.uid}`, JSON.stringify({ champion: c, runnerUp: r, thirdPlace: t }));
+            try {
+              localStorage.setItem(`podium_pred_${user.uid}`, JSON.stringify({ champion: c, runnerUp: r, thirdPlace: t }));
+            } catch (e) {}
           }
         }
       } catch (err) {
@@ -548,11 +555,13 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       
       if (response.ok) {
         setPodiumToast({ ok: true, msg: '¡Tu predicción del podio ha sido guardada con éxito!' });
-        localStorage.setItem(`podium_pred_${user.uid}`, JSON.stringify({
-          champion: podiumChampion.trim(),
-          runnerUp: podiumRunnerUp.trim(),
-          thirdPlace: podiumThirdPlace.trim()
-        }));
+        try {
+          localStorage.setItem(`podium_pred_${user.uid}`, JSON.stringify({
+            champion: podiumChampion.trim(),
+            runnerUp: podiumRunnerUp.trim(),
+            thirdPlace: podiumThirdPlace.trim()
+          }));
+        } catch (e) {}
       } else {
         const data = await response.json().catch(() => ({}));
         setPodiumToast({ ok: false, msg: data.error || 'Error al guardar la predicción del podio.' });
