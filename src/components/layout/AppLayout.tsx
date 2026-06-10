@@ -39,34 +39,42 @@ function ThemeToggleBtn({ compact = false }: { compact?: boolean }) {
 /* ── Lite Toggle Button ── */
 function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
   const { isLite, toggleLite } = useTheme();
-  return (
+
+  const switchElement = (
     <button
       onClick={toggleLite}
-      title={isLite ? 'Desactivar Versión Rápida / LITE (Activar animaciones y efectos)' : 'Activar Versión Rápida / LITE (Desactivar animaciones para máximo rendimiento)'}
+      title={isLite ? 'Cambiar a Versión Colorida (con animaciones y efectos)' : 'Cambiar a Versión Rápida (sin animaciones para máximo rendimiento)'}
       className={`
-        relative flex items-center gap-2 border transition-all duration-300
-        ${compact
-          ? 'rounded-xl w-9 h-9 justify-center'
-          : 'rounded-2xl p-3 w-full text-sm font-semibold overflow-hidden justify-start'
-        }
+        relative flex items-center h-8 w-14 rounded-full p-1 cursor-pointer transition-colors duration-300 outline-none shrink-0
         ${isLite
-          ? 'border-amber-500/35 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-          : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white'
+          ? 'bg-amber-500/20 border border-amber-500/40'
+          : 'bg-white/10 border border-white/20 hover:border-white/30'
         }
       `}
     >
-      <span
-        className={`transition-transform duration-500 ${compact ? 'text-base' : 'text-xl flex-shrink-0 w-6 text-center leading-none'}`}
-        style={{ transform: isLite ? 'scale(1.15)' : 'scale(1)' }}
+      {/* Sliding Thumb */}
+      <div
+        className={`
+          w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center text-xs select-none
+          ${isLite ? 'translate-x-6 bg-amber-400' : 'translate-x-0 bg-white'}
+        `}
       >
         {isLite ? '⚡' : '✨'}
-      </span>
-      {!compact && (
-        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
-          {isLite ? 'Versión Normal' : 'Versión Rápida (LITE)'}
-        </span>
-      )}
+      </div>
     </button>
+  );
+
+  if (compact) {
+    return switchElement;
+  }
+
+  return (
+    <div className="flex items-center justify-between p-3 w-full border border-white/10 bg-white/5 text-slate-300 rounded-2xl text-sm font-semibold select-none">
+      <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+        {isLite ? 'Versión Rápida' : 'Versión Colorida'}
+      </span>
+      {switchElement}
+    </div>
   );
 }
 
