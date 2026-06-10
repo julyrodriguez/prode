@@ -218,34 +218,36 @@ export default function RankingView() {
                 ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : undefined)
                 : MEDAL[idx];
 
-              const rowPadding = (isMundial && idx === 0)
-                ? 'py-5 md:py-6'
+              const rowPadding = idx === 0
+                ? 'py-6 md:py-8'
                 : (isMundial && idx === 1)
                   ? 'py-4 md:py-5'
                   : 'py-3.5';
 
-              const rowBg = isMe
-                ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
-                : (isMundial && idx === 0)
-                  ? 'bg-amber-500/[0.02] border-l-2 border-amber-500/20 hover:bg-amber-500/[0.05]'
+              const rowBg = idx === 0
+                ? (isMe
+                  ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 border-l-4 border-amber-500 hover:from-amber-500/25 hover:to-amber-500/10'
+                  : 'bg-gradient-to-r from-amber-500/10 to-amber-500/[0.02] border-l-4 border-amber-500/50 hover:from-amber-500/15 hover:to-amber-500/[0.05]')
+                : isMe
+                  ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
                   : (isMundial && idx === 1)
                     ? 'bg-slate-500/[0.02] border-l-2 border-slate-400/20 hover:bg-slate-500/[0.05]'
                     : 'hover:bg-white/[0.04]';
 
-              const medalSize = (isMundial && idx === 0)
-                ? 'text-2xl md:text-3xl'
+              const medalSize = idx === 0
+                ? 'text-3xl md:text-4xl'
                 : (isMundial && idx === 1)
                   ? 'text-xl md:text-2xl'
                   : 'text-xl';
 
-              const avatarSize = (isMundial && idx === 0)
-                ? 'w-12 h-12 md:w-14 md:h-14'
+              const avatarSize = idx === 0
+                ? 'w-20 h-20 md:w-24 md:h-24 shadow-[0_0_20px_rgba(245,158,11,0.2)] border-amber-400/40'
                 : (isMundial && idx === 1)
                   ? 'w-10 h-10 md:w-11 md:h-11'
                   : 'w-8 h-8';
 
-              const initialsTextSize = (isMundial && idx === 0)
-                ? 'text-lg md:text-xl'
+              const initialsTextSize = idx === 0
+                ? 'text-3xl md:text-4xl'
                 : (isMundial && idx === 1)
                   ? 'text-sm md:text-base'
                   : 'text-xs';
@@ -260,14 +262,14 @@ export default function RankingView() {
                       ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
                       : 'bg-white/5 border-white/10 text-slate-400';
 
-              const nameTextClass = (isMundial && idx === 0)
-                ? 'text-base md:text-lg font-black text-amber-300'
+              const nameTextClass = idx === 0
+                ? 'text-xl md:text-2xl font-black text-amber-300'
                 : (isMundial && idx === 1)
                   ? 'text-sm md:text-base font-extrabold text-slate-200'
                   : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
-              const pointsClass = (isMundial && idx === 0)
-                ? 'text-lg md:text-xl font-black text-amber-400'
+              const pointsClass = idx === 0
+                ? 'text-2xl md:text-3xl font-black text-amber-400'
                 : (isMundial && idx === 1)
                   ? 'text-base md:text-lg font-black text-slate-200'
                   : `text-base font-black ${isMe ? 'text-amber-400' : (idx < 3) ? 'text-white' : 'text-slate-300'}`;
