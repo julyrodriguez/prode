@@ -40,7 +40,7 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
     if (matches.length > 0) return; // Ya cargado
     try {
       setLoading(true);
-      const res = await fetch(`https://apivacas.jariel.com.ar/api/teams/${teamId}/matches?limit=25`);
+      const res = await fetch(`https://apivacas.jariel.com.ar/api/teams/${teamId}/all-matches?limit=25`);
       if (res.ok) {
         const data = await res.json();
         setMatches(data);
