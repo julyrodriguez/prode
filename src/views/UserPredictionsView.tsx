@@ -50,7 +50,7 @@ export default function UserPredictionsView() {
   const [podium, setPodium] = useState<{ champion: string; runnerUp: string; thirdPlace: string } | null>(null);
 
   // Check if podium prediction should be blurred (until June 12, 2026 00:00:00 GMT-3)
-  const isBlurred = Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime();
+  const isBlurred = false;
 
   useEffect(() => {
     if (!userId || tournament.tournamentId !== 16) return;
