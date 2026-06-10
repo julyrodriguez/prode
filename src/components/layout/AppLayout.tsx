@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { auth } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
+import { createPortal } from 'react-dom';
 
 /* ── Theme Toggle Button ── */
 function ThemeToggleBtn({ compact = false }: { compact?: boolean }) {
@@ -65,7 +66,7 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
     </button>
   );
 
-  const infoModal = showInfo && (
+  const infoModal = showInfo && createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-modal-fade-in"
       onClick={() => setShowInfo(false)}
@@ -101,7 +102,8 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
           Entendido
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 
   if (compact) {
