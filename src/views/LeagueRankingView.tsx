@@ -17,6 +17,19 @@ interface RankingEntry {
 
 const MEDAL: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' };
 
+const PRODE_USER_IDS = new Set([
+  'TNPa89ud5GVwbN7AyHWYpvdI7sH3',
+  'ZIM8X38poYUZicf38gGzFsj8Tis1',
+  'vtiJxm0gJFgpyv74p6wnLnYuSyC3',
+  'vNEg4qrr9vQFDYeLt7tFJQ2GXl13',
+  'ryCAlOASuTM7BiMQ8VJUfgnCJtt1',
+  'jTnexEDtihPrcP1r1dmFm4CFD0z2',
+  'POYvW930tTUZZEnfNcIIy8O67692',
+  'pffqgeno1jSwZMLws4h7sWmzjEj2',
+  'IS6Ap0JmN9OVoGBbvoPCQSIU0xU2',
+  'CPJ15xjLbaMJmiEc7fChoFUiDMw2'
+]);
+
 export default function LeagueRankingView() {
   const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
   const { user } = useAuth();
@@ -26,6 +39,7 @@ export default function LeagueRankingView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [rankingTab, setRankingTab] = useState<'prode' | 'pobres'>('prode');
 
   const tournamentId = activeLeague.tournamentId;
 
@@ -56,8 +70,12 @@ export default function LeagueRankingView() {
     return () => clearInterval(interval);
   }, [tournamentId]);
 
-  const myEntry = user ? ranking.find((r) => r.userId === user.uid) : null;
-  const myPos = myEntry ? ranking.indexOf(myEntry) : -1;
+  const activeRanking = rankingTab === 'prode'
+    ? ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId))
+    : ranking;
+
+  const myEntry = user ? activeRanking.find((r) => r.userId === user.uid) : null;
+  const myPos = myEntry ? activeRanking.indexOf(myEntry) : -1;
 
   if (!tournamentId) {
     return (
@@ -82,7 +100,7 @@ export default function LeagueRankingView() {
               🏆 Posiciones del Prode
             </h1>
             <p className="text-slate-400 font-medium mt-1">
-              {activeLeague.name} — {ranking.length} participantes
+              {activeLeague.name} — {activeRanking.length} participantes
             </p>
           </div>
 
@@ -133,6 +151,31 @@ export default function LeagueRankingView() {
       )}
 
       {!loading && !error && ranking.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner mb-4">
+          <button
+            onClick={() => setRankingTab('prode')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+              rankingTab === 'prode'
+                ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            PRODE
+          </button>
+          <button
+            onClick={() => setRankingTab('pobres')}
+            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+              rankingTab === 'pobres'
+                ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            POBRES
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && ranking.length > 0 && (
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden shadow-lg">
           <div className="grid grid-cols-[40px_1fr_56px_56px_48px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#</span>
@@ -143,7 +186,10 @@ export default function LeagueRankingView() {
           </div>
 
           <div className="divide-y divide-white/[0.03]">
-            {ranking.map((entry, idx) => {
+            {activeRanking.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 italic">No hay participantes en esta tabla todavía.</div>
+            ) : (
+              activeRanking.map((entry, idx) => {
               const isMe = user && entry.userId === user.uid;
               const isMundial = activeLeague.id === 'mundial';
               const isTop3 = idx < 3;
@@ -257,7 +303,7 @@ export default function LeagueRankingView() {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
 
           {/* Leyenda de puntos */}
