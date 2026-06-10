@@ -424,21 +424,21 @@ export default function RankingView() {
                     <span>🥇</span>
                     <span className="font-semibold text-slate-300">Campeón</span>
                   </div>
-                  <span className="font-extrabold text-amber-400">70 pts</span>
+                  <span className="font-extrabold text-amber-400">40 pts</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2">
                     <span>🥈</span>
                     <span className="font-semibold text-slate-300">Subcampeón</span>
                   </div>
-                  <span className="font-extrabold text-slate-400">50 pts</span>
+                  <span className="font-extrabold text-slate-400">25 pts</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2">
                     <span>🥉</span>
                     <span className="font-semibold text-slate-300">Tercer Puesto</span>
                   </div>
-                  <span className="font-extrabold text-amber-600">30 pts</span>
+                  <span className="font-extrabold text-amber-600">20 pts</span>
                 </div>
               </div>
             </div>
