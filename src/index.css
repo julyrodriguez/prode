@@ -688,8 +688,7 @@ html.lite-mode * {
 /* Hide performance-heavy animated/blurred background blobs */
 html.lite-mode .mundial-smoke-container,
 html.lite-mode .mundial-smoke-blob,
-html.lite-mode div[class*="blur-"],
-html.lite-mode [class*="blur-"],
+html.lite-mode [class*="blur-"]:not([class*="backdrop-"]),
 html.lite-mode .pointer-events-none > div {
   display: none !important;
   background-image: none !important;
