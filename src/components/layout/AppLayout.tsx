@@ -470,7 +470,7 @@ export default function AppLayout() {
 
         {/* ── PAGE CONTENT ── */}
         <div className={`flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 relative ${isMatchDetail ? 'pb-8' : 'pb-24 md:pb-8'}`}>
-          <div className={`${((activeLeagueId === 'mundial' && activeTabId === 'posiciones') || location.pathname === '/ranking') ? 'max-w-full' : 'max-w-7xl'} mx-auto py-6`}>
+          <div className="max-w-7xl mx-auto py-6">
             <Outlet context={{ activeLeague, activeLeagueId, activeTabId }} />
           </div>
         </div>

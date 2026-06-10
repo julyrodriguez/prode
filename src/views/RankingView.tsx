@@ -168,10 +168,10 @@ export default function RankingView() {
 
       {/* ── Tabla ── */}
       {!loading && !error && ranking.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner mb-4">
+        <div className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner mb-4 w-full">
           <button
             onClick={() => setRankingTab('prode')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+            className={`flex-1 text-center px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
               rankingTab === 'prode'
                 ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -181,7 +181,7 @@ export default function RankingView() {
           </button>
           <button
             onClick={() => setRankingTab('pobres')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+            className={`flex-1 text-center px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
               rankingTab === 'pobres'
                 ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
