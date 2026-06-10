@@ -42,7 +42,7 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
   return (
     <button
       onClick={toggleLite}
-      title={isLite ? 'Desactivar modo LITE' : 'Activar modo LITE (sin animaciones)'}
+      title={isLite ? 'Desactivar Versión Rápida / LITE (Activar animaciones y efectos)' : 'Activar Versión Rápida / LITE (Desactivar animaciones para máximo rendimiento)'}
       className={`
         relative flex items-center gap-2 border transition-all duration-300
         ${compact
@@ -63,7 +63,7 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
       </span>
       {!compact && (
         <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
-          {isLite ? 'Modo Normal' : 'Modo LITE'}
+          {isLite ? 'Versión Normal' : 'Versión Rápida (LITE)'}
         </span>
       )}
     </button>
