@@ -25,7 +25,8 @@ const PRODE_USER_IDS = new Set([
   'POYvW930tTUZZEnfNcIIy8O67692',
   'pffqgeno1jSwZMLws4h7sWmzjEj2',
   'IS6Ap0JmN9OVoGBbvoPCQSIU0xU2',
-  'CPJ15xjLbaMJmiEc7fChoFUiDMw2'
+  'CPJ15xjLbaMJmiEc7fChoFUiDMw2',
+  'aayngHYHpsNaw66u8FjG9RvF7Vk1'
 ]);
 
 export default function RankingView() {
