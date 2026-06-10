@@ -41,8 +41,37 @@ export default function LeagueRankingView() {
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [rankingTab, setRankingTab] = useState<'prode' | 'pobres'>('prode');
+  const [podiumPredictions, setPodiumPredictions] = useState<any[]>([]);
+  const [loadingPredictions, setLoadingPredictions] = useState(false);
 
   const tournamentId = activeLeague.tournamentId;
+
+  useEffect(() => {
+    if (activeLeague.id !== 'mundial') return;
+    
+    let isMounted = true;
+    const fetchPodiumPredictions = async () => {
+      setLoadingPredictions(true);
+      try {
+        const response = await fetch('https://apivacas.jariel.com.ar/api/mundial/predictions');
+        if (!response.ok) throw new Error('Error al obtener predicciones');
+        const json = await response.json();
+        if (isMounted && json.success) {
+          setPodiumPredictions(json.data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching podium predictions:", err);
+      } finally {
+        if (isMounted) setLoadingPredictions(false);
+      }
+    };
+    
+    fetchPodiumPredictions();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [activeLeague.id]);
 
   useEffect(() => {
     if (!tournamentId) return;
@@ -332,6 +361,94 @@ export default function LeagueRankingView() {
             Todavía no hay posiciones para {activeLeague.name}.<br />
             ¡Sé el primero en hacer tus predicciones!
           </p>
+        </div>
+      )}
+
+      {activeLeague.id === 'mundial' && rankingTab === 'prode' && !loading && !error && (
+        <div className="flex flex-col gap-6 mt-8">
+          <div className="flex items-center pl-2">
+            <div className="w-1.5 h-6 bg-amber-400 rounded-full mr-3 shadow-[0_0_10px_rgba(251,191,36,0.4)]" />
+            <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-amber-200">
+              🏆 Pronósticos de Podio del Mundial
+            </h3>
+          </div>
+          
+          {loadingPredictions ? (
+            <div className="flex justify-center items-center py-12 bg-white/[0.02] border border-white/5 rounded-[2rem]">
+              <div className="animate-spin w-6 h-6 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent mr-3" />
+              <span className="text-slate-400 text-sm font-medium">Cargando pronósticos...</span>
+            </div>
+          ) : podiumPredictions.length === 0 ? (
+            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 text-center text-slate-500 text-sm font-medium">
+              Nadie ha realizado su pronóstico de podio aún.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime() && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-3 text-amber-300 text-xs font-semibold">
+                  <span>🔒</span>
+                  <span>Los pronósticos de los rivales están ocultos hasta el inicio del mundial (12 de Junio a las 00:00 hs GMT-3). Podés ver quiénes ya completaron el suyo.</span>
+                </div>
+              )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {podiumPredictions.map((pred) => {
+                  const isUserBlurred = Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime();
+                  return (
+                    <div key={pred._id} className="relative overflow-hidden bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-3xl p-5 transition-all duration-300 flex flex-col gap-4 shadow-lg backdrop-blur-sm group">
+                      {/* User Info */}
+                      <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+                        <img 
+                          src={pred.avatarUrl ? (pred.avatarUrl.startsWith('http') ? pred.avatarUrl : `https://apivacas.jariel.com.ar${pred.avatarUrl}`) : 'https://apivacas.jariel.com.ar/default-avatar.png'} 
+                          alt={pred.userName}
+                          className="w-9 h-9 rounded-full border border-white/10 object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://apivacas.jariel.com.ar/default-avatar.png' }}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-200 group-hover:text-white transition-colors text-sm">{pred.userName}</span>
+                          <span className="text-[10px] text-slate-500 font-medium">Completado</span>
+                        </div>
+                      </div>
+                      
+                      {/* Podio */}
+                      <div className="flex flex-col gap-2">
+                        {/* Campeón */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2 text-amber-400 font-bold font-black">
+                            <span>🥇</span>
+                            <span>Campeón:</span>
+                          </div>
+                          <span className={`font-extrabold text-slate-300 ${isUserBlurred ? 'blur-md select-none' : ''}`}>
+                            {pred.champion}
+                          </span>
+                        </div>
+                        {/* Subcampeón */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2 text-slate-400 font-bold font-black">
+                            <span>🥈</span>
+                            <span>Subcampeón:</span>
+                          </div>
+                          <span className={`font-extrabold text-slate-300 ${isUserBlurred ? 'blur-md select-none' : ''}`}>
+                            {pred.runnerUp}
+                          </span>
+                        </div>
+                        {/* Tercero */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2 text-amber-600 font-bold font-black">
+                            <span>🥉</span>
+                            <span>Tercer Puesto:</span>
+                          </div>
+                          <span className={`font-extrabold text-slate-300 ${isUserBlurred ? 'blur-md select-none' : ''}`}>
+                            {pred.thirdPlace}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
