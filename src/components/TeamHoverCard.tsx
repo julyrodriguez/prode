@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 interface TeamInMatch {
@@ -32,9 +32,26 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
   const [loading, setLoading] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [coords, setCoords] = useState<{ x: number; y: number } | null>(null);
+  const [cardWidth, setCardWidth] = useState<number>(350);
 
   const timeoutRef = useRef<any>(null);
   const hoverAreaRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (visible) {
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        if (rect.width > 0 && Math.abs(rect.width - cardWidth) > 1) {
+          setCardWidth(rect.width);
+        }
+      }
+    } else {
+      if (cardWidth !== 350) {
+        setCardWidth(350);
+      }
+    }
+  }, [visible, matches, cardWidth]);
 
   const fetchMatches = async () => {
     if (matches.length > 0) return; // Ya cargado
@@ -144,13 +161,14 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
 
   const cardContent = visible && coords && (
     <div
+      ref={cardRef}
       style={{
         position: 'fixed',
         top: Math.min(window.innerHeight - 340, coords.y + 8),
-        left: Math.min(window.innerWidth - 300, Math.max(16, coords.x - 130)),
+        left: Math.max(8, Math.min(window.innerWidth - cardWidth - 12, coords.x - cardWidth / 2)),
         zIndex: 99999,
       }}
-      className="w-64 bg-[#0b1015]/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 select-none animate-modal-scale-in"
+      className="w-max min-w-[320px] max-w-[calc(100vw-24px)] bg-[#0b1015]/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl p-4 text-xs text-slate-200 select-none animate-modal-scale-in"
       onMouseEnter={() => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setVisible(true);
@@ -166,7 +184,7 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
           />
         </div>
-        <span className="font-extrabold text-white text-sm truncate">{teamName}</span>
+        <span className="font-extrabold text-white text-sm whitespace-nowrap">{teamName}</span>
       </div>
 
       {loading ? (
@@ -188,12 +206,12 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
                   return (
                     <div key={m.id || idx} className="flex items-center justify-between gap-1 py-1 px-1.5 bg-white/[0.02] border border-white/5 rounded-lg">
                       <span className="text-[9px] text-slate-400 shrink-0 font-medium">{dateStr}</span>
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center">
-                        <span className="truncate max-w-[50px] font-bold text-right leading-none text-slate-300">{getTeamNameStr(m, 'home')}</span>
-                        <span className="text-[10px] px-1 bg-black/40 border border-white/5 rounded text-white font-black whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 justify-center flex-1">
+                        <span className="whitespace-nowrap font-bold text-right leading-none text-slate-300 flex-1">{getTeamNameStr(m, 'home')}</span>
+                        <span className="text-[10px] px-1 bg-black/40 border border-white/5 rounded text-white font-black whitespace-nowrap shrink-0">
                           {getScore(m, 'home')} - {getScore(m, 'away')}
                         </span>
-                        <span className="truncate max-w-[50px] font-bold text-left leading-none text-slate-300">{getTeamNameStr(m, 'away')}</span>
+                        <span className="whitespace-nowrap font-bold text-left leading-none text-slate-300 flex-1">{getTeamNameStr(m, 'away')}</span>
                       </div>
                       {getResultBadge(m)}
                     </div>
@@ -221,10 +239,10 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
                         <span className="text-[9px] text-emerald-400 font-extrabold uppercase leading-none">{dateStr}</span>
                         <span className="text-[8px] text-slate-500 font-medium leading-none mt-0.5">{hourStr}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center">
-                        <span className="truncate max-w-[55px] font-bold text-right leading-none text-slate-300">{getTeamNameStr(m, 'home')}</span>
-                        <span className="text-[9px] text-slate-500 font-bold whitespace-nowrap">vs</span>
-                        <span className="truncate max-w-[55px] font-bold text-left leading-none text-slate-300">{getTeamNameStr(m, 'away')}</span>
+                      <div className="flex items-center gap-1.5 justify-center flex-1">
+                        <span className="whitespace-nowrap font-bold text-right leading-none text-slate-300 flex-1">{getTeamNameStr(m, 'home')}</span>
+                        <span className="text-[9px] text-slate-500 font-bold whitespace-nowrap shrink-0">vs</span>
+                        <span className="whitespace-nowrap font-bold text-left leading-none text-slate-300 flex-1">{getTeamNameStr(m, 'away')}</span>
                       </div>
                       <div className="w-4 h-4 shrink-0" />
                     </div>
