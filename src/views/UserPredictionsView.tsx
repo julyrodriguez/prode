@@ -47,6 +47,32 @@ export default function UserPredictionsView() {
   const [userName, setUserName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [podium, setPodium] = useState<{ champion: string; runnerUp: string; thirdPlace: string } | null>(null);
+
+  // Check if podium prediction should be blurred (until June 12, 2026 00:00:00 GMT-3)
+  const isBlurred = Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime();
+
+  useEffect(() => {
+    if (!userId || tournament.tournamentId !== 16) return;
+    const fetchPodium = async () => {
+      try {
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/mundial/predictions/${userId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setPodium({
+              champion: json.data.champion,
+              runnerUp: json.data.runnerUp,
+              thirdPlace: json.data.thirdPlace
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching podium predictions:", e);
+      }
+    };
+    fetchPodium();
+  }, [userId, tournament.tournamentId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -155,6 +181,47 @@ export default function UserPredictionsView() {
           )}
         </div>
       </div>
+
+      {/* ── Podio Mundial ── */}
+      {!loading && !error && tournament.tournamentId === 16 && podium && (
+        <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 lg:p-8 shadow-lg flex flex-col gap-4">
+          <div className="flex items-center gap-2 border-b border-white/5 pb-3">
+            <span className="text-xl">🏆</span>
+            <h2 className="text-lg font-black text-white">Predicción del Podio</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            {/* Campeón */}
+            <div className="flex flex-col items-center p-4 bg-black/40 border border-amber-500/10 rounded-2xl text-center">
+              <span className="text-3xl mb-1">🥇</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Campeón</span>
+              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}>
+                {podium.champion}
+              </span>
+            </div>
+            {/* Subcampeón */}
+            <div className="flex flex-col items-center p-4 bg-black/40 border border-slate-500/10 rounded-2xl text-center">
+              <span className="text-3xl mb-1">🥈</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Subcampeón</span>
+              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}>
+                {podium.runnerUp}
+              </span>
+            </div>
+            {/* Tercer Puesto */}
+            <div className="flex flex-col items-center p-4 bg-black/40 border border-amber-600/10 rounded-2xl text-center">
+              <span className="text-3xl mb-1">🥉</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Tercer Puesto</span>
+              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}>
+                {podium.thirdPlace}
+              </span>
+            </div>
+          </div>
+          {isBlurred && (
+            <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider text-center mt-1">
+              🔒 Las predicciones del podio se revelarán el 12 de Junio de 2026.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Cargando / Error ── */}
       {loading && (
