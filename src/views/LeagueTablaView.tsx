@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import type { LEAGUES } from '../components/layout/AppLayout';
+import TeamHoverCard from '../components/TeamHoverCard';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -242,19 +243,21 @@ export default function LeagueTablaView() {
                               {row.posicion || idx + 1}
                             </td>
                             <td className={`${bodyPY} px-2`}>
-                              <div className="flex items-center gap-3">
-                                <div className={`${iconSize} flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors`}>
-                                  <img
-                                    src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
-                                    alt={row.nombre}
-                                    className="w-full h-full object-contain drop-shadow-md"
-                                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
-                                  />
+                              <TeamHoverCard teamId={row.equipoId} teamName={row.nombre} className="w-full flex items-center">
+                                <div className="flex items-center gap-3">
+                                  <div className={`${iconSize} flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors`}>
+                                    <img
+                                      src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
+                                      alt={row.nombre}
+                                      className="w-full h-full object-contain drop-shadow-md"
+                                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+                                    />
+                                  </div>
+                                  <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[150px] sm:max-w-xs transition-colors ${textSize}`}>
+                                    {row.nombre}
+                                  </span>
                                 </div>
-                                <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[150px] sm:max-w-xs transition-colors ${textSize}`}>
-                                  {row.nombre}
-                                </span>
-                              </div>
+                              </TeamHoverCard>
                             </td>
 
                             {isPromedios ? (

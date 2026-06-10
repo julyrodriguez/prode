@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import type { LEAGUES } from '../components/layout/AppLayout';
 import TeamForm from '../components/TeamForm';
 import CopaBracket from '../components/CopaBracket';
+import TeamHoverCard from '../components/TeamHoverCard';
 
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
@@ -1027,17 +1028,25 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 md:gap-4">
 
                       {/* HOME TEAM */}
-                      <div className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
-                        <div className="flex flex-col items-end justify-center min-w-0">
-                          <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{hName}</span>
-                          <div className="mt-1">
-                            <TeamForm teamId={hId} align="left" />
+                      <TeamHoverCard teamId={hId} teamName={hName} className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
+                        <div
+                          className="flex items-center justify-end gap-2 md:gap-3 text-right min-w-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (hId) navigate(`/team/${hId}`);
+                          }}
+                        >
+                          <div className="flex flex-col items-end justify-center min-w-0">
+                            <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
+                            <div className="mt-1">
+                              <TeamForm teamId={hId} align="left" />
+                            </div>
+                          </div>
+                          <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-centeLr justify-center">
+                            {hLogo ? <img src={hLogo} alt={hName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
                           </div>
                         </div>
-                        <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-centeLr justify-center">
-                          {hLogo ? <img src={hLogo} alt={hName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
-                        </div>
-                      </div>
+                      </TeamHoverCard>
 
                       {/* CENTER: score / VS separator / dashes */}
                       <div className="flex flex-col items-center justify-center shrink-0">
@@ -1084,17 +1093,25 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                       </div>
 
                       {/* AWAY TEAM */}
-                      <div className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
-                        <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-                          {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
-                        </div>
-                        <div className="flex flex-col items-start justify-center min-w-0">
-                          <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{aName}</span>
-                          <div className="mt-1">
-                            <TeamForm teamId={aId} align="right" />
+                      <TeamHoverCard teamId={aId} teamName={aName} className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
+                        <div
+                          className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (aId) navigate(`/team/${aId}`);
+                          }}
+                        >
+                          <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+                            {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+                          </div>
+                          <div className="flex flex-col items-start justify-center min-w-0">
+                            <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
+                            <div className="mt-1">
+                              <TeamForm teamId={aId} align="right" />
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      </TeamHoverCard>
                     </div>
 
                     {/* ── Inputs de predicción: fila separada DEBAJO de los equipos ── */}
