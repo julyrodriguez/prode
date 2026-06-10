@@ -39,6 +39,7 @@ function ThemeToggleBtn({ compact = false }: { compact?: boolean }) {
 /* ── Lite Toggle Button ── */
 function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
   const { isLite, toggleLite } = useTheme();
+  const [showInfo, setShowInfo] = useState(false);
 
   const switchElement = (
     <button
@@ -64,16 +65,77 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
     </button>
   );
 
+  const infoModal = showInfo && (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-modal-fade-in"
+      onClick={() => setShowInfo(false)}
+    >
+      <div
+        className="bg-[#0f172a] border border-white/10 rounded-[2rem] p-7 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.8)] text-slate-200 relative animate-modal-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={() => setShowInfo(false)}
+          className="absolute top-5 right-6 text-slate-400 hover:text-white text-lg font-bold transition-colors"
+        >
+          ✕
+        </button>
+        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+          ℹ️ Versiones de la Página
+        </h3>
+        <div className="flex flex-col gap-4 text-sm leading-relaxed">
+          <div>
+            <span className="font-bold text-amber-400 flex items-center gap-1.5">⚡ Versión Rápida (LITE)</span>
+            <p className="text-slate-300 mt-1 text-xs">Desactiva todas las animaciones, transiciones, efectos y fondos con difuminados pesados. Optimiza la velocidad de carga y ahorra batería/procesador.</p>
+          </div>
+          <hr className="border-white/5" />
+          <div>
+            <span className="font-bold text-emerald-400 flex items-center gap-1.5">✨ Versión Colorida</span>
+            <p className="text-slate-300 mt-1 text-xs">Activa la interfaz premium completa con fondos animados y fluidos (efectos de humo y gradientes) y transiciones animadas.</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setShowInfo(false)}
+          className="mt-6 w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-md shadow-emerald-500/20"
+        >
+          Entendido
+        </button>
+      </div>
+    </div>
+  );
+
   if (compact) {
-    return switchElement;
+    return (
+      <div className="flex items-center gap-1.5 shrink-0">
+        {switchElement}
+        <button
+          onClick={() => setShowInfo(true)}
+          title="Ver información de versiones"
+          className="text-slate-400 hover:text-white text-xs w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white/5 transition-colors border border-transparent hover:border-white/10 shrink-0"
+        >
+          ℹ️
+        </button>
+        {infoModal}
+      </div>
+    );
   }
 
   return (
     <div className="flex items-center justify-between p-3 w-full border border-white/10 bg-white/5 text-slate-300 rounded-2xl text-sm font-semibold select-none">
-      <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
-        {isLite ? 'Versión Rápida' : 'Versión Colorida'}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+          {isLite ? 'Versión Rápida' : 'Versión Colorida'}
+        </span>
+        <button
+          onClick={() => setShowInfo(true)}
+          title="Ver información de versiones"
+          className="text-slate-400 hover:text-white transition-colors shrink-0 md:opacity-0 md:group-hover:opacity-100 opacity-100"
+        >
+          ℹ️
+        </button>
+      </div>
       {switchElement}
+      {infoModal}
     </div>
   );
 }
