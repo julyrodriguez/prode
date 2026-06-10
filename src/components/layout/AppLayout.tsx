@@ -99,7 +99,7 @@ const JARIELBET_TABS = [
 
 // General tab items (old behavior)
 const GENERAL_TABS = [
-  { id: 'partidos', label: 'Partidos', path: '/', icon: '⚽' },
+  { id: 'partidos', label: 'Partidos', path: '/general', icon: '⚽' },
   { id: 'predicciones', label: 'Predicciones', path: '/predicciones', icon: '🔮' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', icon: '🏅' },
   { id: 'estadisticas', label: 'Estadísticas', path: '/stats', icon: '📊' },
@@ -137,7 +137,7 @@ export default function AppLayout() {
 
   const handleLeagueSelect = (leagueId: string) => {
     if (leagueId === 'general') {
-      navigate('/');
+      navigate('/general');
     } else if (leagueId === 'jarielbet') {
       navigate('/jarielbet');
     } else if (leagueId === 'cs2') {

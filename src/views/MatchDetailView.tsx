@@ -50,7 +50,7 @@ export default function MatchDetailView() {
       <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center text-slate-400 gap-4">
         <div className="text-4xl">⚠️</div>
         <p>{error || 'No se encontró el partido.'}</p>
-        <button onClick={() => navigate('/')} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">Volver</button>
+        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">Volver</button>
       </div>
     );
   }
@@ -216,7 +216,7 @@ export default function MatchDetailView() {
       {/* Botón Volver — sticky en mobile */}
       <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           className="self-start flex items-center gap-2 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-all shadow-sm"
         >
           <ArrowLeft className="w-4 h-4" />
