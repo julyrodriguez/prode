@@ -660,6 +660,43 @@ img, svg, canvas, video, iframe {
   }
 }
 
+/* ── LITE MODE (No animations, transitions or heavy effects) ── */
+
+/* Disable transitions & standard hover transition timings in LITE mode */
+html.lite-mode,
+html.lite-mode * {
+  transition: none !important;
+  transition-delay: 0s !important;
+  transition-duration: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Stop non-spinner animations in LITE mode to maximize speed and responsiveness */
+html.lite-mode *:not(.animate-spin):not(.cs2-spinner):not([class*="spinner"]):not([class*="loading"]) {
+  animation: none !important;
+  animation-delay: 0s !important;
+  animation-duration: 0s !important;
+  animation-iteration-count: 1 !important;
+}
+
+/* Disable backdrop filter globally in LITE mode to reduce rendering overhead */
+html.lite-mode * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Hide performance-heavy animated/blurred background blobs */
+html.lite-mode .mundial-smoke-container,
+html.lite-mode .mundial-smoke-blob,
+html.lite-mode div[class*="blur-"],
+html.lite-mode [class*="blur-"],
+html.lite-mode .pointer-events-none > div {
+  display: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+
 
 
 

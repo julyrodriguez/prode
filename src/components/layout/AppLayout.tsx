@@ -36,6 +36,40 @@ function ThemeToggleBtn({ compact = false }: { compact?: boolean }) {
   );
 }
 
+/* ── Lite Toggle Button ── */
+function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
+  const { isLite, toggleLite } = useTheme();
+  return (
+    <button
+      onClick={toggleLite}
+      title={isLite ? 'Desactivar modo LITE' : 'Activar modo LITE (sin animaciones)'}
+      className={`
+        relative flex items-center gap-2 border transition-all duration-300
+        ${compact
+          ? 'rounded-xl w-9 h-9 justify-center'
+          : 'rounded-2xl p-3 w-full text-sm font-semibold overflow-hidden justify-start'
+        }
+        ${isLite
+          ? 'border-amber-500/35 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+          : 'border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white'
+        }
+      `}
+    >
+      <span
+        className={`transition-transform duration-500 ${compact ? 'text-base' : 'text-xl flex-shrink-0 w-6 text-center leading-none'}`}
+        style={{ transform: isLite ? 'scale(1.15)' : 'scale(1)' }}
+      >
+        {isLite ? '⚡' : '✨'}
+      </span>
+      {!compact && (
+        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+          {isLite ? 'Modo Normal' : 'Modo LITE'}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export const LEAGUES = [
   { id: 'mundial', name: 'Mundial', icon: '🌍', tournamentId: 16 },
   { id: 'general', name: 'General', icon: '🌐', tournamentId: null },
@@ -213,9 +247,10 @@ export default function AppLayout() {
 
 
 
-        {/* Theme Toggle (Mobile only) */}
-        <div className="px-3 mb-2 shrink-0 md:hidden">
+        {/* Theme & Lite Toggles (Mobile only) */}
+        <div className="px-3 mb-2 shrink-0 md:hidden flex flex-col gap-2">
           <ThemeToggleBtn />
+          <LiteToggleBtn />
         </div>
 
         {/* User info at bottom */}
@@ -331,8 +366,9 @@ export default function AppLayout() {
               </div>
             )}
 
-            {/* RIGHT: Theme toggle + User avatar */}
+            {/* RIGHT: Theme toggle + Lite toggle + User avatar */}
             <div className="flex items-center gap-3">
+              <LiteToggleBtn compact />
               <ThemeToggleBtn compact />
               <div className="hidden md:block">
                 {user ? (

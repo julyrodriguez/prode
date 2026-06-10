@@ -5,11 +5,15 @@ type Theme = 'dark' | 'light';
 interface ThemeContextValue {
   theme: Theme;
   toggleTheme: () => void;
+  isLite: boolean;
+  toggleLite: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'dark',
   toggleTheme: () => {},
+  isLite: false,
+  toggleLite: () => {},
 });
 
 /** Aplica el tema al DOM inmediatamente (sin esperar al siguiente render) */
@@ -33,6 +37,12 @@ function applyTheme(theme: Theme) {
   root.classList.toggle('light', theme === 'light');
 }
 
+/** Aplica el modo LITE al DOM inmediatamente */
+function applyLiteMode(isLite: boolean) {
+  const root = document.documentElement;
+  root.classList.toggle('lite-mode', isLite);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     let stored: Theme | null = null;
@@ -51,6 +61,18 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return resolved;
   });
 
+  const [isLite, setIsLite] = useState<boolean>(() => {
+    let stored = false;
+    try {
+      stored = localStorage.getItem('lite-mode') === 'true';
+    } catch (e) {
+      console.warn('localStorage is not available:', e);
+    }
+    // Aplicar sincrónicamente en la primera inicialización
+    applyLiteMode(stored);
+    return stored;
+  });
+
   useEffect(() => {
     try {
       localStorage.setItem('theme', theme);
@@ -62,6 +84,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(theme);
   }, [theme]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('lite-mode', String(isLite));
+    } catch (e) {
+      console.warn('localStorage is not available:', e);
+    }
+    applyLiteMode(isLite);
+  }, [isLite]);
+
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
@@ -72,8 +103,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const toggleLite = () => {
+    setIsLite(prev => {
+      const next = !prev;
+      applyLiteMode(next);
+      return next;
+    });
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, isLite, toggleLite }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -82,3 +121,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   return useContext(ThemeContext);
 }
+
