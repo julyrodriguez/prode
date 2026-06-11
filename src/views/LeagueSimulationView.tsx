@@ -136,6 +136,31 @@ export default function LeagueSimulationView() {
 
   // Group Stage Matches (Group A to L)
   const groupMatches = allMatches.filter(m => m.tournament_name.includes('Group'));
+
+  // Count how many matches don't have predictions and haven't started yet
+  const unpredictedCount = groupMatches.filter(m => {
+    const pred = simulatedPredictions[m.id];
+    const hasPred = pred && pred.home !== '' && pred.away !== '';
+    const statusType = typeof m.status === 'string' ? m.status : m.status?.type;
+    const hasReal = statusType !== 'notstarted';
+    return !hasPred && !hasReal;
+  }).length;
+
+  const autoFillPredictions = () => {
+    setSimulatedPredictions(prev => {
+      const next = { ...prev };
+      groupMatches.forEach(m => {
+        const pred = next[m.id];
+        const hasPred = pred && pred.home !== '' && pred.away !== '';
+        const statusType = typeof m.status === 'string' ? m.status : m.status?.type;
+        const hasReal = statusType !== 'notstarted';
+        if (!hasPred && !hasReal) {
+          next[m.id] = { home: '0', away: '0' };
+        }
+      });
+      return next;
+    });
+  };
   
   // Extract unique group names
   const groupNames = Array.from(new Set(
@@ -180,7 +205,15 @@ export default function LeagueSimulationView() {
         if (statusType !== 'notstarted') {
           homeS = m.homeScore?.current !== undefined ? m.homeScore.current : null;
           awayS = m.awayScore?.current !== undefined ? m.awayScore.current : null;
+        } else {
+          // If match hasn't started and no prediction exists, default to 0-0 for simulation
+          homeS = 0;
+          awayS = 0;
         }
+      } else {
+        // If one of the fields is empty, default it to 0
+        if (homeS === null) homeS = 0;
+        if (awayS === null) awayS = 0;
       }
 
       if (homeS !== null && awayS !== null) {
@@ -558,7 +591,23 @@ export default function LeagueSimulationView() {
       <Header />
 
       {activeTab === 'groups' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="flex flex-col gap-4 w-full animate-fade-in">
+          {unpredictedCount > 0 && (
+            <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-amber-400 font-bold">
+              <span className="flex items-center gap-2">
+                <span>⚠️</span>
+                <span>Tienes {unpredictedCount} partidos sin pronóstico en la fase de grupos. Se simulan con un empate 0-0 por defecto.</span>
+              </span>
+              <button
+                onClick={autoFillPredictions}
+                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-black rounded-lg font-black transition-all text-[10px] uppercase tracking-wider cursor-pointer transition-colors"
+              >
+                Completar todos con 0-0
+              </button>
+            </div>
+          )}
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* List of Groups */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -655,22 +704,27 @@ export default function LeagueSimulationView() {
                               </span>
                               
                               {/* Inputs */}
-                              <div className="flex items-center gap-1">
-                                <input
-                                  type="text"
-                                  value={pred.home}
-                                  onChange={(e) => handleScoreChange(m.id, 'home', e.target.value)}
-                                  className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-center font-black text-white text-sm focus:border-amber-500/50 outline-none"
-                                  placeholder="-"
-                                />
-                                <span className="text-slate-600 font-bold">-</span>
-                                <input
-                                  type="text"
-                                  value={pred.away}
-                                  onChange={(e) => handleScoreChange(m.id, 'away', e.target.value)}
-                                  className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-center font-black text-white text-sm focus:border-amber-500/50 outline-none"
-                                  placeholder="-"
-                                />
+                              <div className="flex flex-col items-center gap-1 shrink-0">
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="text"
+                                    value={pred.home}
+                                    onChange={(e) => handleScoreChange(m.id, 'home', e.target.value)}
+                                    className={`w-8 h-8 rounded-lg bg-white/5 border text-center font-black text-white text-sm focus:border-amber-500/50 outline-none ${pred.home === '' ? 'border-white/10 placeholder-slate-600' : 'border-amber-500/30'}`}
+                                    placeholder="0"
+                                  />
+                                  <span className="text-slate-600 font-bold">-</span>
+                                  <input
+                                    type="text"
+                                    value={pred.away}
+                                    onChange={(e) => handleScoreChange(m.id, 'away', e.target.value)}
+                                    className={`w-8 h-8 rounded-lg bg-white/5 border text-center font-black text-white text-sm focus:border-amber-500/50 outline-none ${pred.away === '' ? 'border-white/10 placeholder-slate-600' : 'border-amber-500/30'}`}
+                                    placeholder="0"
+                                  />
+                                </div>
+                                {(pred.home === '' || pred.away === '') && (
+                                  <span className="text-[8px] text-amber-500/80 font-bold uppercase tracking-wider block mt-0.5">Rellenado 0-0</span>
+                                )}
                               </div>
 
                               <span className="flex items-center gap-2 text-slate-100 flex-1 text-left">
@@ -758,6 +812,7 @@ export default function LeagueSimulationView() {
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {activeTab === 'bracket' && (
