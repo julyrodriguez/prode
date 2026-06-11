@@ -715,6 +715,16 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   return (
     <div className="w-full flex flex-col gap-6">
 
+      {/* Live results warning banner */}
+      {activeLeague.id === 'mundial' && (
+        <div className="flex items-center gap-3 bg-red-500/10 dark:bg-red-500/5 border border-red-500/30 rounded-2xl px-5 py-3 text-red-800 dark:text-red-200 shadow-sm animate-pulse">
+          <span className="text-lg">⚠️</span>
+          <p className="text-sm font-semibold">
+            <strong className="font-black">Aviso:</strong> Estamos teniendo problemas para tener los resultados en vivo.
+          </p>
+        </div>
+      )}
+
       {/* Prediction mode banner */}
       {isPredictionMode && (
         <div className="flex items-center gap-3 warning-banner border rounded-2xl px-5 py-3">
