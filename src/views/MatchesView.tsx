@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
 import CS2MatchesSection from '../components/CS2MatchesSection';
+import TeamRedCards from '../components/TeamRedCards';
 
 interface MatchOdds {
   full_time?: { home?: number; draw?: number; away?: number };
@@ -577,7 +578,10 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                             {/* HOME TEAM */}
                             <div className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
                               <div className="flex flex-col items-end justify-center min-w-0">
-                                <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{hName}</span>
+                                <div className="relative inline-block">
+                                  <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
+                                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{hName}</span>
+                                </div>
                                 <div className="mt-1">
                                   <TeamForm teamId={hId} align="left" />
                                 </div>
@@ -675,7 +679,10 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                                 {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
                               </div>
                               <div className="flex flex-col items-start justify-center min-w-0">
-                                <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{aName}</span>
+                                <div className="relative inline-block">
+                                  <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={false} />
+                                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{aName}</span>
+                                </div>
                                 <div className="mt-1">
                                   <TeamForm teamId={aId} align="right" />
                                 </div>

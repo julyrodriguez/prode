@@ -5,6 +5,7 @@ import type { LEAGUES } from '../components/layout/AppLayout';
 import TeamForm from '../components/TeamForm';
 import CopaBracket from '../components/CopaBracket';
 import TeamHoverCard from '../components/TeamHoverCard';
+import TeamRedCards from '../components/TeamRedCards';
 
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
@@ -1047,7 +1048,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                           }}
                         >
                           <div className="flex flex-col items-end justify-center min-w-0">
-                            <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
+                            <div className="relative inline-block">
+                              <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
+                              <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
+                            </div>
                             <div className="mt-1">
                               <TeamForm teamId={hId} align="left" />
                             </div>
@@ -1115,7 +1119,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                             {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
                           </div>
                           <div className="flex flex-col items-start justify-center min-w-0">
-                            <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
+                            <div className="relative inline-block">
+                              <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={false} />
+                              <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
+                            </div>
                             <div className="mt-1">
                               <TeamForm teamId={aId} align="right" />
                             </div>
