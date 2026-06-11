@@ -13,6 +13,7 @@ import LeaguePredictionsView from './views/LeaguePredictionsView';
 import LeagueRankingView from './views/LeagueRankingView';
 import LeagueTablaView from './views/LeagueTablaView';
 import LeagueMinigamesView from './views/LeagueMinigamesView';
+import LeagueSimulationView from './views/LeagueSimulationView';
 import ProfileView from './views/ProfileView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { BettingProvider } from './context/BettingContext';
@@ -74,7 +75,10 @@ export default function App() {
                 <Route path="posiciones" element={<LeagueRankingView />} />
                 <Route path="tabla" element={<LeagueTablaView />} />
                 {league.id === 'mundial' && (
-                  <Route path="minijuegos" element={<LeagueMinigamesView />} />
+                  <>
+                    <Route path="minijuegos" element={<LeagueMinigamesView />} />
+                    <Route path="simulacion" element={<LeagueSimulationView />} />
+                  </>
                 )}
               </Route>
             ))}
