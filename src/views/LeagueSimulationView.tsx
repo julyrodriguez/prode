@@ -535,7 +535,7 @@ export default function LeagueSimulationView() {
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
-            🔮 Simulador del Mundial
+            🪄 Simulador del Mundial
           </h1>
           <p className="text-slate-400 font-medium mt-1">
             Simula las posiciones de grupo y completa los brackets usando tus predicciones.

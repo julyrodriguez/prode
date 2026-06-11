@@ -198,7 +198,7 @@ export default function AppLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const currentLeagueTabs = activeLeagueId === 'mundial'
-    ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🔮' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
+    ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
     : LEAGUE_TABS;
 
   const activeLeague = LEAGUES.find(l => {
