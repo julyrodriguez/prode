@@ -411,8 +411,9 @@ export default function LeagueSimulationView() {
   // Resolve knockout stages recursively
   const getKnockoutTeam = (key: string, side: 'home' | 'away'): Team => {
     // Round of 32: Resolved directly from group standings
-    if (key.startsWith('m7') || key.startsWith('m8')) {
-      const idx = Number(key.substring(2)) - 73;
+    const matchNum = Number(key.substring(1));
+    if (matchNum >= 73 && matchNum <= 88) {
+      const idx = matchNum - 73;
       const m = roundOf32Matches[idx];
       return side === 'home' ? m.home : m.away;
     }
