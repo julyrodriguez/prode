@@ -18,7 +18,7 @@ interface RankingEntry {
 const MEDAL: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' };
 
 const PRODE_USER_IDS = new Set([
-  'TNPa89ud5GVwbN7AyHWYpvdI7sH3',
+  'mDpYgQIEtCVIF8pdQ0HYHWiAyJV2',
   'ZIM8X38poYUZicf38gGzFsj8Tis1',
   'vtiJxm0gJFgpyv74p6wnLnYuSyC3',
   'vNEg4qrr9vQFDYeLt7tFJQ2GXl13',
