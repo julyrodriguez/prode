@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 
+const parseStatValue = (val: string | number | undefined): number => {
+  if (val === undefined || val === null) return 0;
+  if (typeof val === 'number') return val;
+  const cleaned = String(val).replace(/%/g, '').trim();
+  return parseFloat(cleaned) || 0;
+};
+
 export default function MatchDetailView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -722,8 +729,8 @@ export default function MatchDetailView() {
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                       {group.statisticsItems.map((stat: any, idx: number) => {
-                        const homeVal = Number(stat.homeValue) || 0;
-                        const awayVal = Number(stat.awayValue) || 0;
+                        const homeVal = parseStatValue(stat.home);
+                        const awayVal = parseStatValue(stat.away);
                         const total = homeVal + awayVal || 1;
                         const hPct = (homeVal / total) * 100;
                         const aPct = (awayVal / total) * 100;
@@ -738,9 +745,21 @@ export default function MatchDetailView() {
                               <span className="text-slate-400 text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
                               <span className={`text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
                             </div>
-                            <div className="flex h-1.5 w-full bg-black/50 rounded-full overflow-hidden border border-white/5 opacity-80">
-                              <div className="h-full bg-emerald-500/90 shadow-[0_0_8px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-out" style={{ width: `${hPct}%` }}></div>
-                              <div className="h-full bg-indigo-500/90 shadow-[0_0_8px_rgba(99,102,241,0.5)] transition-all duration-1000 ease-out" style={{ width: `${aPct}%` }}></div>
+                            <div className="flex items-center gap-3 w-full h-1.5 mt-0.5 opacity-90">
+                              {/* Barra local: crece hacia la izquierda */}
+                              <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
+                                <div
+                                  className="h-full bg-emerald-500/90 shadow-[0_0_6px_rgba(16,185,129,0.4)] rounded-full transition-all duration-1000 ease-out"
+                                  style={{ width: `${hPct}%` }}
+                                />
+                              </div>
+                              {/* Barra visitante: crece hacia la derecha */}
+                              <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-start border border-white/5">
+                                <div
+                                  className="h-full bg-indigo-500/90 shadow-[0_0_6px_rgba(99,102,241,0.4)] rounded-full transition-all duration-1000 ease-out"
+                                  style={{ width: `${aPct}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
                         )
