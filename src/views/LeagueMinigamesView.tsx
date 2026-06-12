@@ -1,9 +1,12 @@
+"use client";
 import { useState, useEffect, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useParams } from 'next/navigation';
+import { useContext } from 'react';
+import { DashboardContext } from '../app/(dashboard)/layout';
+import { LEAGUES } from '../components/layout/AppLayout';
 import { useAuth } from '../context/AuthContext';
 import KeepieUppieGame from '../components/KeepieUppieGame';
 import PlayerWordleGame, { type Player } from '../components/PlayerWordleGame';
-import type { LEAGUES } from '../components/layout/AppLayout';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -282,7 +285,9 @@ function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loadin
 }
 
 export default function LeagueMinigamesView() {
-  const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
+  const params = useParams();
+  const leagueId = (params?.leagueId as string) || 'general';
+  const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
   const { user } = useAuth();
   const [activeGameTab, setActiveGameTab] = useState<'jueguitos' | 'wordle'>('jueguitos');
 

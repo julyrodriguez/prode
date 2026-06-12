@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import type { LEAGUES } from '../components/layout/AppLayout';
+import { useParams, useRouter } from 'next/navigation';
+import { LEAGUES } from '../components/layout/AppLayout';
 import TeamHoverCard from '../components/TeamHoverCard';
 
 type LeagueType = typeof LEAGUES[number];
@@ -28,8 +28,10 @@ function formatTabName(key: string) {
 }
 
 export default function LeagueTablaView() {
-  const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
-  const navigate = useNavigate();
+  const params = useParams();
+  const router = useRouter();
+  const leagueId = params.leagueId as string;
+  const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
   const tournamentId = activeLeague.tournamentId;
 
   const [loading, setLoading] = useState(true);
@@ -235,7 +237,7 @@ export default function LeagueTablaView() {
                         return (
                           <tr
                             key={row.equipoId || idx}
-                            onClick={() => row.equipoId && navigate(`/team/${row.equipoId}`)}
+                            onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
                             className="hover:bg-cyan-500/[0.05] transition-colors group cursor-pointer"
                           >
                             <td className={`${bodyPY} px-3 text-center font-black text-slate-500 group-hover:text-slate-300 transition-colors ${borderClass}`}>

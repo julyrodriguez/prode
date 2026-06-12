@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 
 interface Prediction {
@@ -85,10 +86,10 @@ const RESULT_CONFIG = {
 
 export default function UserPredictionsView() {
   const { userId } = useParams<{ userId: string }>();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const stateTournamentId = location.state?.tournamentId;
-  const stateTournamentName = location.state?.tournamentName;
+  const router = useRouter();
+  const pathname = usePathname(); const searchParams = useSearchParams();
+  const stateTournamentId = searchParams.get('tournamentId') ? parseInt(searchParams.get('tournamentId'), 10) : undefined;
+  const stateTournamentName = searchParams.get('tournamentName') || undefined;
   // Use Liga Argentina (155) as fallback 
   const tournament = {
     tournamentId: stateTournamentId !== undefined ? stateTournamentId : 155,
@@ -208,7 +209,7 @@ export default function UserPredictionsView() {
 
       {/* Volver */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => router.back()}
         className="self-start flex items-center gap-2 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-all shadow-sm"
       >
         <ArrowLeft className="w-4 h-4" />

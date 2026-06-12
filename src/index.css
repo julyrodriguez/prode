@@ -689,6 +689,27 @@ html.lite-mode .pointer-events-none > div {
   animation: float-slow 3s infinite ease-in-out;
 }
 
+/* ── GPU RENDERING & SCROLLING OPTIMIZATION ── */
+
+/* Force hardware acceleration on the main scrollable containers */
+.overflow-y-auto,
+.overflow-x-auto,
+.custom-scrollbar {
+  transform: translate3d(0, 0, 0);
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Cache backdrop-blurred elements on the GPU as textures to prevent repaint lag during scrolling */
+.backdrop-blur-xl,
+.backdrop-blur-md,
+.backdrop-blur-sm,
+[class*="backdrop-blur-"] {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
 
 
 

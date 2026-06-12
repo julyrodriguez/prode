@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { LEAGUES } from '../components/layout/AppLayout';
 
@@ -31,7 +32,7 @@ const PRODE_USER_IDS = new Set([
 
 export default function RankingView() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // Get valid leagues with a tournamentId
   const validLeagues = LEAGUES.filter(l => l.tournamentId !== null);
@@ -277,12 +278,7 @@ export default function RankingView() {
               return (
                 <div
                   key={entry.userId}
-                  onClick={() => navigate(`/predictions/${entry.userId}`, {
-                    state: {
-                      tournamentId: selectedLeague.tournamentId,
-                      tournamentName: selectedLeague.name
-                    }
-                  })}
+                  onClick={() => router.push(`/predictions/${entry.userId}?tournamentId=selectedLeague.tournamentId&tournamentName=selectedLeague.name`)}
                   className={`grid grid-cols-[40px_1fr_56px_56px_48px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                 >
                   {/* Posición */}

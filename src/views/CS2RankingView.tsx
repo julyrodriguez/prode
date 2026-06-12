@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 
 interface CS2Player {
@@ -25,7 +26,7 @@ interface CS2Player {
 }
 
 export default function CS2RankingView() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const [players, setPlayers] = useState<CS2Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +110,7 @@ export default function CS2RankingView() {
                   <tr 
                     key={player._id} 
                     className="border-b border-white/5 hover:bg-white/5 transition-colors duration-75 cursor-pointer group"
-                    onClick={() => navigate(`/cs2/player/${player.steam64_id}`)}
+                    onClick={() => router.push(`/cs2/player/${player.steam64_id}`)}
                   >
                     <td className="py-3 sm:py-4 pl-2 sm:pl-4">
                       <div className={`

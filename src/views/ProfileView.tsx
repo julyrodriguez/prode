@@ -1,3 +1,4 @@
+"use client";
 import { useAuth } from '../context/AuthContext';
 import { PerfilUsuario } from '../components/PerfilUsuario';
 
@@ -27,7 +28,7 @@ export default function ProfileView() {
           usuarioActual={usuarioActual} 
           onUpdateSuccess={() => {
             // Opcionalmente podemos navegar al home si es deseado luego de guardar:
-            // navigate('/');
+            // router.push('/');
           }}
         />
       </div>

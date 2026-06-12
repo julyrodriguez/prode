@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
 import CS2MatchesSection from '../components/CS2MatchesSection';
@@ -59,7 +60,7 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
 
 
 export default function MatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { user } = useAuth();
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
@@ -256,7 +257,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   }, {} as Record<string, Match[]>);
 
   const handleCardClick = (id: number) => {
-    navigate(`/match/${id}`);
+    router.push(`/match/${id}`);
   };
 
   // ─── Guardar predicciones ──────────────────────────────────────────────────

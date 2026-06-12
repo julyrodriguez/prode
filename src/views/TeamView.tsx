@@ -1,5 +1,9 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
+import { useContext } from 'react';
+import { DashboardContext } from '../app/(dashboard)/layout';
+import { LEAGUES } from '../components/layout/AppLayout';
 import { ArrowLeft, MapPin, Users, Calendar, Trophy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -122,8 +126,8 @@ function formatStatValue(key: string, val: number): string {
 
 export default function TeamView() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const outletContext = useOutletContext<any>();
+  const router = useRouter();
+  const outletContext = useContext(DashboardContext);
   const setOverriddenLeagueId = outletContext?.setOverriddenLeagueId;
 
   const { theme } = useTheme();
@@ -191,7 +195,7 @@ export default function TeamView() {
       <div className="w-full h-full flex flex-col items-center justify-center gap-4 text-slate-400">
         <div className="text-4xl">⚠️</div>
         <p>{error || 'Equipo no encontrado.'}</p>
-        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">
+        <button onClick={() => router.back()} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">
           Volver
         </button>
       </div>
@@ -218,7 +222,7 @@ export default function TeamView() {
 
       {/* Botón volver */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => router.back()}
         className="self-start flex items-center gap-2 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-all shadow-sm"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -473,7 +477,7 @@ export default function TeamView() {
               return (
                 <div 
                   key={match.id || match._id || idx} 
-                  onClick={() => navigate(`/match/${match.id || match._id}`)}
+                  onClick={() => router.push(`/match/${match.id || match._id}`)}
                   className="grid grid-cols-[60px_1fr_auto_1fr_30px] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-3"
                 >
                   <div className="flex flex-col items-center justify-center border-r border-white/5 pr-2 md:pr-4 mr-1 md:mr-2">

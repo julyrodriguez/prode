@@ -1,7 +1,10 @@
+"use client";
 
 import { useEffect, useState } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
-import type { LEAGUES } from '../components/layout/AppLayout';
+import { useRouter, useParams } from 'next/navigation';
+import { useContext } from 'react';
+import { DashboardContext } from '../app/(dashboard)/layout';
+import { LEAGUES } from '../components/layout/AppLayout';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -28,8 +31,10 @@ function formatTabName(key: string) {
 }
 
 export default function StatsView() {
-  const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
-  const navigate = useNavigate();
+  const params = useParams();
+  const leagueId = (params?.leagueId as string) || 'general';
+  const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
+  const router = useRouter();
   const tournamentId = activeLeague.tournamentId;
 
   const [loading, setLoading] = useState(true);
@@ -203,7 +208,7 @@ export default function StatsView() {
                 return (
                   <tr 
                     key={row.equipoId || idx} 
-                    onClick={() => row.equipoId && navigate(`/team/${row.equipoId}`)}
+                    onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
                     className="hover:bg-emerald-500/[0.05] transition-colors group cursor-pointer"
                   >
                     <td className={`py-3 px-4 text-center font-bold text-slate-500 group-hover:text-slate-300 transition-colors ${borderClass}`}>

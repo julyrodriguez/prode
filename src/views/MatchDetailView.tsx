@@ -1,5 +1,9 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
+import { useContext } from 'react';
+import { DashboardContext } from '../app/(dashboard)/layout';
+import { LEAGUES } from '../components/layout/AppLayout';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 
 const parseStatValue = (val: string | number | undefined): number => {
@@ -11,8 +15,8 @@ const parseStatValue = (val: string | number | undefined): number => {
 
 export default function MatchDetailView() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const outletContext = useOutletContext<any>();
+  const router = useRouter();
+  const outletContext = useContext(DashboardContext);
   const setOverriddenLeagueId = outletContext?.setOverriddenLeagueId;
 
   const [match, setMatch] = useState<any>(null);
@@ -106,7 +110,7 @@ export default function MatchDetailView() {
       <div className="w-full h-full flex flex-col items-center justify-center p-8 text-center text-slate-400 gap-4">
         <div className="text-4xl">⚠️</div>
         <p>{error || 'No se encontró el partido.'}</p>
-        <button onClick={() => navigate(-1)} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">Volver</button>
+        <button onClick={() => router.back()} className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all">Volver</button>
       </div>
     );
   }
@@ -295,7 +299,7 @@ export default function MatchDetailView() {
       {/* Botón Volver — sticky en mobile */}
       <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-[#09090b]/80 backdrop-blur-xl md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none border-0">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => router.back()}
           className="self-start flex items-center gap-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl transition-all shadow-sm"
         >
           <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -323,7 +327,7 @@ export default function MatchDetailView() {
           {/* HOME */}
           <div className="flex flex-col items-center gap-2 md:gap-4 flex-1 min-w-0">
             <button
-              onClick={() => hId && navigate(`/team/${hId}`)}
+              onClick={() => hId && router.push(`/team/${hId}`)}
               className={`flex flex-col items-center gap-2 md:gap-4 w-full ${hId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
             >
               <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white/5 rounded-full border border-white/10 p-2 md:p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-emerald-500/40 transition-colors shrink-0 animate-[pulse_3s_infinite]">
@@ -375,7 +379,7 @@ export default function MatchDetailView() {
           {/* AWAY */}
           <div className="flex flex-col items-center gap-2 md:gap-4 flex-1 min-w-0">
             <button
-              onClick={() => aId && navigate(`/team/${aId}`)}
+              onClick={() => aId && router.push(`/team/${aId}`)}
               className={`flex flex-col items-center gap-2 md:gap-4 w-full ${aId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
             >
               <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white/5 rounded-full border border-white/10 p-2 md:p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-indigo-500/40 transition-colors shrink-0 animate-[pulse_3s_infinite]">

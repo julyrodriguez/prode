@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'dark' | 'light';
@@ -18,6 +20,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 /** Aplica el tema al DOM inmediatamente (sin esperar al siguiente render) */
 function applyTheme(theme: Theme) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const root = document.documentElement;
   const currentTheme = root.getAttribute('data-theme');
   const isChanging = currentTheme && currentTheme !== theme;
@@ -39,65 +42,62 @@ function applyTheme(theme: Theme) {
 
 /** Aplica el modo LITE al DOM inmediatamente */
 function applyLiteMode(isLite: boolean) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
   const root = document.documentElement;
   root.classList.toggle('lite-mode', isLite);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    let stored: Theme | null = null;
+  const [theme, setTheme] = useState<Theme>('dark');
+  const [isLite, setIsLite] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Inicializar en el cliente una sola vez tras montar
+  useEffect(() => {
+    let storedTheme: Theme | null = null;
+    let storedLite = false;
     try {
-      stored = localStorage.getItem('theme') as Theme | null;
+      storedTheme = localStorage.getItem('theme') as Theme | null;
+      storedLite = localStorage.getItem('lite-mode') === 'true';
     } catch (e) {
       console.warn('localStorage is not available:', e);
     }
-    const resolved = stored
-      ? stored
-      : window.matchMedia('(prefers-color-scheme: dark)').matches
+    const resolvedTheme = storedTheme
+      ? storedTheme
+      : (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
         ? 'dark'
         : 'light';
-    // Aplicar sincrónicamente en la primera inicialización
-    applyTheme(resolved);
-    return resolved;
-  });
 
-  const [isLite, setIsLite] = useState<boolean>(() => {
-    let stored = false;
-    try {
-      stored = localStorage.getItem('lite-mode') === 'true';
-    } catch (e) {
-      console.warn('localStorage is not available:', e);
-    }
-    // Aplicar sincrónicamente en la primera inicialización
-    applyLiteMode(stored);
-    return stored;
-  });
+    setTheme(resolvedTheme);
+    setIsLite(storedLite);
+    applyTheme(resolvedTheme);
+    applyLiteMode(storedLite);
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     try {
       localStorage.setItem('theme', theme);
     } catch (e) {
       console.warn('localStorage is not available:', e);
     }
-    // applyTheme ya fue llamado en toggleTheme, pero lo hacemos también
-    // en el efecto por si el estado cambia desde otro lugar
     applyTheme(theme);
-  }, [theme]);
+  }, [theme, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
     try {
       localStorage.setItem('lite-mode', String(isLite));
     } catch (e) {
       console.warn('localStorage is not available:', e);
     }
     applyLiteMode(isLite);
-  }, [isLite]);
+  }, [isLite, mounted]);
 
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'dark' ? 'light' : 'dark';
-      // ← Aplicar al DOM ANTES del re-render de React para que
-      //   las CSS vars y las clases de Tailwind cambien juntas
       applyTheme(next);
       return next;
     });

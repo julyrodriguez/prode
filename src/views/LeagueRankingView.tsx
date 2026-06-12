@@ -1,7 +1,10 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useRouter, useParams } from 'next/navigation';
+import { useContext } from 'react';
+import { DashboardContext } from '../app/(dashboard)/layout';
+import { LEAGUES } from '../components/layout/AppLayout';
 import { useAuth } from '../context/AuthContext';
-import type { LEAGUES } from '../components/layout/AppLayout';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -32,9 +35,11 @@ const PRODE_USER_IDS = new Set([
 ]);
 
 export default function LeagueRankingView() {
-  const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
+  const params = useParams();
+  const leagueId = (params?.leagueId as string) || 'general';
+  const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [ranking, setRanking] = useState<RankingEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -286,12 +291,7 @@ export default function LeagueRankingView() {
               return (
                 <div
                   key={entry.userId}
-                  onClick={() => navigate(`/predictions/${entry.userId}`, {
-                    state: {
-                      tournamentId: activeLeague.tournamentId,
-                      tournamentName: activeLeague.name
-                    }
-                  })}
+                  onClick={() => router.push(`/predictions/${entry.userId}?tournamentId=activeLeague.tournamentId&tournamentName=activeLeague.name`)}
                   className={`grid grid-cols-[40px_1fr_56px_56px_48px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                 >
                   <div className="flex items-center justify-center">

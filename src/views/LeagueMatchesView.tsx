@@ -1,7 +1,11 @@
+"use client";
 import { useEffect, useState, useCallback, memo } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import { useRouter, useParams } from 'next/navigation';
+import { useContext } from 'react';
+import { DashboardContext } from '../app/(dashboard)/layout';
+import { LEAGUES } from '../components/layout/AppLayout';
 import { useAuth } from '../context/AuthContext';
-import type { LEAGUES } from '../components/layout/AppLayout';
 import TeamForm from '../components/TeamForm';
 import CopaBracket from '../components/CopaBracket';
 import TeamHoverCard from '../components/TeamHoverCard';
@@ -203,7 +207,7 @@ const MatchRow = memo(({
   onPredictionChange,
   onStepScore
 }: MatchRowProps) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const status = parseMatchStatus(match);
   const hScore = getScore(match, 'home');
@@ -228,7 +232,7 @@ const MatchRow = memo(({
         ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
         : 'hover:bg-white/[0.03]'
         }`}
-      onClick={() => navigate(`/match/${match.id}`)}
+      onClick={() => router.push(`/match/${match.id}`)}
     >
       {/* Columna Izquierda: Logo Torneo y Tiempo */}
       <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
@@ -279,7 +283,7 @@ const MatchRow = memo(({
               className="flex items-center justify-end gap-2 md:gap-3 text-right min-w-0"
               onClick={(e) => {
                 e.stopPropagation();
-                if (hId) navigate(`/team/${hId}`);
+                if (hId) router.push(`/team/${hId}`);
               }}
             >
               <div className="flex flex-col items-end justify-center min-w-0">
@@ -347,7 +351,7 @@ const MatchRow = memo(({
               className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0"
               onClick={(e) => {
                 e.stopPropagation();
-                if (aId) navigate(`/team/${aId}`);
+                if (aId) router.push(`/team/${aId}`);
               }}
             >
               <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
@@ -426,9 +430,11 @@ const MatchRow = memo(({
 // Prediction mode is the separate "predicciones" tab, passed via context if needed
 // But here we just need to know if we're in prediction mode based on the URL tab
 export default function LeagueMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
-  const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
+  const params = useParams();
+  const leagueId = (params?.leagueId as string) || 'general';
+  const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
@@ -443,6 +449,11 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   const [isSaving, setIsSaving] = useState(false);
   const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Estados para predicción del podio del Mundial
   const [podiumChampion, setPodiumChampion] = useState('');
@@ -867,7 +878,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
           </div>
           {activeLeague.id === 'mundial' && (
             <button
-              onClick={() => navigate('/liga/mundial/simulacion')}
+              onClick={() => router.push('/liga/mundial/simulacion')}
               className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-sm shadow-[0_4px_15px_rgba(99,102,241,0.3)] transition-all duration-150 active:scale-95 shrink-0 self-start sm:self-auto"
             >
               <span>🪄</span>
@@ -1165,18 +1176,19 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
 
       {/* Toast */}
-      {saveToast && (
-        <div className={`fixed bottom-44 md:bottom-32 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-bold text-sm shadow-2xl border transition-all ${saveToast.ok
+      {mounted && saveToast && typeof document !== 'undefined' && createPortal(
+        <div className={`fixed bottom-44 md:bottom-32 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-2xl font-bold text-sm shadow-2xl border transition-all ${saveToast.ok
           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
           : 'bg-red-500/20 border-red-500/40 text-red-300'
           }`}>
           {saveToast.ok ? '✅ ' : '⚠️ '}{saveToast.msg}
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Save Button (prediction mode) */}
-      {isPredictionMode && (
-        <div className="fixed bottom-28 md:bottom-12 left-1/2 -translate-x-1/2 z-50">
+      {mounted && isPredictionMode && typeof document !== 'undefined' && createPortal(
+        <div className="fixed bottom-28 md:bottom-12 left-1/2 -translate-x-1/2 z-[9999]">
           <button
             onClick={handleSavePredictions}
             disabled={isSaving}
@@ -1188,7 +1200,8 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
               <><span className="text-xl">💾</span> Guardar Predicciones</>
             )}
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

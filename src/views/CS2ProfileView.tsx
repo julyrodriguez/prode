@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 
 function ExpandedMatchDetails({ matchId, currentPlayerId, allPlayers, matchScore, matchOutcome }: { matchId: string, currentPlayerId: string, allPlayers: CS2Player[], matchScore: number[], matchOutcome: string }) {
   const [data, setData] = useState<any>(null);
@@ -239,7 +240,7 @@ const getMatchDate = (finishedAt: any) => {
 
 export default function CS2ProfileView() {
   const { steam64Id } = useParams();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [player, setPlayer] = useState<CS2Player | null>(null);
   const [allPlayers, setAllPlayers] = useState<CS2Player[]>([]);
   const [expandedMatches, setExpandedMatches] = useState<Set<string>>(new Set());
@@ -292,7 +293,7 @@ export default function CS2ProfileView() {
       <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl text-center">
         {error || 'No se encontró el jugador'}
         <br />
-        <button onClick={() => navigate('/cs2')} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white">
+        <button onClick={() => router.push('/cs2')} className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-white">
           Volver al ranking
         </button>
       </div>
@@ -311,7 +312,7 @@ export default function CS2ProfileView() {
 
       {/* ── Botón Volver ── */}
       <button
-        onClick={() => navigate('/cs2')}
+        onClick={() => router.push('/cs2')}
         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

@@ -1,7 +1,8 @@
+"use client";
 import React, { useState } from 'react';
 import { auth } from '../lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 export default function LoginView() {
   const [isRegister, setIsRegister] = useState(false);
@@ -9,7 +10,7 @@ export default function LoginView() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +25,7 @@ export default function LoginView() {
       } else {
         await signInWithEmailAndPassword(auth, emailToUse, password);
       }
-      navigate('/');
+      router.push('/');
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
          setError('Contraseña o correo incorrectos');

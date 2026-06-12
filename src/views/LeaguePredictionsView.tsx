@@ -1,3 +1,4 @@
+"use client";
 import LeagueMatchesView from './LeagueMatchesView';
 
 // Predicciones tab = same matches view but with prediction mode on
