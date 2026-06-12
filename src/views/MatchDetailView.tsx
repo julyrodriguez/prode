@@ -16,6 +16,19 @@ export default function MatchDetailView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
+  const [showAllPredictions, setShowAllPredictions] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  // Cuenta regresiva del partido
+  useEffect(() => {
+    const start = match?.startTimestamp ? (match.startTimestamp * 1000) : 0;
+    if (!start || start <= Date.now()) return;
+
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [match?.startTimestamp]);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -131,6 +144,29 @@ export default function MatchDetailView() {
     if (desc === 'ap' || desc?.includes('pen')) return 'PENALES';
 
     return statusDesc ? String(statusDesc).toUpperCase() : 'EN VIVO';
+  };
+
+  const getCountdownStr = () => {
+    if (!startMs) return null;
+    const diff = startMs - now;
+    if (diff <= 0) return null;
+
+    const secs = Math.floor(diff / 1000);
+    const mins = Math.floor(secs / 60);
+    const hours = Math.floor(mins / 60);
+    const days = Math.floor(hours / 24);
+
+    const s = secs % 60;
+    const m = mins % 60;
+    const h = hours % 24;
+
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0 || days > 0) parts.push(`${h}h`);
+    parts.push(`${m}m`);
+    parts.push(`${s}s`);
+
+    return parts.join(' ');
   };
 
   // ─── Mapas de traducción ─────────────────────────────────────────────────────
@@ -286,11 +322,18 @@ export default function MatchDetailView() {
               </div>
             )}
 
-            {/* Status Badge */}
-            <div className={`flex items-center gap-1 md:gap-2 px-2 py-0.5 md:px-4 md:py-1.5 rounded-md md:rounded-lg border font-black text-[9px] md:text-xs tracking-wider md:tracking-widest shadow-lg ${isLive ? 'bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800/80 text-slate-300 border-white/10'}`}>
-              {isLive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>}
-              <span>{getMatchTimeStatus()}</span>
-            </div>
+            {/* Status Badge / Countdown */}
+            {!hasStarted && getCountdownStr() ? (
+              <div className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-3 md:py-1.5 rounded-md md:rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono font-black text-[9px] md:text-xs tracking-wider shadow-[0_0_15px_rgba(16,185,129,0.15)] select-none">
+                <Clock className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 animate-pulse text-emerald-400 shrink-0" />
+                <span>{getCountdownStr()}</span>
+              </div>
+            ) : (
+              <div className={`flex items-center gap-1 md:gap-2 px-2 py-0.5 md:px-4 md:py-1.5 rounded-md md:rounded-lg border font-black text-[9px] md:text-xs tracking-wider md:tracking-widest shadow-lg ${isLive ? 'bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800/80 text-slate-300 border-white/10'}`}>
+                {isLive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>}
+                <span>{getMatchTimeStatus()}</span>
+              </div>
+            )}
           </div>
 
           {/* AWAY */}
@@ -581,6 +624,10 @@ export default function MatchDetailView() {
               '': 'border-white/10 bg-white/5 text-slate-300',
             };
 
+            const visiblePredictions = showAllPredictions
+              ? matchPredictions
+              : matchPredictions.slice(0, 3);
+
             return (
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-lg h-fit">
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
@@ -596,7 +643,7 @@ export default function MatchDetailView() {
                 )}
 
                 <div className="divide-y divide-white/[0.03]">
-                  {matchPredictions.map((p: any, i: number) => {
+                  {visiblePredictions.map((p: any, i: number) => {
                     const color = getColor(p);
                     const scoreStr = `${p.homeScore ?? p.home_score ?? '?'} - ${p.awayScore ?? p.away_score ?? '?'}`;
                     const userName = p.userName || p.name || `Usuario ${i + 1}`;
@@ -630,6 +677,15 @@ export default function MatchDetailView() {
                     );
                   })}
                 </div>
+
+                {matchPredictions.length > 3 && (
+                  <button
+                    onClick={() => setShowAllPredictions(!showAllPredictions)}
+                    className="w-full text-center py-2 text-[10px] md:text-xs font-bold text-slate-400 hover:text-white hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer"
+                  >
+                    {showAllPredictions ? 'Ver menos ↑' : `Ver más (${matchPredictions.length - 3} más) ↓`}
+                  </button>
+                )}
               </div>
             );
           })()}
