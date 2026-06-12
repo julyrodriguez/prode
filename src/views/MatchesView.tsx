@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
 import CS2MatchesSection from '../components/CS2MatchesSection';
 import TeamRedCards from '../components/TeamRedCards';
+import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
 
 interface MatchOdds {
   full_time?: { home?: number; draw?: number; away?: number };
@@ -54,118 +55,7 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
   );
 }
 
-/* ─ OddsRow: cuotas colapsables debajo de cada partido ─ */
-function OddsRow({ odds }: { odds: MatchOdds }) {
-  const [open, setOpen] = useState(false);
-  const ft = odds.full_time;
-  if (!ft || (ft.home == null && ft.draw == null && ft.away == null)) return null;
 
-  const fmt = (v?: number) => v != null ? v.toFixed(2) : '—';
-  const hasExtra = !!(odds.double_chance || odds.draw_no_bet || odds.btts);
-
-  return (
-    <div className="w-full border-t border-white/[0.06] bg-black/25">
-      {/* Fila principal: 1X2 + botón expandir */}
-      <div className="flex items-stretch w-full">
-        <div className="flex items-center gap-1.5 flex-1 px-3 py-2">
-          <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 shrink-0 mr-1 hidden sm:block">1X2</span>
-          <div className="flex items-center gap-1.5 flex-1">
-            <div className="flex items-center justify-center gap-1 flex-1 bg-white/[0.04] border border-white/[0.07] rounded-lg py-1.5">
-              <span className="text-[9px] text-slate-500 font-bold">1</span>
-              <span className="text-[13px] font-black text-emerald-400">{fmt(ft.home)}</span>
-            </div>
-            <div className="flex items-center justify-center gap-1 flex-1 bg-white/[0.04] border border-white/[0.07] rounded-lg py-1.5">
-              <span className="text-[9px] text-slate-500 font-bold">X</span>
-              <span className="text-[13px] font-black text-slate-300">{fmt(ft.draw)}</span>
-            </div>
-            <div className="flex items-center justify-center gap-1 flex-1 bg-white/[0.04] border border-white/[0.07] rounded-lg py-1.5">
-              <span className="text-[9px] text-slate-500 font-bold">2</span>
-              <span className="text-[13px] font-black text-indigo-400">{fmt(ft.away)}</span>
-            </div>
-          </div>
-        </div>
-        {hasExtra && (
-          <button
-            onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
-            className="flex items-center justify-center px-4 border-l border-white/[0.06] text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] active:bg-white/10 transition-colors min-w-[48px] shrink-0"
-            aria-label={open ? 'Ocultar más cuotas' : 'Ver más cuotas'}
-          >
-            <span className="text-[11px] font-bold">{open ? '▲' : '▼'}</span>
-          </button>
-        )}
-      </div>
-
-      {/* Extra cuotas colapsables */}
-      {open && (
-        <div className="flex flex-col border-t border-white/[0.04]">
-          {odds.double_chance && (
-            <div className="flex items-center px-3 py-1.5 gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 shrink-0 w-[60px] hidden sm:block">Doble Ch.</span>
-              <div className="flex items-center gap-1.5 flex-1">
-                {odds.double_chance.home_draw != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-amber-500/[0.07] border border-amber-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">1X</span>
-                    <span className="text-xs font-black text-amber-400">{fmt(odds.double_chance.home_draw)}</span>
-                  </div>
-                )}
-                {odds.double_chance.draw_away != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-amber-500/[0.07] border border-amber-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">X2</span>
-                    <span className="text-xs font-black text-amber-400">{fmt(odds.double_chance.draw_away)}</span>
-                  </div>
-                )}
-                {odds.double_chance.home_away != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-amber-500/[0.07] border border-amber-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">12</span>
-                    <span className="text-xs font-black text-amber-400">{fmt(odds.double_chance.home_away)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {odds.draw_no_bet && (
-            <div className="flex items-center px-3 py-1.5 gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 shrink-0 w-[60px] hidden sm:block">DNB</span>
-              <div className="flex items-center gap-1.5 flex-1">
-                {odds.draw_no_bet.home != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-cyan-500/[0.07] border border-cyan-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">1</span>
-                    <span className="text-xs font-black text-cyan-400">{fmt(odds.draw_no_bet.home)}</span>
-                  </div>
-                )}
-                {odds.draw_no_bet.away != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-cyan-500/[0.07] border border-cyan-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">2</span>
-                    <span className="text-xs font-black text-cyan-400">{fmt(odds.draw_no_bet.away)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {odds.btts && (
-            <div className="flex items-center px-3 py-1.5 gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-600 shrink-0 w-[60px] hidden sm:block">BTTS</span>
-              <div className="flex items-center gap-1.5 flex-1">
-                {odds.btts.yes != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-purple-500/[0.07] border border-purple-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">Sí</span>
-                    <span className="text-xs font-black text-purple-400">{fmt(odds.btts.yes)}</span>
-                  </div>
-                )}
-                {odds.btts.no != null && (
-                  <div className="flex items-center justify-center gap-1 flex-1 bg-purple-500/[0.07] border border-purple-500/20 rounded-lg py-1.5">
-                    <span className="text-[9px] text-slate-500 font-bold">No</span>
-                    <span className="text-xs font-black text-purple-400">{fmt(odds.btts.no)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function MatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const navigate = useNavigate();
@@ -691,12 +581,10 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
 
                           </div>
                         </div>
-                        {/* Odds row — solo en modo partidos, no predicciones */}
-                        {!isPredictionMode && match.odds && (
-                          <div className="col-span-2" onClick={e => e.stopPropagation()}>
-                            <OddsRow odds={match.odds} />
-                          </div>
-                        )}
+                        {/* Goles colapsables debajo de cada partido */}
+                        <div className="col-span-2" onClick={e => e.stopPropagation()}>
+                          <MatchGoalsCollapsible matchId={match.id} hasStarted={status.hasStarted} />
+                        </div>
                       </div>
                     );
                   })}
