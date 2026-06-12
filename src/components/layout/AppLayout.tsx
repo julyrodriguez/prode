@@ -221,7 +221,11 @@ export default function AppLayout() {
     : null;
 
   return (
-    <div className="h-screen w-full font-sans selection:bg-emerald-500/30 overflow-hidden flex" style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', transition: 'background-color 0.28s ease, color 0.28s ease' }}>
+    <div 
+      className="h-screen w-full font-sans selection:bg-emerald-500/30 overflow-hidden flex" 
+      data-league={activeLeagueId}
+      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', transition: 'background-color 0.28s ease, color 0.28s ease' }}
+    >
 
       {/* ── GLOW BACKGROUND ── */}
       {activeLeagueId === 'mundial' && activeTabId !== 'minijuegos' ? (

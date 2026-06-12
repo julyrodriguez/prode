@@ -568,16 +568,28 @@ img, svg, canvas, video, iframe {
   will-change: transform, opacity;
 }
 
-/* Light mode styling for the mundial smoke background */
+/* Light mode styling for the mundial smoke background (hidden completely) */
 [data-theme="light"] .mundial-smoke-container {
-  background-color: var(--bg-base);
-  opacity: 1;
-  visibility: visible;
+  display: none !important;
 }
 
-[data-theme="light"] .mundial-smoke-bg-image {
-  opacity: 0.14; /* Subtly overlays colors on light background */
-  filter: contrast(0.9) brightness(1.1);
+/* ── MUNDIAL LEAGUE READABILITY CARD OVERRIDES (DARK MODE ONLY) ──
+   Overwrites transparent variables and utility card classes to use a semi-solid, 
+   darker backdrop when the colorful smoke background is active, ensuring text legibility. */
+:root:not([data-theme="light"]) [data-league="mundial"] {
+  --bg-card:        rgba(11, 16, 21, 0.90);
+  --bg-card-strong: rgba(11, 16, 21, 0.95);
+  --bg-surface:     rgba(9, 9, 11, 0.90);
+}
+
+:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.01\],
+:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.02\],
+:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.03\],
+:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.04\],
+:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.05\],
+:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/5 {
+  background-color: rgba(11, 16, 21, 0.90) !important;
+  backdrop-filter: blur(20px) !important;
 }
 
 /* ── MODAL ANIMATIONS ── */
