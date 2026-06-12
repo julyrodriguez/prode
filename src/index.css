@@ -451,9 +451,13 @@ img, svg, canvas, video, iframe {
 
 /* ── THEMATIC WARNING BANNER & BADGES ── */
 .warning-banner {
-  background-color: rgba(245, 158, 11, 0.1) !important;
-  border-color: rgba(245, 158, 11, 0.25) !important;
+  background-color: rgba(11, 16, 21, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(245, 158, 11, 0.15) !important;
+  border-left: 4px solid #fbbf24 !important;
   color: #fcd34d !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05) !important;
 }
 
 .deadline-badge {
@@ -482,9 +486,13 @@ img, svg, canvas, video, iframe {
 
 /* Light mode overrides for warnings and labels */
 [data-theme="light"] .warning-banner {
-  background-color: rgba(251, 191, 36, 0.12) !important;
-  border-color: rgba(217, 119, 6, 0.35) !important;
+  background-color: rgba(255, 255, 255, 0.80) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(217, 119, 6, 0.2) !important;
+  border-left: 4px solid #d97706 !important;
   color: #78350f !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
 }
 
 [data-theme="light"] .deadline-badge {
