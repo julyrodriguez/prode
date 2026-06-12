@@ -469,7 +469,7 @@ export default function AppLayout() {
 
         {/* ── MOBILE BOTTOM NAV ── */}
         {!isMatchDetail && (
-          <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl h-16 flex items-center justify-between px-2 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+          <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[#121212]/65 backdrop-blur-xl border border-white/10 rounded-2xl h-16 flex items-center justify-between px-2 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
             {isCS2 ? (
               // CS2 Tab (only one for now, or just dummy to keep layout consistent)
               <button
@@ -552,7 +552,7 @@ export default function AppLayout() {
                           }
                         }}
                         className={`
-                          absolute -top-7 w-16 h-16 rounded-full flex items-center justify-center border-4 border-[#0f172a] shadow-lg transition-all duration-200 active:scale-90
+                          absolute -top-7 w-16 h-16 rounded-full flex items-center justify-center border-4 border-[#121212] shadow-lg transition-all duration-200 active:scale-90
                           ${isPartidosActive
                             ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
                             : 'bg-slate-800 text-slate-300 shadow-md hover:bg-slate-700'
