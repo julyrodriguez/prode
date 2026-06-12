@@ -165,6 +165,7 @@ const LEAGUE_TABS = [
 const GENERAL_TABS = [
   { id: 'partidos', label: 'Partidos', path: '/general', icon: '⚽' },
   { id: 'predicciones', label: 'Predicciones', path: '/predicciones', icon: '🔮' },
+  { id: 'minijuegos', label: 'Juegos', path: '/liga/mundial/minijuegos', icon: '🎮' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', icon: '🏅' },
   { id: 'estadisticas', label: 'Estadísticas', path: '/stats', icon: '📊' },
 ] as const;
@@ -194,7 +195,7 @@ export default function AppLayout() {
 
   const currentLeagueTabs = activeLeagueId === 'mundial'
     ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
-    : LEAGUE_TABS;
+    : [...LEAGUE_TABS, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const];
 
   const activeLeague = LEAGUES.find(l => {
     if (isCS2) return l.id === 'cs2';
@@ -213,6 +214,10 @@ export default function AppLayout() {
   };
 
   const handleTabSelect = (tabId: string) => {
+    if (tabId === 'minijuegos') {
+      navigate('/liga/mundial/minijuegos');
+      return;
+    }
     if (activeLeagueId && !isGeneralSection) {
       navigate(`/liga/${activeLeagueId}/${tabId}`);
     }
@@ -487,16 +492,13 @@ export default function AppLayout() {
 
                 const leftItems = isGeneralSection
                   ? [
+                      { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' },
                       { id: 'predicciones', label: 'Predicciones', icon: '🔮', path: '/predicciones' }
                     ]
-                  : activeLeagueId === 'mundial'
-                    ? [
-                        { id: 'minijuegos', label: 'Juegos', icon: '🎮' },
-                        { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
-                      ]
-                    : [
-                        { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
-                      ];
+                  : [
+                      { id: 'minijuegos', label: 'Juegos', icon: '🎮' },
+                      { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
+                    ];
 
                 const rightItems = isGeneralSection
                   ? [
