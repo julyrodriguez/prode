@@ -772,22 +772,23 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       )}
 
       {/* Date Navigator Header */}
-      <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-        <div className="flex flex-col text-center md:text-left">
-          <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">
-            {activeLeague.icon} {activeLeague.name}
+      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-3.5 md:py-4 md:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+        <div className="flex flex-col text-center sm:text-left">
+          <h1 className="text-lg md:text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400 flex items-center justify-center sm:justify-start gap-1.5 leading-tight">
+            <span className="text-xl leading-none">{activeLeague.icon}</span>
+            <span>{activeLeague.name}</span>
           </h1>
-          <p className="text-slate-400 mt-1 font-medium text-sm">
+          <p className="text-slate-400 mt-0.5 font-medium text-xs">
             {isPredictionMode ? 'Tus predicciones para esta liga' : 'Partidos de la liga'}
           </p>
         </div>
 
         {selectedDate && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="flex flex-row items-center justify-center gap-2.5 w-full sm:w-auto shrink-0">
             {activeLeague.id === 'mundial' && (
               <button
                 onClick={() => { setAllMatches([]); setLoading(true); setViewMode(prev => prev === 'day' ? 'week' : 'day'); }}
-                className="px-3 py-2.5 rounded-xl text-xs font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 transition-all flex items-center gap-1.5 shadow-[0_4px_12px_rgba(16,185,129,0.1)] active:scale-95 transform shrink-0 select-none"
+                className="px-2.5 py-2 rounded-xl text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 transition-all flex items-center gap-1 shadow-[0_2px_8px_rgba(16,185,129,0.05)] active:scale-95 transform shrink-0 select-none cursor-pointer"
               >
                 {viewMode === 'day' ? (
                   <>
@@ -801,19 +802,19 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
               </button>
             )}
 
-            <div className="flex items-center gap-3 bg-black/40 px-3 py-2 rounded-2xl border border-white/5">
+            <div className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-xl border border-white/5 shrink-0">
               <button
                 onClick={handlePrevDay}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold"
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold text-xs cursor-pointer"
               >
                 <span>{'<'}</span>
               </button>
 
-              <div className="flex flex-col items-center min-w-[120px]">
-                <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-0.5">
+              <div className="flex flex-col items-center min-w-[95px] select-none">
+                <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-widest leading-none mb-0.5">
                   {viewMode === 'week' ? 'SEMANA' : 'FECHA'}
                 </span>
-                <span className="text-sm font-black text-white capitalize text-center">
+                <span className="text-[11px] font-black text-white capitalize text-center leading-none">
                   {viewMode === 'week' ? (
                     (() => {
                       const startD = new Date(selectedDate + 'T12:00:00');
@@ -832,7 +833,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
               <button
                 onClick={handleNextDay}
-                className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold"
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold text-xs cursor-pointer"
               >
                 <span>{'>'}</span>
               </button>
