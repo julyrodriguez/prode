@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, MapPin, Users, Calendar, Trophy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
@@ -123,6 +123,9 @@ function formatStatValue(key: string, val: number): string {
 export default function TeamView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const outletContext = useOutletContext<any>();
+  const setOverriddenLeagueId = outletContext?.setOverriddenLeagueId;
+
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [team, setTeam] = useState<any>(null);
@@ -130,6 +133,19 @@ export default function TeamView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedComp, setSelectedComp] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (team && setOverriddenLeagueId) {
+      const compKeys = Object.keys(team.competitions || {});
+      if (compKeys.includes('16')) {
+        setOverriddenLeagueId('mundial');
+      } else if (compKeys.includes('155')) {
+        setOverriddenLeagueId('liga-arg');
+      } else if (compKeys.includes('325')) {
+        setOverriddenLeagueId('brasileirao');
+      }
+    }
+  }, [team, setOverriddenLeagueId]);
 
   useEffect(() => {
     const fetchTeam = async () => {

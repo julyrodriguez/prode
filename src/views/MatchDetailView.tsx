@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 
 const parseStatValue = (val: string | number | undefined): number => {
@@ -12,12 +12,28 @@ const parseStatValue = (val: string | number | undefined): number => {
 export default function MatchDetailView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const outletContext = useOutletContext<any>();
+  const setOverriddenLeagueId = outletContext?.setOverriddenLeagueId;
+
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (match && setOverriddenLeagueId) {
+      const isMundialMatch = match.tournament_id === 16 || match.tournament?.id === 16;
+      if (isMundialMatch) {
+        setOverriddenLeagueId('mundial');
+      } else if (match.tournament_id === 155 || match.tournament?.id === 155) {
+        setOverriddenLeagueId('liga-arg');
+      } else if (match.tournament_id === 325 || match.tournament?.id === 325) {
+        setOverriddenLeagueId('brasileirao');
+      }
+    }
+  }, [match, setOverriddenLeagueId]);
 
   // Cuenta regresiva del partido
   useEffect(() => {

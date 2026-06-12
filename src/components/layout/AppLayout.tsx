@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -175,9 +175,15 @@ export default function AppLayout() {
   const { user } = useAuth();
   const handleLogout = () => signOut(auth);
 
+  const [overriddenLeagueId, setOverriddenLeagueId] = useState<LeagueId | null>(null);
+
+  useEffect(() => {
+    setOverriddenLeagueId(null);
+  }, [location.pathname]);
+
   // Detect if we're on a league sub-route
   const leagueMatch = location.pathname.match(/^\/liga\/([^/]+)\/?(.+)?$/);
-  const activeLeagueId = leagueMatch ? leagueMatch[1] as LeagueId : 'general';
+  const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
   const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
 
   const isMatchDetail = location.pathname.startsWith('/match/') || location.pathname.startsWith('/team/') || location.pathname.startsWith('/cs2/player/');
@@ -457,7 +463,7 @@ export default function AppLayout() {
         {/* ── PAGE CONTENT ── */}
         <div className={`flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 relative ${isMatchDetail ? 'pb-8' : 'pb-24 md:pb-8'}`}>
           <div className="max-w-7xl mx-auto py-6">
-            <Outlet context={{ activeLeague, activeLeagueId, activeTabId }} />
+            <Outlet context={{ activeLeague, activeLeagueId, activeTabId, setOverriddenLeagueId }} />
           </div>
         </div>
 
