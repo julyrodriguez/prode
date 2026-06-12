@@ -15,7 +15,7 @@ function ThemeToggleBtn({ compact = false }: { compact?: boolean }) {
       onClick={toggleTheme}
       title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
       className={`
-        relative flex items-center gap-2 border transition-all duration-300
+        relative flex items-center gap-2 border transition-all duration-150
         ${compact
           ? 'rounded-xl w-9 h-9 justify-center border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white'
           : 'rounded-2xl p-3 w-full border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-sm font-semibold overflow-hidden justify-start'
@@ -23,13 +23,13 @@ function ThemeToggleBtn({ compact = false }: { compact?: boolean }) {
       `}
     >
       <span
-        className={`transition-transform duration-500 ${compact ? 'text-base' : 'text-xl flex-shrink-0 w-6 text-center leading-none'}`}
+        className={`transition-transform duration-200 ${compact ? 'text-base' : 'text-xl flex-shrink-0 w-6 text-center leading-none'}`}
         style={{ transform: isDark ? 'rotate(0deg)' : 'rotate(180deg)' }}
       >
         {isDark ? '🌙' : '☀️'}
       </span>
       {!compact && (
-        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
           {isDark ? 'Modo Claro' : 'Modo Oscuro'}
         </span>
       )}
@@ -47,7 +47,7 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
       onClick={toggleLite}
       title={isLite ? 'Cambiar a Versión Colorida (con animaciones y efectos)' : 'Cambiar a Versión Rápida (sin animaciones para máximo rendimiento)'}
       className={`
-        relative flex items-center h-8 w-14 rounded-full p-1 cursor-pointer transition-colors duration-300 outline-none shrink-0
+        relative flex items-center h-8 w-14 rounded-full p-1 cursor-pointer transition-colors duration-150 outline-none shrink-0
         ${isLite
           ? 'bg-amber-500/20 border border-amber-500/40'
           : 'bg-white/10 border border-white/20 hover:border-white/30'
@@ -57,7 +57,7 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
       {/* Sliding Thumb */}
       <div
         className={`
-          w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 flex items-center justify-center text-xs select-none
+          w-6 h-6 rounded-full shadow-md transform transition-transform duration-150 flex items-center justify-center text-xs select-none
           ${isLite ? 'translate-x-6 bg-amber-400' : 'translate-x-0 bg-white'}
         `}
       >
@@ -125,13 +125,13 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center justify-between p-3 w-full border border-white/10 bg-white/5 text-slate-300 rounded-2xl text-sm font-semibold select-none">
       <div className="flex items-center gap-2">
-        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+        <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
           {isLite ? 'Versión Rápida' : 'Versión Colorida'}
         </span>
         <button
           onClick={() => setShowInfo(true)}
           title="Ver información de versiones"
-          className="text-slate-400 hover:text-white transition-colors shrink-0 md:opacity-0 md:group-hover:opacity-100 opacity-100"
+          className="text-slate-400 hover:text-white transition-colors duration-150 shrink-0 md:opacity-0 md:group-hover:opacity-100 opacity-100"
         >
           ℹ️
         </button>
@@ -224,7 +224,7 @@ export default function AppLayout() {
     <div 
       className="h-screen w-full font-sans selection:bg-emerald-500/30 overflow-hidden flex" 
       data-league={activeLeagueId}
-      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', transition: 'background-color 0.28s ease, color 0.28s ease' }}
+      style={{ backgroundColor: 'var(--bg-base)', color: 'var(--text-primary)', transition: 'background-color 0.15s ease, color 0.15s ease' }}
     >
 
       {/* ── GLOW BACKGROUND ── */}
@@ -253,18 +253,18 @@ export default function AppLayout() {
           fixed md:relative top-0 left-0 h-full
           flex flex-col
           w-72 md:w-20 md:hover:w-72
-          transition-all duration-300 ease-out
+          transition-all duration-150 ease-out
           bg-black/60 backdrop-blur-xl border-r border-white/5
           z-50 group
           ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
         {/* Logo */}
-        <div className="h-20 flex items-center justify-start px-5 transition-all shrink-0">
+        <div className="h-20 flex items-center justify-start px-5 transition-all duration-150 shrink-0">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center font-bold text-lg text-slate-50 shadow-[0_0_15px_rgba(16,185,129,0.3)] flex-shrink-0">
             VL
           </div>
-          <span className="ml-4 font-bold text-xl tracking-tight md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+          <span className="ml-4 font-bold text-xl tracking-tight md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
             Vacas Locas
           </span>
         </div>
@@ -280,7 +280,7 @@ export default function AppLayout() {
                 key={league.id}
                 onClick={() => handleLeagueSelect(league.id)}
                 className={`
-                  flex items-center p-3 rounded-2xl transition-all duration-200 w-full text-left
+                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left
                   ${league.id === 'mundial'
                     ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
                     : isActive && league.id === 'cs2'
@@ -292,11 +292,11 @@ export default function AppLayout() {
                 `}
               >
                 <span className={`text-xl flex-shrink-0 w-6 text-center leading-none ${league.id === 'mundial' ? 'mundial-icon' : ''}`}>{league.icon}</span>
-                <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity whitespace-nowrap">
+                <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
                   {league.name}
                 </span>
                 {isActive && (
-                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : league.id === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : league.id === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                 )}
               </button>
             );
@@ -324,12 +324,12 @@ export default function AppLayout() {
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               </div>
-              <div className="flex flex-col min-w-0 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
+              <div className="flex flex-col min-w-0 md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150">
                 <span className="text-white text-sm font-bold truncate">{user.displayName || user.email?.split('@')[0]}</span>
                 <div className="flex items-center gap-2">
-                  <NavLink to="/perfil" className="text-[10px] text-emerald-400 hover:text-emerald-300 text-left" onClick={() => setMobileSidebarOpen(false)}>Editar Perfil</NavLink>
+                  <NavLink to="/perfil" className="text-[10px] text-emerald-400 hover:text-emerald-300 text-left transition-colors duration-100" onClick={() => setMobileSidebarOpen(false)}>Editar Perfil</NavLink>
                   <span className="text-white/20">|</span>
-                  <button onClick={handleLogout} className="text-[10px] text-red-400 hover:text-red-300 text-left">
+                  <button onClick={handleLogout} className="text-[10px] text-red-400 hover:text-red-300 text-left transition-colors duration-100">
                     Cerrar Sesión
                   </button>
                 </div>
@@ -340,7 +340,7 @@ export default function AppLayout() {
               <div className="w-9 h-9 rounded-full border border-red-500/30 flex items-center justify-center bg-black/40 text-red-400 font-bold flex-shrink-0">
                 ?
               </div>
-              <span className="text-slate-400 text-sm font-medium md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity">
+              <span className="text-slate-400 text-sm font-medium md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150">
                 No autenticado
               </span>
             </div>
@@ -384,7 +384,7 @@ export default function AppLayout() {
                       key={tab.id}
                       onClick={() => handleTabSelect(tab.id)}
                       className={`
-                        px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap
+                        px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-100 whitespace-nowrap
                         ${isTabActive
                           ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.15)] border border-emerald-500/20'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -409,7 +409,7 @@ export default function AppLayout() {
                       key={tab.id}
                       to={tab.path}
                       className={`
-                        px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5
+                        px-3 sm:px-4 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all duration-100 whitespace-nowrap flex items-center gap-1.5
                         ${isTabActive
                           ? 'bg-white/10 text-white shadow-sm border border-white/10'
                           : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -431,10 +431,10 @@ export default function AppLayout() {
               <div className="hidden md:block">
                 {user ? (
                   <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/perfil')}>
-                    <span className="text-white text-sm font-bold hidden lg:block hover:text-emerald-400 transition-colors">
+                    <span className="text-white text-sm font-bold hidden lg:block hover:text-emerald-400 transition-colors duration-100">
                       {user.displayName || user.email?.split('@')[0]}
                     </span>
-                    <div className="relative w-9 h-9 rounded-full border border-white/20 bg-gradient-to-r from-emerald-400 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden hover:border-emerald-400 transition-colors">
+                    <div className="relative w-9 h-9 rounded-full border border-white/20 bg-gradient-to-r from-emerald-400 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg overflow-hidden hover:border-emerald-400 transition-colors duration-100">
                       <span className="absolute z-0">{user.email?.[0].toUpperCase()}</span>
                       <img
                         src={`https://apivacas.jariel.com.ar/users/${user.uid}.webp?v=${user.photoURL || '1'}`}
@@ -467,7 +467,7 @@ export default function AppLayout() {
             {isCS2 ? (
               // CS2 Tab (only one for now, or just dummy to keep layout consistent)
               <button
-                className={`flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all text-amber-500 font-bold bg-amber-500/10`}
+                className={`flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all duration-100 text-amber-500 font-bold bg-amber-500/10`}
               >
                 <span className="text-xl mb-1">🔫</span>
                 <span className="text-[10px] leading-none tracking-wide">CS2</span>
@@ -481,7 +481,7 @@ export default function AppLayout() {
                     key={tab.id}
                     onClick={() => handleTabSelect(tab.id)}
                     className={`
-                      flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all
+                      flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all duration-100
                       ${isTabActive ? 'text-emerald-400 font-bold bg-emerald-500/10' : 'text-slate-400 hover:text-white'}
                     `}
                   >
@@ -499,7 +499,7 @@ export default function AppLayout() {
                     key={tab.id}
                     to={tab.path}
                     className={`
-                      flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all
+                      flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all duration-100
                       ${isTabActive ? 'text-emerald-400 font-bold bg-emerald-500/10' : 'text-slate-400 hover:text-white'}
                     `}
                   >

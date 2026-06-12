@@ -92,8 +92,8 @@
 /* El elemento raíz también transiciona para cubrir el fondo del viewport */
 html.theme-transitioning {
   transition:
-    background-color 0.28s ease,
-    color 0.28s ease;
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .theme-transitioning div,
@@ -128,11 +128,11 @@ html.theme-transitioning {
 .theme-transitioning thead,
 .theme-transitioning tbody {
   transition:
-    background-color 0.28s ease,
-    border-color 0.28s ease,
-    color 0.28s ease,
-    box-shadow 0.28s ease,
-    opacity 0.28s ease !important;
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease !important;
 }
 
 /* Never animate these — no visual theme change & wastes GPU */
@@ -353,10 +353,10 @@ img, svg, canvas, video, iframe {
   background-size: 200% 200% !important;
   border: 1px solid rgba(251, 191, 36, 0.25) !important;
   color: #fbbf24 !important; /* Gold text */
-  animation: mundial-gold-glow 3s infinite ease-in-out, mundial-rainbow-bg 6s infinite ease-in-out !important;
+  animation: mundial-gold-glow 1.5s infinite ease-in-out, mundial-rainbow-bg 3.2s infinite ease-in-out !important;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease !important;
+  transition: all 0.15s ease !important;
 }
 
 .mundial-menu-item:hover {
@@ -373,12 +373,12 @@ img, svg, canvas, video, iframe {
   color: #ffffff !important;
   border-color: rgba(251, 191, 36, 0.7) !important;
   box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), 0 0 35px rgba(16, 185, 129, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1) !important;
-  animation: mundial-gold-glow 2.5s infinite ease-in-out, mundial-rainbow-bg 4s infinite ease-in-out !important;
+  animation: mundial-gold-glow 1.2s infinite ease-in-out, mundial-rainbow-bg 2.2s infinite ease-in-out !important;
 }
 
 .mundial-menu-item .mundial-icon {
   display: inline-block;
-  animation: float-icon 3s infinite ease-in-out;
+  animation: float-icon 1.4s infinite ease-in-out;
 }
 
 /* Light mode overrides for the special mundial item */
@@ -552,7 +552,7 @@ img, svg, canvas, video, iframe {
   overflow: hidden;
   pointer-events: none;
   background-color: #040608;
-  transition: opacity 0.4s ease-in-out, visibility 0.4s;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s;
   opacity: 1;
   visibility: visible;
 }
@@ -564,7 +564,7 @@ img, svg, canvas, video, iframe {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  animation: smoke-bg-float 35s infinite ease-in-out;
+  animation: smoke-bg-float 20s infinite ease-in-out;
   will-change: transform, opacity;
 }
 
@@ -604,11 +604,11 @@ img, svg, canvas, video, iframe {
 }
 
 .animate-modal-fade-in {
-  animation: modal-fade-in 0.2s ease-out forwards;
+  animation: modal-fade-in 0.12s ease-out forwards;
 }
 
 .animate-modal-scale-in {
-  animation: modal-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: modal-scale-in 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 /* ── PAGE TRANSITION ANIMATIONS ── */
@@ -618,7 +618,7 @@ img, svg, canvas, video, iframe {
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  animation: fade-in 0.18s ease-out forwards;
 }
 
 /* ── MOBILE / iOS PERFORMANCE OPTIMIZATION (Prevent GPU OOM & Crashes) ── */

@@ -315,22 +315,22 @@ export default function PlayerWordleGame({ userId, jugadorDelDia, playersList }:
                   </div>
 
                   {/* Selección */}
-                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-500 ${isCorrectSeleccion ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
+                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-200 ${isCorrectSeleccion ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
                     {guess.seleccion}
                   </div>
 
                   {/* Grupo */}
-                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-500 ${isCorrectGrupo ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
+                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-200 ${isCorrectGrupo ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
                     {guess.grupo}
                   </div>
 
                   {/* Liga */}
-                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-500 ${isCorrectLiga ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
+                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-200 ${isCorrectLiga ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
                     {guess.liga}
                   </div>
 
                   {/* Edad */}
-                  <div className={`py-3 rounded-xl flex items-center justify-center gap-1 text-white transition-all duration-500 ${isCorrectEdad ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
+                  <div className={`py-3 rounded-xl flex items-center justify-center gap-1 text-white transition-all duration-200 ${isCorrectEdad ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
                     <span>{guess.edad}</span>
                     {!isCorrectEdad && (
                       <span className="text-xs font-black">
@@ -340,7 +340,7 @@ export default function PlayerWordleGame({ userId, jugadorDelDia, playersList }:
                   </div>
 
                   {/* Posición */}
-                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-500 ${isCorrectPosicion ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
+                  <div className={`py-3 rounded-xl flex items-center justify-center text-white transition-all duration-200 ${isCorrectPosicion ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-rose-500/85'}`}>
                     {guess.posicion}
                   </div>
                 </div>

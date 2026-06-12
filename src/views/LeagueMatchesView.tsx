@@ -1079,7 +1079,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
         <CopaBracket />
       )}
 
-      <div className={`transition-opacity duration-300 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`transition-opacity duration-150 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
         {loading && dailyMatches.length === 0 ? (
           <MatchSkeleton />
         ) : dailyMatches.length === 0 ? (

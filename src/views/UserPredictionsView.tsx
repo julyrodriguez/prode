@@ -272,7 +272,7 @@ export default function UserPredictionsView() {
             <div className="flex flex-col items-center p-4 bg-black/40 border border-amber-500/10 rounded-2xl text-center">
               <span className="text-3xl mb-1">🥇</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Campeón</span>
-              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}>
+              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-150 ${isBlurred ? 'blur-md select-none' : ''}`}>
                 {podium.champion}
               </span>
             </div>
@@ -280,7 +280,7 @@ export default function UserPredictionsView() {
             <div className="flex flex-col items-center p-4 bg-black/40 border border-slate-500/10 rounded-2xl text-center">
               <span className="text-3xl mb-1">🥈</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Subcampeón</span>
-              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}>
+              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-150 ${isBlurred ? 'blur-md select-none' : ''}`}>
                 {podium.runnerUp}
               </span>
             </div>
@@ -288,7 +288,7 @@ export default function UserPredictionsView() {
             <div className="flex flex-col items-center p-4 bg-black/40 border border-amber-600/10 rounded-2xl text-center">
               <span className="text-3xl mb-1">🥉</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Tercer Puesto</span>
-              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-300 ${isBlurred ? 'blur-md select-none' : ''}`}>
+              <span className={`text-sm md:text-base font-extrabold text-white mt-1.5 transition-all duration-150 ${isBlurred ? 'blur-md select-none' : ''}`}>
                 {podium.thirdPlace}
               </span>
             </div>

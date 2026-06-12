@@ -382,7 +382,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
       )}
 
       {!error && (
-        <div className={`transition-opacity duration-300 flex flex-col gap-8 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`transition-opacity duration-150 flex flex-col gap-8 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
           {loading && Object.keys(groupedMatches).length === 0 ? (
             <MatchSkeleton />
           ) : Object.keys(groupedMatches).length === 0 ? (

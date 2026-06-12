@@ -395,7 +395,7 @@ export default function LeagueRankingView() {
                 {podiumPredictions.map((pred) => {
                   const isUserBlurred = Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime();
                   return (
-                    <div key={pred._id} className="relative overflow-hidden bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-3xl p-5 transition-all duration-300 flex flex-col gap-4 shadow-lg backdrop-blur-sm group">
+                    <div key={pred._id} className="relative overflow-hidden bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-3xl p-5 transition-all duration-150 flex flex-col gap-4 shadow-lg backdrop-blur-sm group">
                       {/* User Info */}
                       <div className="flex items-center gap-3 border-b border-white/5 pb-3">
                         <img 

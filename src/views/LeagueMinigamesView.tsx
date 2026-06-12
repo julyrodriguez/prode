@@ -414,7 +414,7 @@ export default function LeagueMinigamesView() {
           <div className="flex bg-black/40 p-1 rounded-2xl border border-white/5 gap-1 shrink-0">
             <button
               onClick={() => setActiveGameTab('jueguitos')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeGameTab === 'jueguitos'
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'jueguitos'
                 ? 'bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-emerald-500/20'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
@@ -423,7 +423,7 @@ export default function LeagueMinigamesView() {
             </button>
             <button
               onClick={() => setActiveGameTab('wordle')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${activeGameTab === 'wordle'
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'wordle'
                 ? 'bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-emerald-500/20'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
