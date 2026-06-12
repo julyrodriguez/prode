@@ -539,23 +539,10 @@ img, svg, canvas, video, iframe {
 }
 
 /* ── MUNDIAL ANIMATED SMOKE BACKGROUND ── */
-@keyframes smoke-float-1 {
-  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.18; }
-  33% { transform: translate3d(15vw, 10vh, 0) scale(1.25) rotate(120deg); opacity: 0.26; }
-  66% { transform: translate3d(-10vw, 20vh, 0) scale(0.9) rotate(240deg); opacity: 0.14; }
-  100% { transform: translate3d(0, 0, 0) scale(1) rotate(360deg); opacity: 0.18; }
-}
-
-@keyframes smoke-float-2 {
-  0% { transform: translate3d(0, 0, 0) scale(1.15) rotate(360deg); opacity: 0.14; }
-  50% { transform: translate3d(-20vw, -15vh, 0) scale(0.9) rotate(180deg); opacity: 0.22; }
-  100% { transform: translate3d(0, 0, 0) scale(1.15) rotate(0deg); opacity: 0.14; }
-}
-
-@keyframes smoke-float-3 {
-  0% { transform: translate3d(0, 0, 0) scale(0.95) rotate(0deg); opacity: 0.20; }
-  50% { transform: translate3d(25vw, -5vh, 0) scale(1.2) rotate(270deg); opacity: 0.28; }
-  100% { transform: translate3d(0, 0, 0) scale(0.95) rotate(360deg); opacity: 0.20; }
+@keyframes smoke-bg-float {
+  0% { transform: scale(1.0) rotate(0deg); opacity: 0.55; }
+  50% { transform: scale(1.15) rotate(8deg); opacity: 0.75; }
+  100% { transform: scale(1.0) rotate(0deg); opacity: 0.55; }
 }
 
 .mundial-smoke-container {
@@ -570,43 +557,15 @@ img, svg, canvas, video, iframe {
   visibility: visible;
 }
 
-.mundial-smoke-blob {
+.mundial-smoke-bg-image {
   position: absolute;
-  border-radius: 50%;
-  /* OPTIMIZATION: Removed 'filter: blur(50px)' and 'mix-blend-mode: screen' as they are extremely heavy 
-     and cause page lag. Instead, we use smooth radial gradients fading to 100% opacity which are 
-     natively hardware-accelerated and performant on all devices. */
+  inset: -12%; /* Extra padding to avoid borders during rotation/scale */
+  background-image: url('/mundial_smoke_bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: smoke-bg-float 35s infinite ease-in-out;
   will-change: transform, opacity;
-}
-
-/* Red Smoke */
-.mundial-smoke-red {
-  top: -10%;
-  left: 20%;
-  width: 60vw;
-  height: 60vh;
-  background: radial-gradient(circle, rgba(239, 68, 68, 0.70) 0%, rgba(239, 68, 68, 0.22) 45%, rgba(239, 68, 68, 0) 100%) !important;
-  animation: smoke-float-1 25s infinite ease-in-out;
-}
-
-/* Green Smoke */
-.mundial-smoke-green {
-  bottom: -15%;
-  right: 15%;
-  width: 65vw;
-  height: 65vh;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.70) 0%, rgba(16, 185, 129, 0.22) 45%, rgba(16, 185, 129, 0) 100%) !important;
-  animation: smoke-float-2 30s infinite ease-in-out;
-}
-
-/* Blue Smoke */
-.mundial-smoke-blue {
-  top: 30%;
-  left: -10%;
-  width: 55vw;
-  height: 55vh;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.75) 0%, rgba(59, 130, 246, 0.24) 45%, rgba(59, 130, 246, 0) 100%) !important;
-  animation: smoke-float-3 28s infinite ease-in-out;
 }
 
 /* Light mode styling for the mundial smoke background */
@@ -616,16 +575,9 @@ img, svg, canvas, video, iframe {
   visibility: visible;
 }
 
-[data-theme="light"] .mundial-smoke-red {
-  background: radial-gradient(circle, rgba(239, 68, 68, 0.50) 0%, rgba(239, 68, 68, 0.16) 45%, rgba(239, 68, 68, 0) 100%) !important;
-}
-
-[data-theme="light"] .mundial-smoke-green {
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.50) 0%, rgba(16, 185, 129, 0.16) 45%, rgba(16, 185, 129, 0) 100%) !important;
-}
-
-[data-theme="light"] .mundial-smoke-blue {
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.55) 0%, rgba(59, 130, 246, 0.18) 45%, rgba(59, 130, 246, 0) 100%) !important;
+[data-theme="light"] .mundial-smoke-bg-image {
+  opacity: 0.08; /* Subtly overlays colors on light background */
+  filter: contrast(0.9) brightness(1.1);
 }
 
 /* ── MODAL ANIMATIONS ── */
@@ -684,7 +636,7 @@ html.lite-mode * {
 
 /* Hide performance-heavy animated/blurred background blobs */
 html.lite-mode .mundial-smoke-container,
-html.lite-mode .mundial-smoke-blob,
+html.lite-mode .mundial-smoke-bg-image,
 html.lite-mode [class*="blur-"]:not([class*="backdrop-"]),
 html.lite-mode .pointer-events-none > div {
   display: none !important;
