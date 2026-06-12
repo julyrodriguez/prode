@@ -218,93 +218,93 @@ export default function MatchDetailView() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="w-full flex flex-col gap-6 animate-fade-in pb-8 pt-4 md:pt-6">
+    <div className="w-full flex flex-col gap-4 md:gap-6 animate-fade-in pb-6 md:pb-8 pt-2 md:pt-6">
 
       {/* Botón Volver — sticky en mobile */}
-      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0">
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0">
         <button
           onClick={() => navigate(-1)}
-          className="self-start flex items-center gap-2 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl transition-all shadow-sm"
+          className="self-start flex items-center gap-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl transition-all shadow-sm"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="font-semibold text-sm">Volver a Partidos</span>
+          <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          <span className="font-semibold text-xs md:text-sm">Volver a Partidos</span>
         </button>
       </div>
 
       {/* Hero Header Partido */}
-      <div className="relative w-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 lg:p-10 flex flex-col items-center justify-center shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
+      <div className="relative w-full bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-[2rem] p-4 md:p-8 lg:p-10 flex flex-col items-center justify-center shadow-lg md:shadow-[0_10px_40px_rgba(0,0,0,0.5)] overflow-hidden">
 
         {/* Decorative background gradients */}
         <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-emerald-500/10 to-transparent blur-3xl pointer-events-none"></div>
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/10 to-transparent blur-3xl pointer-events-none"></div>
 
         {/* Torneo Label */}
-        <div className="z-10 flex items-center gap-2 bg-black/40 px-4 py-1.5 rounded-full border border-white/5 mb-8">
-          <span className="text-[11px] font-bold tracking-widest text-emerald-400 uppercase">T O R N E O</span>
-          <div className="w-1 h-1 rounded-full bg-slate-600"></div>
-          <span className="text-xs font-semibold text-slate-200">{tName}</span>
+        <div className="z-10 flex items-center gap-1.5 bg-black/40 px-3 py-1 md:px-4 md:py-1.5 rounded-full border border-white/5 mb-4 md:mb-8">
+          <span className="text-[9px] md:text-[11px] font-bold tracking-widest text-emerald-400 uppercase">T O R N E O</span>
+          <div className="w-0.5 h-0.5 md:w-1 md:h-1 rounded-full bg-slate-600"></div>
+          <span className="text-[10px] md:text-xs font-semibold text-slate-200">{tName}</span>
         </div>
 
         {/* Info Teams & Score */}
-        <div className="z-10 flex flex-col md:flex-row items-center w-full justify-center md:gap-16 lg:gap-24">
+        <div className="z-10 flex flex-row items-center w-full justify-between gap-2 md:gap-8 lg:gap-16">
 
           {/* HOME */}
-          <div className="flex flex-col items-center gap-4 flex-1">
+          <div className="flex flex-col items-center gap-2 md:gap-4 flex-1 min-w-0">
             <button
               onClick={() => hId && navigate(`/team/${hId}`)}
-              className={`flex flex-col items-center gap-4 ${hId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
+              className={`flex flex-col items-center gap-2 md:gap-4 w-full ${hId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
             >
-              <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-full border border-white/10 p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-emerald-500/40 transition-colors">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white/5 rounded-full border border-white/10 p-2 md:p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-emerald-500/40 transition-colors shrink-0 animate-[pulse_3s_infinite]">
                 {hLogo && <img src={hLogo} alt={hName} className="w-full h-full object-contain filter drop-shadow-xl z-20" />}
                 <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-2xl z-0"></div>
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-center text-white break-words drop-shadow-md group-hover:text-emerald-300 transition-colors">{hName}</h2>
-              {hId && <span className="text-[10px] font-semibold text-slate-500 group-hover:text-emerald-400 transition-colors">Ver perfil →</span>}
+              <h2 className="text-xs sm:text-sm md:text-xl lg:text-3xl font-black text-center text-white break-words drop-shadow-md group-hover:text-emerald-300 transition-colors line-clamp-2 px-1">{hName}</h2>
+              {hId && <span className="hidden md:inline text-[10px] font-semibold text-slate-500 group-hover:text-emerald-400 transition-colors">Ver perfil →</span>}
             </button>
           </div>
 
           {/* CENTRO: SCORE / TIME */}
-          <div className="flex flex-col items-center my-8 md:my-0 gap-4 shrink-0 px-4">
+          <div className="flex flex-col items-center gap-2 md:gap-4 shrink-0 px-2 sm:px-4">
             {hasStarted && statusType !== 'canceled' ? (
               <div className="flex flex-col items-center">
-                <div className="flex items-center gap-4 text-5xl md:text-7xl font-black font-mono tracking-tighter text-white drop-shadow-2xl">
+                <div className="flex items-center gap-2 md:gap-4 text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black font-mono tracking-tighter text-white drop-shadow-2xl">
                   <span>{hScore}</span>
-                  <span className="text-slate-600 text-4xl mb-3 font-sans">-</span>
+                  <span className="text-slate-600 text-xl sm:text-3xl mb-1 md:mb-3 font-sans select-none">-</span>
                   <span>{aScore}</span>
                 </div>
                 {matchEndText && (
-                  <span className="text-emerald-400 font-bold text-xs uppercase tracking-widest mt-1 mb-2 drop-shadow-md">
+                  <span className="text-emerald-400 font-bold text-[9px] sm:text-xs uppercase tracking-widest mt-0.5 md:mt-1 mb-1 md:mb-2 drop-shadow-md text-center max-w-[100px] sm:max-w-none truncate">
                     {matchEndText}
                   </span>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-4 text-4xl md:text-5xl font-black text-slate-500 tracking-tighter drop-shadow-2xl">
+              <div className="flex items-center gap-2 md:gap-4 text-2xl sm:text-4xl md:text-5xl font-black text-slate-500 tracking-tighter drop-shadow-2xl">
                 <span className="opacity-50">-</span>
-                <span className="text-slate-700 text-3xl mb-1">-</span>
+                <span className="text-slate-700 text-xl sm:text-3xl mb-1">-</span>
                 <span className="opacity-50">-</span>
               </div>
             )}
 
             {/* Status Badge */}
-            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-lg border font-black text-xs tracking-widest shadow-lg ${isLive ? 'bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800/80 text-slate-300 border-white/10'}`}>
-              {isLive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>}
-              {getMatchTimeStatus()}
+            <div className={`flex items-center gap-1 md:gap-2 px-2 py-0.5 md:px-4 md:py-1.5 rounded-md md:rounded-lg border font-black text-[9px] md:text-xs tracking-wider md:tracking-widest shadow-lg ${isLive ? 'bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800/80 text-slate-300 border-white/10'}`}>
+              {isLive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>}
+              <span>{getMatchTimeStatus()}</span>
             </div>
           </div>
 
           {/* AWAY */}
-          <div className="flex flex-col items-center gap-4 flex-1">
+          <div className="flex flex-col items-center gap-2 md:gap-4 flex-1 min-w-0">
             <button
               onClick={() => aId && navigate(`/team/${aId}`)}
-              className={`flex flex-col items-center gap-4 ${aId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
+              className={`flex flex-col items-center gap-2 md:gap-4 w-full ${aId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
             >
-              <div className="w-24 h-24 md:w-32 md:h-32 bg-white/5 rounded-full border border-white/10 p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-indigo-500/40 transition-colors">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white/5 rounded-full border border-white/10 p-2 md:p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-indigo-500/40 transition-colors shrink-0 animate-[pulse_3s_infinite]">
                 {aLogo && <img src={aLogo} alt={aName} className="w-full h-full object-contain filter drop-shadow-xl z-20" />}
                 <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-2xl z-0"></div>
               </div>
-              <h2 className="text-2xl md:text-3xl font-black text-center text-white break-words drop-shadow-md group-hover:text-indigo-300 transition-colors">{aName}</h2>
-              {aId && <span className="text-[10px] font-semibold text-slate-500 group-hover:text-indigo-400 transition-colors">Ver perfil →</span>}
+              <h2 className="text-xs sm:text-sm md:text-xl lg:text-3xl font-black text-center text-white break-words drop-shadow-md group-hover:text-indigo-300 transition-colors line-clamp-2 px-1">{aName}</h2>
+              {aId && <span className="hidden md:inline text-[10px] font-semibold text-slate-500 group-hover:text-indigo-400 transition-colors">Ver perfil →</span>}
             </button>
           </div>
 
@@ -322,8 +322,8 @@ export default function MatchDetailView() {
               <span className="text-[11px] font-black text-slate-200 uppercase tracking-wider">Cronología</span>
             </div>
             <div className="flex gap-4 text-[9px] font-bold uppercase tracking-widest">
-              <span className="text-emerald-400 truncate max-w-[80px]">{hName}</span>
-              <span className="text-indigo-400 truncate max-w-[80px]">{aName}</span>
+              <span className="text-emerald-400 truncate max-w-[80px]" title={hName}>{hName}</span>
+              <span className="text-indigo-400 truncate max-w-[80px]" title={aName}>{aName}</span>
             </div>
           </div>
 
@@ -367,11 +367,11 @@ export default function MatchDetailView() {
                 const hasScore = inc.homeScore !== undefined && inc.awayScore !== undefined;
                 const scoreText = hasScore ? ` (${inc.homeScore} - ${inc.awayScore})` : '';
                 return (
-                  <div key={idx} className="flex items-center justify-center py-1 bg-white/[0.01]">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border border-white/10 px-2.5 py-0.5 rounded-full bg-black/30">
-                      {periodLabel || 'Período'}{scoreText}
-                    </span>
-                  </div>
+                   <div key={idx} className="flex items-center justify-center py-1 bg-white/[0.01]">
+                     <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest border border-white/10 px-2.5 py-0.5 rounded-full bg-black/30">
+                       {periodLabel || 'Período'}{scoreText}
+                     </span>
+                   </div>
                 );
               } else if (inc.incidentType === "injuryTime") {
                 return (
@@ -417,15 +417,15 @@ export default function MatchDetailView() {
               const isAway = inc.isHome === false;
 
               return (
-                <div key={idx} className="grid grid-cols-[1fr_40px_1fr] items-center px-2 py-1.5 hover:bg-white/[0.02] transition-colors group">
+                <div key={idx} className="grid grid-cols-[1fr_40px_1fr] items-center px-1.5 py-1 hover:bg-white/[0.02] transition-colors group">
                   {/* IZQUIERDA (Local) */}
                   {isHome ? (
-                    <div className="flex items-center justify-end gap-2 pr-2">
-                      <div className="flex flex-col items-end text-right">
-                        <span className="text-xs font-semibold text-slate-200 group-hover:text-emerald-300 transition-colors leading-tight truncate max-w-[120px] sm:max-w-xs">{title}</span>
-                        {detail && <span className="text-[10px] text-slate-500 leading-tight truncate max-w-[120px] sm:max-w-xs">{detail}</span>}
+                    <div className="flex items-center justify-end gap-1.5 md:gap-2 pr-1.5 md:pr-2 min-w-0">
+                      <div className="flex flex-col items-end text-right min-w-0">
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-200 group-hover:text-emerald-300 transition-colors leading-tight truncate max-w-[95px] xs:max-w-[140px] sm:max-w-xs">{title}</span>
+                        {detail && <span className="text-[8px] sm:text-[10px] text-slate-500 leading-tight truncate max-w-[95px] xs:max-w-[140px] sm:max-w-xs">{detail}</span>}
                       </div>
-                      <div className={`w-7 h-7 rounded-full border ${borderClass} ${colorClass} flex items-center justify-center text-xs shrink-0`}>
+                      <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full border ${borderClass} ${colorClass} flex items-center justify-center text-[10px] md:text-xs shrink-0`}>
                         {icon}
                       </div>
                     </div>
@@ -433,18 +433,18 @@ export default function MatchDetailView() {
 
                   {/* CENTRO: tiempo */}
                   <div className="flex flex-col items-center justify-center shrink-0 w-10">
-                    <span className={`text-sm font-black ${isHome ? 'text-emerald-400' : isAway ? 'text-indigo-400' : 'text-slate-400'}`}>{timeStr}</span>
+                    <span className={`text-[11px] md:text-sm font-black ${isHome ? 'text-emerald-400' : isAway ? 'text-indigo-400' : 'text-slate-400'}`}>{timeStr}</span>
                   </div>
 
                   {/* DERECHA (Visitante) */}
                   {isAway ? (
-                    <div className="flex items-center justify-start gap-2 pl-2">
-                      <div className={`w-7 h-7 rounded-full border ${borderClass} ${colorClass} flex items-center justify-center text-xs shrink-0`}>
+                    <div className="flex items-center justify-start gap-1.5 md:gap-2 pl-1.5 md:pl-2 min-w-0">
+                      <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full border ${borderClass} ${colorClass} flex items-center justify-center text-[10px] md:text-xs shrink-0`}>
                         {icon}
                       </div>
-                      <div className="flex flex-col items-start text-left">
-                        <span className="text-xs font-semibold text-slate-200 group-hover:text-indigo-300 transition-colors leading-tight truncate max-w-[120px] sm:max-w-xs">{title}</span>
-                        {detail && <span className="text-[10px] text-slate-500 leading-tight truncate max-w-[120px] sm:max-w-xs">{detail}</span>}
+                      <div className="flex flex-col items-start text-left min-w-0">
+                        <span className="text-[10px] sm:text-xs font-semibold text-slate-200 group-hover:text-indigo-300 transition-colors leading-tight truncate max-w-[95px] xs:max-w-[140px] sm:max-w-xs">{title}</span>
+                        {detail && <span className="text-[8px] sm:text-[10px] text-slate-500 leading-tight truncate max-w-[95px] xs:max-w-[140px] sm:max-w-xs">{detail}</span>}
                       </div>
                     </div>
                   ) : <div />}
@@ -456,34 +456,34 @@ export default function MatchDetailView() {
       )}
 
       {/* Data Section: Detalles, Alineaciones y Estadísticas */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 md:gap-4">
 
         {/* COLUMNA IZQUIERDA: Info + Alineaciones + Predicciones */}
-        <div className="xl:col-span-1 flex flex-col gap-4">
+        <div className="xl:col-span-1 flex flex-col gap-3 md:gap-4">
 
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 relative overflow-hidden">
-            <h3 className="text-sm font-bold text-slate-200">Detalles</h3>
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
+            <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
             <div className="flex flex-col gap-2 z-10">
               {dateStr && (
-                <div className="flex items-center gap-3 bg-black/20 p-2.5 rounded-xl border border-white/5">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                    <Calendar className="w-4 h-4" />
+                <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                    <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Fecha Programada</span>
-                    <span className="text-xs text-slate-200 font-bold capitalize">{dateStr}</span>
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Fecha Programada</span>
+                    <span className="text-[10px] md:text-xs text-slate-200 font-bold capitalize">{dateStr}</span>
                   </div>
                 </div>
               )}
 
               {timeStr && (
-                <div className="flex items-center gap-3 bg-black/20 p-2.5 rounded-xl border border-white/5">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Hora (Local)</span>
-                    <span className="text-xs text-slate-200 font-bold">{timeStr} HS</span>
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Hora (Local)</span>
+                    <span className="text-[10px] md:text-xs text-slate-200 font-bold">{timeStr} HS</span>
                   </div>
                 </div>
               )}
@@ -493,10 +493,10 @@ export default function MatchDetailView() {
 
           {/* Alineaciones */}
           {match.lineups && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4">
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-xs">📋</span>
-                <h3 className="text-sm font-bold text-slate-200">Alineaciones Iniciales</h3>
+                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-[10px] md:text-xs">📋</span>
+                <h3 className="text-xs md:text-sm font-bold text-slate-200">Alineaciones Iniciales</h3>
               </div>
 
               <div className="flex flex-col gap-3">
@@ -507,15 +507,15 @@ export default function MatchDetailView() {
 
                 <div className="flex w-full gap-2">
                   {/* LOCAL */}
-                  <div className="flex-1 flex flex-col gap-2 pr-1">
+                  <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
                     {(match.lineups.home?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 group">
-                        <span className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0">
+                      <div key={i} className="flex items-center gap-2 group min-w-0">
+                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0">
                           {p.jerseyNumber}
                         </span>
-                        <div className="flex flex-col truncate border-b border-transparent group-hover:border-emerald-500/30 transition-all overflow-hidden">
-                          <span className="text-slate-300 text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
-                          <span className="text-slate-600 text-[8px] uppercase font-bold">{p.position}</span>
+                        <div className="flex flex-col truncate border-b border-transparent group-hover:border-emerald-500/30 transition-all overflow-hidden w-full">
+                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
+                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
                         </div>
                       </div>
                     ))}
@@ -525,14 +525,14 @@ export default function MatchDetailView() {
                   <div className="w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
 
                   {/* VISITANTE */}
-                  <div className="flex-1 flex flex-col gap-2 pl-1">
+                  <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
                     {(match.lineups.away?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
-                      <div key={i} className="flex items-center justify-end gap-2 group text-right">
+                      <div key={i} className="flex items-center justify-end gap-2 group text-right min-w-0">
                         <div className="flex flex-col truncate items-end border-b border-transparent group-hover:border-indigo-500/30 transition-all overflow-hidden w-full">
-                          <span className="text-slate-300 text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
-                          <span className="text-slate-600 text-[8px] uppercase font-bold">{p.position}</span>
+                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
+                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
                         </div>
-                        <span className="w-5 h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0">
+                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0">
                           {p.jerseyNumber}
                         </span>
                       </div>
@@ -583,7 +583,7 @@ export default function MatchDetailView() {
 
             return (
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-lg h-fit">
-                <div className="flex items-center gap-2 px-4 py-2 border-b border-white/5">
+                <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
                   <span className="text-sm">🎯</span>
                   <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Pronósticos</span>
                   <span className="ml-auto text-[10px] font-semibold text-slate-500">{matchPredictions.length} participante{matchPredictions.length !== 1 ? 's' : ''}</span>
@@ -604,8 +604,8 @@ export default function MatchDetailView() {
                     const uId = p.userId || p.user_id || p.uid;
 
                     return (
-                      <div key={p._id || i} className="flex items-center gap-3 px-3 py-2">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center font-black text-[10px] text-white shrink-0 relative overflow-hidden">
+                      <div key={p._id || i} className="flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2">
+                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-indigo-500 to-emerald-500 flex items-center justify-center font-black text-[9px] md:text-[10px] text-white shrink-0 relative overflow-hidden">
                           <span>{initial}</span>
                           {uId && (
                             <img
@@ -616,13 +616,13 @@ export default function MatchDetailView() {
                             />
                           )}
                         </div>
-                        <span className="flex-1 text-xs font-semibold text-slate-300 truncate">{userName}</span>
+                        <span className="flex-1 text-[11px] md:text-xs font-semibold text-slate-300 truncate">{userName}</span>
                         {predMode === 'hidden' ? (
-                          <div className="px-2 rounded-md border border-white/10 bg-white/5 text-slate-500 text-xs font-black select-none" style={{ filter: 'blur(5px)' }}>
+                          <div className="px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-md border border-white/10 bg-white/5 text-slate-500 text-[10px] md:text-xs font-black select-none" style={{ filter: 'blur(5px)' }}>
                             {scoreStr}
                           </div>
                         ) : (
-                          <div className={`px-2 rounded-md border text-xs font-black ${colorClasses[color] || colorClasses.grey}`}>
+                          <div className={`px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-md border text-[10px] md:text-xs font-black ${colorClasses[color] || colorClasses.grey}`}>
                             {scoreStr}
                           </div>
                         )}
@@ -637,29 +637,29 @@ export default function MatchDetailView() {
         </div>
 
         {/* COLUMNA DERECHA: Estadísticas */}
-        <div className="xl:col-span-2 flex flex-col gap-4">
+        <div className="xl:col-span-2 flex flex-col gap-3 md:gap-4">
           {match.live_statistics && match.live_statistics.length > 0 ? (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-6 shadow-lg h-fit">
-              <div className="flex flex-row items-center justify-between gap-2 pb-3 border-b border-white/5">
-                <div className="flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-xs">📊</span>
-                  <h3 className="text-sm font-bold text-white">Estadísticas</h3>
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
+              <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
+                  <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas</h3>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest bg-black/30 px-3 py-1 rounded-lg border border-white/5">
-                  <span className="text-emerald-400 truncate max-w-[80px]" title={hName}>{hName}</span>
-                  <span className="text-slate-600 font-sans">-</span>
-                  <span className="text-indigo-400 truncate max-w-[80px]" title={aName}>{aName}</span>
+                <div className="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest bg-black/30 px-2 py-0.5 md:px-3 md:py-1 rounded-lg border border-white/5">
+                  <span className="text-emerald-400 truncate max-w-[70px] md:max-w-[80px]" title={hName}>{hName}</span>
+                  <span className="text-slate-600 font-sans select-none">-</span>
+                  <span className="text-indigo-400 truncate max-w-[70px] md:max-w-[80px]" title={aName}>{aName}</span>
                 </div>
               </div>
 
               {/* Iteramos sobre los grupos de estadísticas */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
                 {match.live_statistics.map((group: any, gIdx: number) => (
-                  <div key={gIdx} className="flex flex-col gap-4">
-                    <h4 className="text-slate-400 text-[10px] font-black uppercase tracking-widest pl-2 border-l-2 border-slate-600">
+                  <div key={gIdx} className="flex flex-col gap-2 md:gap-4">
+                    <h4 className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest pl-1.5 md:pl-2 border-l-2 border-slate-600">
                       {translateGroup(group.groupName)}
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 md:gap-y-3">
                       {group.statisticsItems.map((stat: any, idx: number) => {
                         const homeVal = parseStatValue(stat.home);
                         const awayVal = parseStatValue(stat.away);
@@ -671,13 +671,13 @@ export default function MatchDetailView() {
                         const isAwayWinner = awayVal > homeVal;
 
                         return (
-                          <div key={idx} className="flex flex-col gap-1.5">
+                          <div key={idx} className="flex flex-col gap-1">
                             <div className="flex justify-between items-center px-1">
-                              <span className={`text-xs ${isHomeWinner ? 'text-emerald-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.home}</span>
-                              <span className="text-slate-400 text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
-                              <span className={`text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
+                              <span className={`text-[10px] md:text-xs ${isHomeWinner ? 'text-emerald-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.home}</span>
+                              <span className="text-slate-400 text-[8px] md:text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
+                              <span className={`text-[10px] md:text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
                             </div>
-                            <div className="flex items-center gap-3 w-full h-1.5 mt-0.5 opacity-90">
+                            <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
                               {/* Barra local: crece hacia la izquierda */}
                               <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
                                 <div
@@ -702,9 +702,9 @@ export default function MatchDetailView() {
               </div>
             </div>
           ) : (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center text-slate-500 h-full min-h-[200px]">
-              <div className="text-3xl mb-3 opacity-30">📊</div>
-              <p className="text-[11px] font-medium z-10 text-center px-4">Estadísticas disponibles pronto.</p>
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center text-slate-500 h-full min-h-[150px] md:min-h-[200px]">
+              <div className="text-2xl md:text-3xl mb-2 md:mb-3 opacity-30">📊</div>
+              <p className="text-[10px] md:text-[11px] font-medium z-10 text-center px-4">Estadísticas disponibles pronto.</p>
             </div>
           )}
         </div>
