@@ -861,7 +861,8 @@ export default function MatchDetailView() {
             );
           })()}
         </div>
-
+      </div>
     </div>
   );
 }
+
