@@ -224,7 +224,7 @@ const MatchRow = memo(({
 
   return (
     <div
-      className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-colors ${status.isLive
+      className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-colors duration-75 ${status.isLive
         ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
         : 'hover:bg-white/[0.03]'
         }`}

@@ -108,7 +108,7 @@ export default function CS2RankingView() {
                 return (
                   <tr 
                     key={player._id} 
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer group"
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors duration-75 cursor-pointer group"
                     onClick={() => navigate(`/cs2/player/${player.steam64_id}`)}
                   >
                     <td className="py-3 sm:py-4 pl-2 sm:pl-4">
