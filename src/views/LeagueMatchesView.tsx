@@ -524,6 +524,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() - (viewMode === 'week' ? 7 : 1));
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    setAllMatches([]); // Clear matches immediately to trigger skeleton
   };
 
   const handleNextDay = () => {
@@ -531,6 +532,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + (viewMode === 'week' ? 7 : 1));
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    setAllMatches([]); // Clear matches immediately to trigger skeleton
   };
 
   const dailyMatches = allMatches; // El backend ya filtra por fecha ahora
@@ -782,7 +784,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
           <div className="flex flex-wrap items-center justify-center gap-3">
             {activeLeague.id === 'mundial' && (
               <button
-                onClick={() => setViewMode(prev => prev === 'day' ? 'week' : 'day')}
+                onClick={() => { setAllMatches([]); setViewMode(prev => prev === 'day' ? 'week' : 'day'); }}
                 className="px-3 py-2.5 rounded-xl text-xs font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/40 transition-all flex items-center gap-1.5 shadow-[0_4px_12px_rgba(16,185,129,0.1)] active:scale-95 transform shrink-0 select-none"
               >
                 {viewMode === 'day' ? (

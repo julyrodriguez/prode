@@ -233,6 +233,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() - 1);
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    setAllMatches([]); // Clear matches immediately to trigger skeleton
   };
 
   const handleNextDay = () => {
@@ -240,6 +241,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + 1);
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
+    setAllMatches([]); // Clear matches immediately to trigger skeleton
   };
 
   const dailyMatches = allMatches; // El backend ya devuelve filtrado por fecha
