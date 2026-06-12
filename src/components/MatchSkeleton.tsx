@@ -1,6 +1,16 @@
+import { useTheme } from '../context/ThemeContext';
+
 export default function MatchSkeleton() {
+  const { isLite } = useTheme();
+
   return (
     <div className="flex flex-col gap-6">
+      {isLite && (
+        <div className="flex items-center justify-center gap-3 py-4 bg-[#0b1015]/60 border border-white/5 rounded-2xl shadow-2xl backdrop-blur-md">
+          <div className="animate-spin w-5 h-5 rounded-full border-2 border-emerald-400 border-r-transparent" />
+          <span className="text-sm font-bold text-slate-300">Cargando partidos...</span>
+        </div>
+      )}
       {/* 2 secciones simuladas de torneos */}
       {[1, 2].map((sectionIndex) => (
         <div key={sectionIndex} className="flex flex-col gap-4 animate-pulse">
