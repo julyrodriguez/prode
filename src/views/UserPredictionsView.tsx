@@ -25,10 +25,62 @@ function getResult(pred: Prediction): 'exact' | 'tendency' | 'wrong' {
   return predSign === realSign ? 'tendency' : 'wrong';
 }
 
+function getPointsForPrediction(
+  pred: Prediction,
+  match: any | undefined,
+  tournamentId: number,
+  result: 'exact' | 'tendency' | 'wrong'
+): number {
+  if (result === 'wrong') return 0;
+
+  if (tournamentId === 16) {
+    // Mundial (tournamentId 16) rules:
+    const stage = (match?.stage || match?.round_name || '').toLowerCase();
+    const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
+
+    // Group stage detection:
+    const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
+
+    if (isGroup) {
+      return result === 'exact' ? 4 : 2;
+    }
+
+    // Knockout phases (16avos, Octavos, Cuartos):
+    const is16avosTo4tos = 
+      stage.includes('32') || 
+      stage.includes('16') || 
+      stage.includes('octav') || 
+      stage.includes('dieciseis') || 
+      stage.includes('16av') || 
+      stage.includes('quarter') || 
+      stage.includes('cuart');
+
+    if (is16avosTo4tos) {
+      return result === 'exact' ? 8 : 4;
+    }
+
+    const isSemi = stage.includes('semi');
+    if (isSemi) {
+      return result === 'exact' ? 14 : 7;
+    }
+
+    const isFinal = stage.includes('final');
+    if (isFinal) {
+      return result === 'exact' ? 20 : 10;
+    }
+
+    // Default fallback for Mundial (Group rules)
+    return result === 'exact' ? 4 : 2;
+  }
+
+  // Fallback for standard tournaments:
+  return result === 'exact' ? 6 : 3;
+}
+
 const RESULT_CONFIG = {
-  exact: { label: 'Exacto', pts: 6, icon: '✅', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
-  tendency: { label: 'Tendencia', pts: 3, icon: '🟡', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/25' },
-  wrong: { label: 'Errado', pts: 0, icon: '❌', color: 'text-slate-500', bg: 'bg-white/[0.01]', border: 'border-white/5' },
+  exact: { label: 'Exacto', icon: '✅', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
+  tendency: { label: 'Tendencia', icon: '🟡', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/25' },
+  wrong: { label: 'Errado', icon: '❌', color: 'text-slate-500', bg: 'bg-white/[0.01]', border: 'border-white/5' },
 };
 
 export default function UserPredictionsView() {
@@ -48,6 +100,22 @@ export default function UserPredictionsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [podium, setPodium] = useState<{ champion: string; runnerUp: string; thirdPlace: string } | null>(null);
+  const [matches, setMatches] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const res = await fetch('https://apivacas.jariel.com.ar/api/matches/all');
+        if (res.ok) {
+          const data = await res.json();
+          setMatches(data);
+        }
+      } catch (e) {
+        console.error("Error fetching matches:", e);
+      }
+    };
+    fetchMatches();
+  }, []);
 
   // Check if podium prediction should be blurred (until June 12, 2026 00:00:00 GMT-3)
   const isBlurred = Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime();
@@ -114,12 +182,22 @@ export default function UserPredictionsView() {
     getRankingName();
   }, [userId, tournament.tournamentId]);
 
+  // Create a quick lookup map for matches
+  const matchesMap = new Map<number, any>();
+  matches.forEach((m) => {
+    const mId = m.id !== undefined ? m.id : m._id;
+    if (mId !== undefined) {
+      matchesMap.set(mId, m);
+    }
+  });
+
   // ─── Estadísticas rápidas ──────────────────────────────────────────────────
   const totals = predictions.reduce(
     (acc, p) => {
       const r = getResult(p);
       acc[r]++;
-      acc.pts += RESULT_CONFIG[r].pts;
+      const match = matchesMap.get(p.matchId);
+      acc.pts += getPointsForPrediction(p, match, tournament.tournamentId, r);
       return acc;
     },
     { exact: 0, tendency: 0, wrong: 0, pts: 0 }
@@ -243,6 +321,8 @@ export default function UserPredictionsView() {
           {predictions.map((pred) => {
             const result = getResult(pred);
             const cfg = RESULT_CONFIG[result];
+            const match = matchesMap.get(pred.matchId);
+            const ptsObtenidos = getPointsForPrediction(pred, match, tournament.tournamentId, result);
             const date = new Date(pred.fechaUnix * 1000);
             const dateStr = date.toLocaleDateString('es-ES', {
               weekday: 'short', day: 'numeric', month: 'short',
@@ -257,7 +337,7 @@ export default function UserPredictionsView() {
                 {/* PTS Badge */}
                 <div className="absolute top-4 right-4 flex flex-col items-center justify-center w-12 h-12 rounded-full border border-white/10 bg-black/20 shadow-sm">
                   <span className="text-lg leading-none">{cfg.icon}</span>
-                  <span className={`text-[10px] font-black ${cfg.color} mt-0.5`}>+{cfg.pts}</span>
+                  <span className={`text-[10px] font-black ${cfg.color} mt-0.5`}>+{ptsObtenidos}</span>
                 </div>
 
                 <div className="w-full flex-1 flex flex-col gap-4">
