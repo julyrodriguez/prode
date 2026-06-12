@@ -1161,12 +1161,12 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       </div>
 
       {/* Spacer para que el cartel no tape el último partido */}
-      {isPredictionMode && <div className="h-32 md:h-24"></div>}
+      {isPredictionMode && <div className="h-40 md:h-28"></div>}
 
 
       {/* Toast */}
       {saveToast && (
-        <div className={`fixed bottom-36 md:bottom-28 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-bold text-sm shadow-2xl border transition-all ${saveToast.ok
+        <div className={`fixed bottom-44 md:bottom-32 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl font-bold text-sm shadow-2xl border transition-all ${saveToast.ok
           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
           : 'bg-red-500/20 border-red-500/40 text-red-300'
           }`}>
@@ -1176,14 +1176,14 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
       {/* Save Button (prediction mode) */}
       {isPredictionMode && (
-        <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-50">
+        <div className="fixed bottom-28 md:bottom-12 left-1/2 -translate-x-1/2 z-50">
           <button
             onClick={handleSavePredictions}
             disabled={isSaving}
-            className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed text-black font-black px-8 py-3.5 rounded-full shadow-[0_10px_40px_rgba(16,185,129,0.5)] transition-all transform hover:scale-105 active:scale-95 flex items-center gap-3"
+            className="bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 hover:from-emerald-300 hover:via-teal-300 hover:to-emerald-400 disabled:from-emerald-800/40 disabled:to-emerald-900/40 disabled:text-emerald-500/50 disabled:border-emerald-950/20 disabled:cursor-not-allowed text-zinc-950 font-black px-8 py-3.5 rounded-full shadow-[0_0_30px_rgba(16,185,129,0.35),0_10px_25px_rgba(0,0,0,0.4)] border border-emerald-300/30 transition-all duration-200 transform hover:scale-[1.04] active:scale-[0.96] flex items-center gap-3"
           >
             {isSaving ? (
-              <><div className="w-5 h-5 rounded-full border-2 border-black/30 border-t-black animate-spin" /> Guardando...</>
+              <><div className="w-5 h-5 rounded-full border-2 border-zinc-950/30 border-t-zinc-950 animate-spin" /> Guardando...</>
             ) : (
               <><span className="text-xl">💾</span> Guardar Predicciones</>
             )}
