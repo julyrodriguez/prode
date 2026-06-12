@@ -867,36 +867,36 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
       {/* SECCIÓN PREDICCIÓN DEL PODIO DEL MUNDIAL */}
       {activeLeague.id === 'mundial' && isPredictionMode && (isBeforeDeadline || podiumChampion || podiumRunnerUp || podiumThirdPlace) && (
-        <div className="relative overflow-hidden podium-card rounded-[2rem] p-6 flex flex-col gap-5 backdrop-blur-xl">
-          {/* Decorative Glow Blob */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl animate-bounce">🏆</span>
-                <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-200 to-emerald-400">
-                  Pronóstico del Podio del Mundial
-                </h2>
+        isBeforeDeadline ? (
+          <div className="relative overflow-hidden podium-card rounded-[2rem] p-6 flex flex-col gap-5 backdrop-blur-xl">
+            {/* Decorative Glow Blob */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl animate-bounce">🏆</span>
+                  <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-200 to-emerald-400">
+                    Pronóstico del Podio del Mundial
+                  </h2>
+                </div>
+                <p className="text-slate-400 text-xs font-semibold mt-1">
+                  Elegí tus candidatos para las primeras tres posiciones del Mundial.
+                </p>
               </div>
-              <p className="text-slate-400 text-xs font-semibold mt-1">
-                Elegí tus candidatos para las primeras tres posiciones del Mundial.
-              </p>
+              <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isBeforeDeadline ? 'deadline-badge border' : 'deadline-badge-expired border'}`}>
+                {isBeforeDeadline ? '⏳ Plazo: Hasta el 11/06/2026' : '🔒 Plazo finalizado'}
+              </div>
             </div>
-            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${isBeforeDeadline ? 'deadline-badge border' : 'deadline-badge-expired border'}`}>
-              {isBeforeDeadline ? '⏳ Plazo: Hasta el 11/06/2026' : '🔒 Plazo finalizado'}
-            </div>
-          </div>
 
-          {/* Form / Podium Inputs */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
-            {/* 1st Place (Campeón) */}
-            <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-black/30 border border-white/5 hover:border-amber-500/20 transition-all">
-              <span className="text-[10px] gold-label font-extrabold uppercase tracking-widest flex items-center gap-1.5">
-                🥇 Campeón
-              </span>
-              {isBeforeDeadline ? (
+            {/* Form / Podium Inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+              {/* 1st Place (Campeón) */}
+              <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-black/30 border border-white/5 hover:border-amber-500/20 transition-all">
+                <span className="text-[10px] gold-label font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+                  🥇 Campeón
+                </span>
                 <input
                   list="world-cup-teams"
                   type="text"
@@ -905,19 +905,13 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                   onChange={(e) => setPodiumChampion(e.target.value)}
                   className="w-full podium-card-input rounded-xl px-3.5 py-2 text-sm font-bold outline-none transition-all"
                 />
-              ) : (
-                <div className="podium-card-static rounded-xl px-3.5 py-2 text-sm font-black">
-                  {podiumChampion || '—'}
-                </div>
-              )}
-            </div>
+              </div>
 
-            {/* 2nd Place (Subcampeón) */}
-            <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-black/30 border border-white/5 hover:border-slate-400/20 transition-all">
-              <span className="text-[10px] silver-label font-extrabold uppercase tracking-widest flex items-center gap-1.5">
-                🥈 Subcampeón
-              </span>
-              {isBeforeDeadline ? (
+              {/* 2nd Place (Subcampeón) */}
+              <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-black/30 border border-white/5 hover:border-slate-400/20 transition-all">
+                <span className="text-[10px] silver-label font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+                  🥈 Subcampeón
+                </span>
                 <input
                   list="world-cup-teams"
                   type="text"
@@ -926,19 +920,13 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                   onChange={(e) => setPodiumRunnerUp(e.target.value)}
                   className="w-full podium-card-input rounded-xl px-3.5 py-2 text-sm font-bold outline-none transition-all"
                 />
-              ) : (
-                <div className="podium-card-static rounded-xl px-3.5 py-2 text-sm font-black">
-                  {podiumRunnerUp || '—'}
-                </div>
-              )}
-            </div>
+              </div>
 
-            {/* 3rd Place (Tercer Puesto) */}
-            <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-black/30 border border-white/5 hover:border-amber-700/20 transition-all">
-              <span className="text-[10px] bronze-label font-extrabold uppercase tracking-widest flex items-center gap-1.5">
-                🥉 Tercer Puesto
-              </span>
-              {isBeforeDeadline ? (
+              {/* 3rd Place (Tercer Puesto) */}
+              <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-black/30 border border-white/5 hover:border-amber-700/20 transition-all">
+                <span className="text-[10px] bronze-label font-extrabold uppercase tracking-widest flex items-center gap-1.5">
+                  🥉 Tercer Puesto
+                </span>
                 <input
                   list="world-cup-teams"
                   type="text"
@@ -947,23 +935,17 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                   onChange={(e) => setPodiumThirdPlace(e.target.value)}
                   className="w-full podium-card-input rounded-xl px-3.5 py-2 text-sm font-bold outline-none transition-all"
                 />
-              ) : (
-                <div className="podium-card-static rounded-xl px-3.5 py-2 text-sm font-black">
-                  {podiumThirdPlace || '—'}
-                </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Datalist for autocomplete */}
-          <datalist id="world-cup-teams">
-            {worldCupTeams.map((team) => (
-              <option key={team} value={team} />
-            ))}
-          </datalist>
+            {/* Datalist for autocomplete */}
+            <datalist id="world-cup-teams">
+              {worldCupTeams.map((team) => (
+                <option key={team} value={team} />
+              ))}
+            </datalist>
 
-          {/* Save Button / Feedback Toast for Podium */}
-          {isBeforeDeadline && (
+            {/* Save Button / Feedback Toast for Podium */}
             <div className="flex items-center justify-center sm:justify-between gap-4 mt-1 border-t border-white/5 pt-4 relative z-10">
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest hidden sm:inline">
                 Asegurate de que no se repitan los países
@@ -985,18 +967,79 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                 )}
               </button>
             </div>
-          )}
 
-          {/* Podium Feedback Toast (localized inside card) */}
-          {podiumToast && (
-            <div className={`mt-2 px-4 py-2.5 rounded-xl font-bold text-xs border text-center relative z-10 transition-all ${podiumToast.ok
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
-              : 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
-              }`}>
-              {podiumToast.ok ? '✅ ' : '⚠️ '}{podiumToast.msg}
+            {/* Podium Feedback Toast (localized inside card) */}
+            {podiumToast && (
+              <div className={`mt-2 px-4 py-2.5 rounded-xl font-bold text-xs border text-center relative z-10 transition-all ${podiumToast.ok
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                : 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
+                }`}>
+                {podiumToast.ok ? '✅ ' : '⚠️ '}{podiumToast.msg}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="relative overflow-hidden podium-card rounded-[2rem] p-6 flex flex-col gap-6 backdrop-blur-xl border border-white/10 shadow-xl">
+            {/* Decorative Glow Blob */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="flex flex-col items-center text-center gap-1.5 relative z-10">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl animate-pulse">🏆</span>
+                <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-200 to-emerald-400">
+                  Tus Pronósticos del Podio
+                </h2>
+              </div>
+              <p className="text-slate-400 text-xs font-semibold">
+                Esta es tu predicción definitiva guardada para las primeras tres posiciones del Mundial.
+              </p>
             </div>
-          )}
-        </div>
+
+            {/* Visual Podium Container */}
+            <div className="flex items-end justify-center gap-3 md:gap-5 pt-8 pb-4 relative z-10 max-w-lg mx-auto w-full">
+              
+              {/* 2nd Place (Left) */}
+              <div className="flex-1 flex flex-col items-center gap-2 max-w-[130px] md:max-w-[140px]">
+                <span className="text-slate-200 font-extrabold text-xs md:text-sm truncate text-center w-full px-1">
+                  {podiumRunnerUp || '—'}
+                </span>
+                <div className="w-full h-24 md:h-28 rounded-t-2xl bg-gradient-to-t from-slate-900/90 to-slate-800/40 border-t border-x border-slate-500/30 flex flex-col items-center justify-center p-3 shadow-lg backdrop-blur-sm group hover:border-slate-400/40 transition-all">
+                  <span className="text-2xl md:text-3xl mb-1">🥈</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">2° Puesto</span>
+                </div>
+              </div>
+
+              {/* 1st Place (Middle - Taller) */}
+              <div className="flex-1 flex flex-col items-center gap-2 max-w-[140px] md:max-w-[150px]">
+                <span className="text-amber-400 font-black text-sm md:text-base truncate text-center w-full px-1 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)]">
+                  {podiumChampion || '—'}
+                </span>
+                <div className="w-full h-32 md:h-36 rounded-t-2xl bg-gradient-to-t from-amber-950/70 to-amber-500/10 border-t border-x border-amber-500/40 flex flex-col items-center justify-center p-3 shadow-[0_0_20px_rgba(245,158,11,0.1)] backdrop-blur-sm group hover:border-amber-400/50 transition-all relative">
+                  {/* Crown badge */}
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-black font-black text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+                    Campeón
+                  </div>
+                  <span className="text-3xl md:text-4xl mb-1 mt-1">🥇</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">1° Lugar</span>
+                </div>
+              </div>
+
+              {/* 3rd Place (Right) */}
+              <div className="flex-1 flex flex-col items-center gap-2 max-w-[130px] md:max-w-[140px]">
+                <span className="text-orange-300 font-extrabold text-xs md:text-sm truncate text-center w-full px-1">
+                  {podiumThirdPlace || '—'}
+                </span>
+                <div className="w-full h-20 md:h-22 rounded-t-2xl bg-gradient-to-t from-orange-950/90 to-orange-900/30 border-t border-x border-orange-700/30 flex flex-col items-center justify-center p-3 shadow-lg backdrop-blur-sm group hover:border-orange-500/40 transition-all">
+                  <span className="text-2xl md:text-3xl mb-1">🥉</span>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-400">3° Puesto</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        )
       )}
 
       {jumpMsg && (
