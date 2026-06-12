@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, memo } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import type { LEAGUES } from '../components/layout/AppLayout';
@@ -129,10 +129,303 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
 }
 
 
+const parseMatchStatus = (match: Match) => {
+  const startMs = (match.startTimestamp || 0) * 1000;
+  const isPastTime = startMs > 0 && startMs < Date.now();
+
+  if (match.status === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
+
+  if (typeof match.status === 'object' && match.status !== null) {
+    if (match.status.type === 'inprogress') return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
+    if (match.status.type === 'finished') {
+      const isPenalties = match.status.description === 'AP';
+      return { isLive: false, hasStarted: true, label: 'Finalizado', isPenalties };
+    }
+    if (match.status.type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
+  }
+
+  if (isPastTime) return { isLive: true, hasStarted: true, label: 'EN JUEGO' };
+  return { isLive: false, hasStarted: false, label: 'Pendiente' };
+};
+
+const getMatchTime = (match: Match) => {
+  const statusDesc = typeof match.status === 'object' ? match.status?.description?.toLowerCase() : match.status?.toLowerCase();
+  if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ENTRETIEMPO';
+  if (statusDesc?.includes('1st') || statusDesc?.includes('first')) return 'PRIMER TIEMPO';
+  if (statusDesc?.includes('2nd') || statusDesc?.includes('second')) return 'SEGUNDO TIEMPO';
+  if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
+  if (statusDesc === 'ap' || statusDesc?.includes('pen')) return 'PENALES';
+  const original = typeof match.status === 'object' ? match.status?.description : match.status;
+  return original ? String(original).toUpperCase() : 'EN VIVO';
+};
+
+const getScore = (match: Match, team: 'home' | 'away') => {
+  const scoreObj = team === 'home' ? match.homeScore : match.awayScore;
+  const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
+  const altTeamObj = team === 'home' ? match.home_team : match.away_team;
+  if (scoreObj?.current !== undefined) return scoreObj.current;
+  if (teamObj?.score !== undefined) return teamObj.score;
+  if (altTeamObj?.score !== undefined) return altTeamObj.score;
+  return null;
+};
+
+const getTeamName = (match: Match, team: 'home' | 'away') => {
+  const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
+  const altTeamObj = team === 'home' ? match.home_team : match.away_team;
+  return teamObj?.name || altTeamObj?.name || (team === 'home' ? 'Local' : 'Visitante');
+};
+
+const getTeamLogo = (match: Match, team: 'home' | 'away') => {
+  const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
+  const altTeamObj = team === 'home' ? match.home_team : match.away_team;
+  const teamId = teamObj?.id || altTeamObj?.id;
+  if (teamId) return `https://apivacas.jariel.com.ar/escudos/${teamId}.png`;
+  const logoUrl = teamObj?.logoUrl || altTeamObj?.logoUrl || null;
+  return logoUrl?.startsWith('/') ? `https://apivacas.jariel.com.ar/api${logoUrl}` : logoUrl;
+};
+
+interface MatchRowProps {
+  match: Match;
+  isPredictionMode: boolean;
+  prediction: { home: string; away: string } | undefined;
+  user: any;
+  viewMode: string;
+  onPredictionChange: (matchId: number, side: 'home' | 'away', value: string) => void;
+  onStepScore: (matchId: number, side: 'home' | 'away', delta: number) => void;
+}
+
+const MatchRow = memo(({
+  match,
+  isPredictionMode,
+  prediction,
+  user,
+  viewMode,
+  onPredictionChange,
+  onStepScore
+}: MatchRowProps) => {
+  const navigate = useNavigate();
+
+  const status = parseMatchStatus(match);
+  const hScore = getScore(match, 'home');
+  const aScore = getScore(match, 'away');
+  const hName = getTeamName(match, 'home');
+  const aName = getTeamName(match, 'away');
+  const hLogo = getTeamLogo(match, 'home');
+  const aLogo = getTeamLogo(match, 'away');
+  const hId = match.homeTeam?.id || match.home_team?.id;
+  const aId = match.awayTeam?.id || match.away_team?.id;
+
+  const now = Math.floor(Date.now() / 1000);
+  const oneHourBefore = match.startTimestamp ? match.startTimestamp - 3600 : null;
+  const isLocked = status.isLive || (oneHourBefore !== null && now >= oneHourBefore);
+  const canPredict = isPredictionMode && !status.hasStarted && !isLocked && !!user;
+  const hasPrediction = !!(prediction?.home !== undefined && prediction?.away !== undefined);
+  const liveTime = status.isLive ? getMatchTime(match) : null;
+
+  return (
+    <div
+      className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-colors ${status.isLive
+        ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
+        : 'hover:bg-white/[0.03]'
+        }`}
+      onClick={() => navigate(`/match/${match.id}`)}
+    >
+      {/* Columna Izquierda: Logo Torneo y Tiempo */}
+      <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
+        <div className="w-5 h-5 md:w-6 md:h-6 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
+          <img
+            src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
+            alt="torneo"
+            className="w-full h-full object-contain"
+            onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+          />
+        </div>
+        {viewMode === 'week' && match.startTimestamp && (
+          <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
+            {new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', {
+              weekday: 'short', day: '2-digit'
+            }).replace('.', '')}
+          </span>
+        )}
+        {status.isLive ? (
+          <span className="text-red-500 text-[10px] md:text-xs font-black animate-pulse drop-shadow-[0_0_5px_rgba(239,68,68,0.5)] text-center leading-tight break-words">
+            {liveTime || "VIVO"}
+          </span>
+        ) : status.hasStarted ? (
+          <span className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-center leading-tight break-words">{status.label}</span>
+        ) : (
+          <span className="text-slate-300 text-[11px] md:text-sm font-bold text-center leading-tight break-words">
+            {match.startTimestamp
+              ? new Date(match.startTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : status.label}
+          </span>
+        )}
+      </div>
+
+      {/* Columna Derecha: Equipos, Score y Prode */}
+      <div className="flex flex-col py-2 px-2 md:px-4 justify-center relative">
+        {match.round_name && (
+          <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80">
+            {match.round_name}
+          </div>
+        )}
+
+        {/* ── Fila de equipos + centro (scores/VS) ── */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 md:gap-4">
+
+          {/* HOME TEAM */}
+          <TeamHoverCard teamId={hId} teamName={hName} className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
+            <div
+              className="flex items-center justify-end gap-2 md:gap-3 text-right min-w-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (hId) navigate(`/team/${hId}`);
+              }}
+            >
+              <div className="flex flex-col items-end justify-center min-w-0">
+                <div className="relative inline-block">
+                  <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
+                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
+                </div>
+                <div className="mt-1">
+                  <TeamForm teamId={hId} align="left" />
+                </div>
+              </div>
+              <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+                {hLogo ? <img src={hLogo} alt={hName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+              </div>
+            </div>
+          </TeamHoverCard>
+
+          {/* CENTER: score / VS separator / dashes */}
+          <div className="flex flex-col items-center justify-center shrink-0">
+            {isPredictionMode && !status.hasStarted && !isLocked && !canPredict && (
+              <div className="text-amber-500/80 text-[9px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1">
+                🔒
+              </div>
+            )}
+
+            {canPredict ? (
+              // En modo predicción el centro queda limpio — inputs van abajo
+              <div className="flex items-center gap-1 px-2 py-1">
+                <span className="text-lg font-black text-slate-700">–</span>
+              </div>
+            ) : status.hasStarted && (hScore !== null || aScore !== null) ? (
+              // Scores live/finished
+              <div className="flex flex-col items-center gap-0.5">
+                <div className={`flex items-center gap-2 md:gap-3 px-2 py-0.5 rounded ${status.isLive ? 'bg-red-500/[0.08] border border-red-500/20' : 'bg-black/30 border border-white/5'}`}>
+                  <span className={`text-base md:text-lg font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{hScore ?? 0}</span>
+                  <span className={`text-xs md:text-sm ${status.isLive ? 'text-red-500/50' : 'text-slate-500'}`}>-</span>
+                  <span className={`text-base md:text-lg font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{aScore ?? 0}</span>
+                </div>
+                {status.isPenalties && (
+                  <PenaltyScoreDisplay matchId={match.id} />
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 md:gap-3 px-2 py-0.5">
+                <span className="text-base md:text-lg font-black text-slate-500">-</span>
+                <span className="text-xs md:text-sm text-slate-600">-</span>
+                <span className="text-base md:text-lg font-black text-slate-500">-</span>
+              </div>
+            )}
+
+            {/* Mi prode (si el partido empezó) */}
+            {isPredictionMode && status.hasStarted && hasPrediction && (
+              <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-[2px] bg-black/40 border border-white/5 rounded-full">
+                <span className="text-[8px] md:text-[9px] uppercase font-bold tracking-widest text-slate-500">Mi prode</span>
+                <span className="text-[10px] md:text-[11px] font-black text-emerald-400/90 tracking-widest">
+                  {prediction?.home}-{prediction?.away}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* AWAY TEAM */}
+          <TeamHoverCard teamId={aId} teamName={aName} className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
+            <div
+              className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (aId) navigate(`/team/${aId}`);
+              }}
+            >
+              <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+                {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+              </div>
+              <div className="flex flex-col items-start justify-center min-w-0">
+                <div className="relative inline-block">
+                  <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={false} />
+                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
+                </div>
+                <div className="mt-1">
+                  <TeamForm teamId={aId} align="right" />
+                </div>
+              </div>
+            </div>
+          </TeamHoverCard>
+        </div>
+
+        {/* ── Inputs de predicción: fila separada DEBAJO de los equipos ── */}
+        {canPredict && (
+          <div
+            className="mt-2.5 pt-2.5 border-t border-emerald-500/10 flex items-center justify-center gap-3"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Nombre local */}
+            <span className="text-[10px] text-slate-500 font-bold truncate max-w-[60px] text-right hidden sm:block">{hName}</span>
+
+            {/* HOME STEPPER */}
+            <div className="flex items-center bg-black/40 border border-emerald-500/20 rounded-lg overflow-hidden hover:border-emerald-500/40 transition-colors">
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'home', -1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">−</button>
+              <input
+                type="text" inputMode="numeric" pattern="[0-9]*"
+                value={prediction?.home ?? ''}
+                onClick={e => e.stopPropagation()}
+                placeholder="0"
+                onChange={e => onPredictionChange(match.id, 'home', e.target.value.replace(/\D/g, '').slice(0, 2))}
+                className="w-8 h-9 bg-transparent text-center font-black text-base text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
+              />
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'home', 1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">+</button>
+            </div>
+
+            <span className="text-slate-600 font-black text-lg">—</span>
+
+            {/* AWAY STEPPER */}
+            <div className="flex items-center bg-black/40 border border-emerald-500/20 rounded-lg overflow-hidden hover:border-emerald-500/40 transition-colors">
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'away', -1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">−</button>
+              <input
+                type="text" inputMode="numeric" pattern="[0-9]*"
+                value={prediction?.away ?? ''}
+                onClick={e => e.stopPropagation()}
+                placeholder="0"
+                onChange={e => onPredictionChange(match.id, 'away', e.target.value.replace(/\D/g, '').slice(0, 2))}
+                className="w-8 h-9 bg-transparent text-center font-black text-base text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
+              />
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'away', 1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">+</button>
+            </div>
+
+            {/* Nombre visitante */}
+            <span className="text-[10px] text-slate-500 font-bold truncate max-w-[60px] hidden sm:block">{aName}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Goles colapsables debajo de cada partido */}
+      <div
+        className="col-start-2"
+        onClick={e => e.stopPropagation()}
+      >
+        <MatchGoalsCollapsible matchId={match.id} hasStarted={status.hasStarted} />
+      </div>
+    </div>
+  );
+});
+
+
 // Prediction mode is the separate "predicciones" tab, passed via context if needed
 // But here we just need to know if we're in prediction mode based on the URL tab
 export default function LeagueMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
-  const navigate = useNavigate();
   const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
   const { user } = useAuth();
 
@@ -463,62 +756,6 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     }
   };
 
-  const parseMatchStatus = (match: Match) => {
-    const startMs = (match.startTimestamp || 0) * 1000;
-    const isPastTime = startMs > 0 && startMs < Date.now();
-
-    if (match.status === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
-
-    if (typeof match.status === 'object' && match.status !== null) {
-      if (match.status.type === 'inprogress') return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
-      if (match.status.type === 'finished') {
-        const isPenalties = match.status.description === 'AP';
-        return { isLive: false, hasStarted: true, label: 'Finalizado', isPenalties };
-      }
-      if (match.status.type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
-    }
-
-    if (isPastTime) return { isLive: true, hasStarted: true, label: 'EN JUEGO' };
-    return { isLive: false, hasStarted: false, label: 'Pendiente' };
-  };
-
-  const getMatchTime = (match: Match) => {
-    const statusDesc = typeof match.status === 'object' ? match.status?.description?.toLowerCase() : match.status?.toLowerCase();
-    if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ENTRETIEMPO';
-    if (statusDesc?.includes('1st') || statusDesc?.includes('first')) return 'PRIMER TIEMPO';
-    if (statusDesc?.includes('2nd') || statusDesc?.includes('second')) return 'SEGUNDO TIEMPO';
-    if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
-    if (statusDesc === 'ap' || statusDesc?.includes('pen')) return 'PENALES';
-    const original = typeof match.status === 'object' ? match.status?.description : match.status;
-    return original ? String(original).toUpperCase() : 'EN VIVO';
-  };
-
-  const getScore = (match: Match, team: 'home' | 'away') => {
-    const scoreObj = team === 'home' ? match.homeScore : match.awayScore;
-    const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
-    const altTeamObj = team === 'home' ? match.home_team : match.away_team;
-    if (scoreObj?.current !== undefined) return scoreObj.current;
-    if (teamObj?.score !== undefined) return teamObj.score;
-    if (altTeamObj?.score !== undefined) return altTeamObj.score;
-    return null;
-  };
-
-  const getTeamName = (match: Match, team: 'home' | 'away') => {
-    const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
-    const altTeamObj = team === 'home' ? match.home_team : match.away_team;
-    return teamObj?.name || altTeamObj?.name || (team === 'home' ? 'Local' : 'Visitante');
-  };
-
-  const getTeamLogo = (match: Match, team: 'home' | 'away') => {
-    const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
-    const altTeamObj = team === 'home' ? match.home_team : match.away_team;
-    const teamId = teamObj?.id || altTeamObj?.id;
-    if (teamId) return `https://apivacas.jariel.com.ar/escudos/${teamId}.png`;
-    const logoUrl = teamObj?.logoUrl || altTeamObj?.logoUrl || null;
-    return logoUrl?.startsWith('/') ? `https://apivacas.jariel.com.ar/api${logoUrl}` : logoUrl;
-  };
-
-
   const handlePrevDay = () => {
     setSearchDirection(-1);
     const d = new Date(selectedDate + 'T12:00:00');
@@ -585,14 +822,24 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     }
   };
 
-  const stepScore = (matchId: number, side: 'home' | 'away', delta: number) => {
+  const stepScore = useCallback((matchId: number, side: 'home' | 'away', delta: number) => {
     setLocalPredictions(prev => {
       const cur = prev[matchId] || { home: '0', away: '0' };
       const curVal = parseInt(cur[side] || '0', 10);
       const next = Math.max(0, Math.min(20, curVal + delta));
       return { ...prev, [matchId]: { ...cur, [side]: String(next) } };
     });
-  };
+  }, []);
+
+  const handlePredictionChange = useCallback((matchId: number, side: 'home' | 'away', value: string) => {
+    setLocalPredictions(prev => ({
+      ...prev,
+      [matchId]: {
+        ...prev[matchId] ?? { home: '', away: '' },
+        [side]: value
+      }
+    }));
+  }, []);
 
   // Se eliminó el early return de loading para dejar el título fijo
 
@@ -842,225 +1089,18 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
           </div>
         ) : (
           <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
-            {dailyMatches.map((match, idx) => {
-              const status = parseMatchStatus(match);
-
-              const hScore = getScore(match, 'home');
-              const aScore = getScore(match, 'away');
-              const hName = getTeamName(match, 'home');
-              const aName = getTeamName(match, 'away');
-              const hLogo = getTeamLogo(match, 'home');
-              const aLogo = getTeamLogo(match, 'away');
-              const hId = match.homeTeam?.id || match.home_team?.id;
-              const aId = match.awayTeam?.id || match.away_team?.id;
-
-              const now = Math.floor(Date.now() / 1000);
-              const oneHourBefore = match.startTimestamp ? match.startTimestamp - 3600 : null;
-              const isLocked = status.isLive || (oneHourBefore !== null && now >= oneHourBefore);
-              const canPredict = isPredictionMode && !status.hasStarted && !isLocked && !!user;
-              const hasPrediction = !!(localPredictions[match.id]?.home !== undefined && localPredictions[match.id]?.away !== undefined);
-              const liveTime = status.isLive ? getMatchTime(match) : null;
-
-              return (
-                <div
-                  key={match.id || idx}
-                  className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-colors ${status.isLive
-                    ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
-                    : 'hover:bg-white/[0.03]'
-                    }`}
-                  onClick={() => navigate(`/match/${match.id}`)}
-                >
-                  {/* Columna Izquierda: Logo Torneo y Tiempo */}
-                  <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
-                    <div className="w-5 h-5 md:w-6 md:h-6 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
-                      <img
-                        src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
-                        alt="torneo"
-                        className="w-full h-full object-contain"
-                        onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
-                      />
-                    </div>
-                    {viewMode === 'week' && match.startTimestamp && (
-                      <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
-                        {new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', {
-                          weekday: 'short', day: '2-digit'
-                        }).replace('.', '')}
-                      </span>
-                    )}
-                    {status.isLive ? (
-                      <span className="text-red-500 text-[10px] md:text-xs font-black animate-pulse drop-shadow-[0_0_5px_rgba(239,68,68,0.5)] text-center leading-tight break-words">
-                        {liveTime || "VIVO"}
-                      </span>
-                    ) : status.hasStarted ? (
-                      <span className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-center leading-tight break-words">{status.label}</span>
-                    ) : (
-                      <span className="text-slate-300 text-[11px] md:text-sm font-bold text-center leading-tight break-words">
-                        {match.startTimestamp
-                          ? new Date(match.startTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : status.label}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Columna Derecha: Equipos, Score y Prode */}
-                  <div className="flex flex-col py-2 px-2 md:px-4 justify-center relative">
-                    {match.round_name && (
-                      <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80">
-                        {match.round_name}
-                      </div>
-                    )}
-
-                    {/* ── Fila de equipos + centro (scores/VS) ── */}
-                    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 md:gap-4">
-
-                      {/* HOME TEAM */}
-                      <TeamHoverCard teamId={hId} teamName={hName} className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
-                        <div
-                          className="flex items-center justify-end gap-2 md:gap-3 text-right min-w-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (hId) navigate(`/team/${hId}`);
-                          }}
-                        >
-                          <div className="flex flex-col items-end justify-center min-w-0">
-                            <div className="relative inline-block">
-                              <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
-                              <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
-                            </div>
-                            <div className="mt-1">
-                              <TeamForm teamId={hId} align="left" />
-                            </div>
-                          </div>
-                          <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-centeLr justify-center">
-                            {hLogo ? <img src={hLogo} alt={hName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
-                          </div>
-                        </div>
-                      </TeamHoverCard>
-
-                      {/* CENTER: score / VS separator / dashes */}
-                      <div className="flex flex-col items-center justify-center shrink-0">
-                        {isPredictionMode && !status.hasStarted && !isLocked && !canPredict && (
-                          <div className="text-amber-500/80 text-[9px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1">
-                            🔒
-                          </div>
-                        )}
-
-                        {canPredict ? (
-                          // En modo predicción el centro queda limpio — inputs van abajo
-                          <div className="flex items-center gap-1 px-2 py-1">
-                            <span className="text-lg font-black text-slate-700">–</span>
-                          </div>
-                        ) : status.hasStarted && (hScore !== null || aScore !== null) ? (
-                          // Scores live/finished
-                          <div className="flex flex-col items-center gap-0.5">
-                            <div className={`flex items-center gap-2 md:gap-3 px-2 py-0.5 rounded ${status.isLive ? 'bg-red-500/[0.08] border border-red-500/20' : 'bg-black/30 border border-white/5'}`}>
-                              <span className={`text-base md:text-lg font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{hScore ?? 0}</span>
-                              <span className={`text-xs md:text-sm ${status.isLive ? 'text-red-500/50' : 'text-slate-500'}`}>-</span>
-                              <span className={`text-base md:text-lg font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{aScore ?? 0}</span>
-                            </div>
-                            {(status as any).isPenalties && (
-                              <PenaltyScoreDisplay matchId={match.id} />
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 md:gap-3 px-2 py-0.5">
-                            <span className="text-base md:text-lg font-black text-slate-500">-</span>
-                            <span className="text-xs md:text-sm text-slate-600">-</span>
-                            <span className="text-base md:text-lg font-black text-slate-500">-</span>
-                          </div>
-                        )}
-
-                        {/* Mi prode (si el partido empezó) */}
-                        {isPredictionMode && status.hasStarted && hasPrediction && (
-                          <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-[2px] bg-black/40 border border-white/5 rounded-full">
-                            <span className="text-[8px] md:text-[9px] uppercase font-bold tracking-widest text-slate-500">Mi prode</span>
-                            <span className="text-[10px] md:text-[11px] font-black text-emerald-400/90 tracking-widest">
-                              {localPredictions[match.id]?.home}-{localPredictions[match.id]?.away}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* AWAY TEAM */}
-                      <TeamHoverCard teamId={aId} teamName={aName} className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
-                        <div
-                          className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (aId) navigate(`/team/${aId}`);
-                          }}
-                        >
-                          <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-                            {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
-                          </div>
-                          <div className="flex flex-col items-start justify-center min-w-0">
-                            <div className="relative inline-block">
-                              <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={false} />
-                              <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
-                            </div>
-                            <div className="mt-1">
-                              <TeamForm teamId={aId} align="right" />
-                            </div>
-                          </div>
-                        </div>
-                      </TeamHoverCard>
-                    </div>
-
-                    {/* ── Inputs de predicción: fila separada DEBAJO de los equipos ── */}
-                    {canPredict && (
-                      <div
-                        className="mt-2.5 pt-2.5 border-t border-emerald-500/10 flex items-center justify-center gap-3"
-                        onClick={e => e.stopPropagation()}
-                      >
-                        {/* Nombre local */}
-                        <span className="text-[10px] text-slate-500 font-bold truncate max-w-[60px] text-right hidden sm:block">{hName}</span>
-
-                        {/* HOME STEPPER */}
-                        <div className="flex items-center bg-black/40 border border-emerald-500/20 rounded-lg overflow-hidden hover:border-emerald-500/40 transition-colors">
-                          <button onClick={e => { e.stopPropagation(); stepScore(match.id, 'home', -1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">−</button>
-                          <input
-                            type="text" inputMode="numeric" pattern="[0-9]*"
-                            value={localPredictions[match.id]?.home ?? ''}
-                            onClick={e => e.stopPropagation()}
-                            placeholder="0"
-                            onChange={e => setLocalPredictions(prev => ({ ...prev, [match.id]: { ...prev[match.id] ?? { away: '' }, home: e.target.value.replace(/\D/g, '').slice(0, 2) } }))}
-                            className="w-8 h-9 bg-transparent text-center font-black text-base text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
-                          />
-                          <button onClick={e => { e.stopPropagation(); stepScore(match.id, 'home', 1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">+</button>
-                        </div>
-
-                        <span className="text-slate-600 font-black text-lg">—</span>
-
-                        {/* AWAY STEPPER */}
-                        <div className="flex items-center bg-black/40 border border-emerald-500/20 rounded-lg overflow-hidden hover:border-emerald-500/40 transition-colors">
-                          <button onClick={e => { e.stopPropagation(); stepScore(match.id, 'away', -1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">−</button>
-                          <input
-                            type="text" inputMode="numeric" pattern="[0-9]*"
-                            value={localPredictions[match.id]?.away ?? ''}
-                            onClick={e => e.stopPropagation()}
-                            placeholder="0"
-                            onChange={e => setLocalPredictions(prev => ({ ...prev, [match.id]: { ...prev[match.id] ?? { home: '' }, away: e.target.value.replace(/\D/g, '').slice(0, 2) } }))}
-                            className="w-8 h-9 bg-transparent text-center font-black text-base text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
-                          />
-                          <button onClick={e => { e.stopPropagation(); stepScore(match.id, 'away', 1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">+</button>
-                        </div>
-
-                        {/* Nombre visitante */}
-                        <span className="text-[10px] text-slate-500 font-bold truncate max-w-[60px] hidden sm:block">{aName}</span>
-                      </div>
-                    )}
-
-                  </div>
-                  {/* Goles colapsables debajo de cada partido */}
-                  <div
-                    className="col-start-2"
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <MatchGoalsCollapsible matchId={match.id} hasStarted={status.hasStarted} />
-                  </div>
-                </div>
-            );
-          })}
+            {dailyMatches.map((match, idx) => (
+              <MatchRow
+                key={match.id || idx}
+                match={match}
+                isPredictionMode={isPredictionMode}
+                prediction={localPredictions[match.id]}
+                user={user}
+                viewMode={viewMode}
+                onPredictionChange={handlePredictionChange}
+                onStepScore={stepScore}
+              />
+            ))}
           </div>
         )}
       </div>
