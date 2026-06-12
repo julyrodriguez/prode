@@ -7,6 +7,7 @@ import CopaBracket from '../components/CopaBracket';
 import TeamHoverCard from '../components/TeamHoverCard';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
+import MatchSkeleton from '../components/MatchSkeleton';
 
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
@@ -841,10 +842,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
       <div className={`transition-opacity duration-300 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
         {loading && dailyMatches.length === 0 ? (
-          <div className="w-full min-h-[300px] flex flex-col justify-center items-center gap-4">
-            <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent" />
-            <span className="text-slate-400 font-medium">Cargando partidos...</span>
-          </div>
+          <MatchSkeleton />
         ) : dailyMatches.length === 0 ? (
           <div className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col justify-center items-center text-center">
             <div className="text-5xl mb-4 opacity-50">🏟️</div>

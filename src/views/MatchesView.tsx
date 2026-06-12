@@ -5,6 +5,7 @@ import TeamForm from '../components/TeamForm';
 import CS2MatchesSection from '../components/CS2MatchesSection';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
+import MatchSkeleton from '../components/MatchSkeleton';
 
 interface MatchOdds {
   full_time?: { home?: number; draw?: number; away?: number };
@@ -378,10 +379,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
       {!error && (
         <div className={`transition-opacity duration-300 flex flex-col gap-8 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
           {loading && Object.keys(groupedMatches).length === 0 ? (
-            <div className="w-full min-h-[300px] flex flex-col justify-center items-center gap-4">
-              <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
-              <span className="text-slate-400 font-medium">Sincronizando central...</span>
-            </div>
+            <MatchSkeleton />
           ) : Object.keys(groupedMatches).length === 0 ? (
             <div className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col justify-center items-center text-center">
               <div className="text-5xl mb-4 opacity-50">🏟️</div>
