@@ -145,7 +145,6 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
 export const LEAGUES = [
   { id: 'mundial', name: 'Mundial', icon: '🌍', tournamentId: 16 },
   { id: 'general', name: 'General', icon: '🌐', tournamentId: null },
-  { id: 'jarielbet', name: 'JarielBet', icon: '🎰', tournamentId: null },
   { id: 'cs2', name: 'CS2 Premier', icon: '🔫', tournamentId: null },
   { id: 'liga-arg', name: 'Liga Argentina', icon: '🇦🇷', tournamentId: 155 },
   { id: 'brasileirao', name: 'Brasileirao', icon: '🇧🇷', tournamentId: 325 },
@@ -160,13 +159,6 @@ const LEAGUE_TABS = [
   { id: 'predicciones', label: 'Predicciones', icon: '🔮' },
   { id: 'tabla', label: 'Tabla', icon: '📊' },
   { id: 'posiciones', label: 'Posiciones', icon: '🏅' },
-] as const;
-
-const JARIELBET_TABS = [
-  { id: 'apuestas', label: 'Apuestas', icon: '🎰' },
-  { id: 'historial', label: 'Historial', icon: '📋' },
-  { id: 'pendientes', label: 'Pendientes', icon: '⏳' },
-  { id: 'tabla', label: 'Tabla', icon: '🏆' },
 ] as const;
 
 // General tab items (old behavior)
@@ -189,11 +181,8 @@ export default function AppLayout() {
   const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
 
   const isMatchDetail = location.pathname.startsWith('/match/') || location.pathname.startsWith('/team/') || location.pathname.startsWith('/cs2/player/');
-  const isJarielBet = location.pathname === '/jarielbet';
   const isCS2 = location.pathname.startsWith('/cs2');
-  const query = new URLSearchParams(location.search);
-  const activeJarielTab = isJarielBet ? (query.get('tab') || 'apuestas') : null;
-  const isGeneralSection = isJarielBet || isCS2 ? false : (activeLeagueId === 'general' || !leagueMatch);
+  const isGeneralSection = isCS2 ? false : (activeLeagueId === 'general' || !leagueMatch);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -202,7 +191,6 @@ export default function AppLayout() {
     : LEAGUE_TABS;
 
   const activeLeague = LEAGUES.find(l => {
-    if (isJarielBet) return l.id === 'jarielbet';
     if (isCS2) return l.id === 'cs2';
     return l.id === activeLeagueId;
   }) || LEAGUES.find(l => l.id === 'general') || LEAGUES[0];
@@ -210,8 +198,6 @@ export default function AppLayout() {
   const handleLeagueSelect = (leagueId: string) => {
     if (leagueId === 'general') {
       navigate('/general');
-    } else if (leagueId === 'jarielbet') {
-      navigate('/jarielbet');
     } else if (leagueId === 'cs2') {
       navigate('/cs2');
     } else {
@@ -284,11 +270,9 @@ export default function AppLayout() {
         {/* League Navigation */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto overflow-x-hidden">
           {LEAGUES.map((league) => {
-            const isActive = league.id === 'jarielbet'
-              ? isJarielBet
-              : league.id === 'cs2'
-                ? isCS2
-                : (league.id === activeLeagueId || (league.id === 'general' && isGeneralSection && !isJarielBet && !isCS2));
+            const isActive = league.id === 'cs2'
+              ? isCS2
+              : (league.id === activeLeagueId || (league.id === 'general' && isGeneralSection && !isCS2));
             return (
               <button
                 key={league.id}
@@ -297,7 +281,7 @@ export default function AppLayout() {
                   flex items-center p-3 rounded-2xl transition-all duration-200 w-full text-left
                   ${league.id === 'mundial'
                     ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
-                    : isActive && (league.id === 'jarielbet' || league.id === 'cs2')
+                    : isActive && league.id === 'cs2'
                       ? 'bg-amber-500/15 text-amber-400 shadow-[inset_0_1px_1px_rgba(245,158,11,0.1)]'
                       : isActive
                         ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
@@ -310,7 +294,7 @@ export default function AppLayout() {
                   {league.name}
                 </span>
                 {isActive && (
-                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : (league.id === 'jarielbet' || league.id === 'cs2') ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : league.id === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                 )}
               </button>
             );
@@ -388,8 +372,8 @@ export default function AppLayout() {
               <span className="font-bold text-white">{activeLeague.name}</span>
             </div>
 
-            {/* CENTER: Sub-tabs (for league sections, NOT JarielBet, NOT CS2) */}
-            {!isGeneralSection && !isJarielBet && !isCS2 && (
+            {/* CENTER: Sub-tabs (for league sections, NOT CS2) */}
+            {!isGeneralSection && !isCS2 && (
               <div className="hidden md:flex items-center bg-black/40 p-1 rounded-xl border border-white/5 gap-0.5">
                 {currentLeagueTabs.map((tab) => {
                   const isTabActive = activeTabId === tab.id;
@@ -478,25 +462,7 @@ export default function AppLayout() {
         {/* ── MOBILE BOTTOM NAV ── */}
         {!isMatchDetail && (
           <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 flex items-center justify-around shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
-            {isJarielBet ? (
-              // JarielBet Tabs
-              JARIELBET_TABS.map((tab) => {
-                const isActive = activeJarielTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => navigate(`/jarielbet?tab=${tab.id}`)}
-                    className={`
-                      flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all
-                      ${isActive ? 'text-amber-500 font-bold bg-amber-500/10' : 'text-slate-400 hover:text-white'}
-                    `}
-                  >
-                    <span className="text-xl mb-1">{tab.icon}</span>
-                    <span className="text-[10px] leading-none tracking-wide">{tab.label}</span>
-                  </button>
-                );
-              })
-            ) : isCS2 ? (
+            {isCS2 ? (
               // CS2 Tab (only one for now, or just dummy to keep layout consistent)
               <button
                 className={`flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all text-amber-500 font-bold bg-amber-500/10`}

@@ -16,10 +16,7 @@ import LeagueMinigamesView from './views/LeagueMinigamesView';
 import LeagueSimulationView from './views/LeagueSimulationView';
 import ProfileView from './views/ProfileView';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { BettingProvider } from './context/BettingContext';
 import { ThemeProvider } from './context/ThemeContext';
-import JarielBetView from './views/JarielBetView';
-import UserBetHistoryView from './views/UserBetHistoryView';
 import CS2RankingView from './views/CS2RankingView';
 import CS2ProfileView from './views/CS2ProfileView';
 
@@ -43,7 +40,6 @@ export default function App() {
   return (
     <ThemeProvider>
     <AuthProvider>
-      <BettingProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginView />} />
@@ -56,7 +52,6 @@ export default function App() {
             <Route path="ranking" element={<RankingView />} />
             <Route path="stats" element={<StatsView />} />
             <Route path="perfil" element={<ProfileView />} />
-            <Route path="jarielbet" element={<JarielBetView />} />
             <Route path="cs2" element={<CS2RankingView />} />
             <Route path="cs2/player/:steam64Id" element={<CS2ProfileView />} />
 
@@ -64,10 +59,9 @@ export default function App() {
             <Route path="match/:id" element={<MatchDetailView />} />
             <Route path="team/:id" element={<TeamView />} />
             <Route path="predictions/:userId" element={<UserPredictionsView />} />
-            <Route path="jarielbet/user/:userId" element={<UserBetHistoryView />} />
 
             {/* ── Per-League Routes ── */}
-            {LEAGUES.filter(l => l.id !== 'general' && l.id !== 'jarielbet').map(league => (
+            {LEAGUES.filter(l => l.id !== 'general').map(league => (
               <Route key={league.id} path={`liga/${league.id}`}>
                 <Route index element={<Navigate to={`/liga/${league.id}/partidos`} replace />} />
                 <Route path="partidos" element={<LeagueMatchesView />} />
@@ -86,7 +80,6 @@ export default function App() {
           </Route>
         </Routes>
       </BrowserRouter>
-      </BettingProvider>
     </AuthProvider>
     </ThemeProvider>
   );
