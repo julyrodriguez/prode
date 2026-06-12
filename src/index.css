@@ -680,6 +680,16 @@ html.lite-mode .pointer-events-none > div {
   box-shadow: none !important;
 }
 
+/* Custom premium floating animation */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-float-slow {
+  animation: float-slow 3s infinite ease-in-out;
+}
+
+
 
 
 
