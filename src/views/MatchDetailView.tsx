@@ -293,7 +293,7 @@ export default function MatchDetailView() {
     <div className="w-full flex flex-col gap-4 md:gap-6 animate-fade-in pb-6 md:pb-8 pt-2 md:pt-6">
 
       {/* Botón Volver — sticky en mobile */}
-      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none md:border-0">
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-[#09090b]/80 backdrop-blur-xl md:static md:mx-0 md:px-0 md:py-0 md:bg-transparent md:backdrop-blur-none border-0">
         <button
           onClick={() => navigate(-1)}
           className="self-start flex items-center gap-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl transition-all shadow-sm"
