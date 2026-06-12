@@ -31,21 +31,41 @@ export default function MatchDetailView() {
   }, [match?.startTimestamp]);
 
   useEffect(() => {
-    const fetchDetail = async () => {
+    if (!id) return;
+
+    let isMounted = true;
+
+    const fetchDetail = async (showLoading = false) => {
       try {
-        setLoading(true);
+        if (showLoading) setLoading(true);
         const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/detail/${id}`);
         if (!res.ok) throw new Error('Error al cargar datos del partido');
         const data = await res.json();
         const matchData = data.events ? data.events[0] : data;
-        setMatch(matchData);
+        if (isMounted) {
+          setMatch(matchData);
+        }
       } catch (err: any) {
-        setError(err.message);
+        if (showLoading && isMounted) {
+          setError(err.message);
+        }
       } finally {
-        setLoading(false);
+        if (showLoading && isMounted) {
+          setLoading(false);
+        }
       }
     };
-    if (id) fetchDetail();
+
+    fetchDetail(true);
+
+    const interval = setInterval(() => {
+      fetchDetail(false);
+    }, 15000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [id]);
 
   // Fetch predicciones del partido
