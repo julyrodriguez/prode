@@ -881,7 +881,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                   onClick={() => navigate(`/match/${match.id}`)}
                 >
                   {/* Columna Izquierda: Logo Torneo y Tiempo */}
-                  <div className="flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
+                  <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
                     <div className="w-5 h-5 md:w-6 md:h-6 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
                       <img
                         src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
@@ -1063,7 +1063,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                   </div>
                   {/* Goles colapsables debajo de cada partido */}
                   <div
-                    className="col-span-2"
+                    className="col-start-2"
                     onClick={e => e.stopPropagation()}
                   >
                     <MatchGoalsCollapsible matchId={match.id} hasStarted={status.hasStarted} />
