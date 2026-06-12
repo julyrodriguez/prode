@@ -234,9 +234,9 @@ export default function AppLayout() {
     >
 
       {/* ── GLOW BACKGROUND ── */}
-      {activeLeagueId === 'mundial' && activeTabId !== 'minijuegos' && activeTabId !== 'posiciones' ? (
+      {activeLeagueId === 'mundial' && activeTabId !== 'minijuegos' ? (
         <div className="mundial-smoke-container">
-          <div className="mundial-smoke-bg-image" />
+          <div className={`mundial-smoke-bg-image ${activeTabId === 'posiciones' ? 'is-static' : ''}`} />
         </div>
       ) : (
         <div className="fixed inset-0 z-0 pointer-events-none">

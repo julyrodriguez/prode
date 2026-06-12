@@ -576,6 +576,12 @@ img, svg, canvas, video, iframe {
   will-change: transform, opacity;
 }
 
+.mundial-smoke-bg-image.is-static {
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
 /* Light mode styling for the mundial smoke background (hidden completely) */
 [data-theme="light"] .mundial-smoke-container {
   display: none !important;
