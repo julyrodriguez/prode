@@ -469,160 +469,135 @@ export default function AppLayout() {
 
         {/* ── MOBILE BOTTOM NAV ── */}
         {!isMatchDetail && (
-          <>
-            {/* Floating button for Minijuegos (Mundial only) */}
-            {activeLeagueId === 'mundial' && (
+          <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl h-16 flex items-center justify-between px-2 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+            {isCS2 ? (
+              // CS2 Tab (only one for now, or just dummy to keep layout consistent)
               <button
-                onClick={() => navigate('/liga/mundial/minijuegos')}
-                className={`md:hidden fixed bottom-24 right-6 z-40 w-12 h-12 rounded-full text-white flex items-center justify-center border transition-all duration-200 active:scale-95 shadow-[0_4px_15px_rgba(0,0,0,0.5)] animate-float-slow
-                  ${activeTabId === 'minijuegos'
-                    ? 'bg-emerald-500 border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)] scale-105'
-                    : 'bg-gradient-to-tr from-violet-500 to-indigo-600 border-white/10 hover:scale-105'
-                  }
-                `}
-                title="Minijuegos"
+                className={`flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all duration-100 text-amber-500 font-bold bg-amber-500/10`}
               >
-                <span className="text-xl">🎮</span>
-                {activeTabId !== 'minijuegos' && (
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-violet-500 border border-white/20"></span>
-                  </span>
-                )}
+                <span className="text-xl mb-1">🔫</span>
+                <span className="text-[10px] leading-none tracking-wide">CS2</span>
               </button>
-            )}
+            ) : (
+              // General or League Nav with Protruding Matches button in center
+              (() => {
+                const isPartidosActive = isGeneralSection
+                  ? (generalTabActive === 'partidos')
+                  : (activeTabId === 'partidos' || !activeTabId);
 
-            <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[#0f172a]/95 backdrop-blur-xl border border-white/10 rounded-2xl h-16 flex items-center justify-between px-2 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
-              {isCS2 ? (
-                // CS2 Tab (only one for now, or just dummy to keep layout consistent)
-                <button
-                  className={`flex flex-col items-center justify-center py-2 rounded-xl flex-1 transition-all duration-100 text-amber-500 font-bold bg-amber-500/10`}
-                >
-                  <span className="text-xl mb-1">🔫</span>
-                  <span className="text-[10px] leading-none tracking-wide">CS2</span>
-                </button>
-              ) : (
-                // General or League Nav with Protruding Matches button in center
-                (() => {
-                  const isPartidosActive = isGeneralSection
-                    ? (generalTabActive === 'partidos')
-                    : (activeTabId === 'partidos' || !activeTabId);
-
-                  const leftItems = isGeneralSection
+                const leftItems = isGeneralSection
+                  ? [
+                      { id: 'predicciones', label: 'Predicciones', icon: '🔮', path: '/predicciones' }
+                    ]
+                  : activeLeagueId === 'mundial'
                     ? [
-                        { id: 'predicciones', label: 'Predicciones', icon: '🔮', path: '/predicciones' }
-                      ]
-                    : activeLeagueId === 'mundial'
-                      ? [
-                          { id: 'predicciones', label: 'Predicciones', icon: '🔮' },
-                          { id: 'simulacion', label: 'Simulador', icon: '🪄' }
-                        ]
-                      : [
-                          { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
-                        ];
-
-                  const rightItems = isGeneralSection
-                    ? [
-                        { id: 'ranking', label: 'Ranking', icon: '🏅', path: '/ranking' },
-                        { id: 'estadisticas', label: 'Estadísticas', icon: '📊', path: '/stats' }
+                        { id: 'minijuegos', label: 'Juegos', icon: '🎮' },
+                        { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
                       ]
                     : [
-                        { id: 'tabla', label: 'Tabla', icon: '📊' },
-                        { id: 'posiciones', label: 'Posiciones', icon: '🏅' }
+                        { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
                       ];
 
-                  return (
-                    <>
-                      {/* Left section (flexible space) */}
-                      <div className="flex-1 flex items-center justify-around gap-1 px-1 min-w-0">
-                        {leftItems.map((tab) => {
-                          const isActive = isGeneralSection
-                            ? (generalTabActive === tab.id)
-                            : (activeTabId === tab.id);
+                const rightItems = isGeneralSection
+                  ? [
+                      { id: 'ranking', label: 'Ranking', icon: '🏅', path: '/ranking' },
+                      { id: 'estadisticas', label: 'Estadísticas', icon: '📊', path: '/stats' }
+                    ]
+                  : [
+                      { id: 'tabla', label: 'Tabla', icon: '📊' },
+                      { id: 'posiciones', label: 'Posiciones', icon: '🏅' }
+                    ];
 
-                          const handleClick = () => {
-                            if (isGeneralSection && 'path' in tab) {
-                              navigate(tab.path);
-                            } else {
-                              handleTabSelect(tab.id);
-                            }
-                          };
+                return (
+                  <>
+                    {/* Left section (flexible space) */}
+                    <div className="flex-1 flex items-center justify-around gap-1 px-1 min-w-0">
+                      {leftItems.map((tab) => {
+                        const isActive = isGeneralSection
+                          ? (generalTabActive === tab.id)
+                          : (activeTabId === tab.id);
 
-                          return (
-                            <button
-                              key={tab.id}
-                              onClick={handleClick}
-                              className={`
-                                flex flex-col items-center justify-center py-1 rounded-xl flex-1 min-w-[50px] max-w-[72px] transition-all duration-100
-                                ${isActive ? 'text-emerald-400 font-bold bg-emerald-500/10' : 'text-slate-400 hover:text-white'}
-                              `}
-                            >
-                              <span className="text-lg mb-0.5">{tab.icon}</span>
-                              <span className="text-[9px] leading-none tracking-wide text-center truncate w-full">{tab.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                        const handleClick = () => {
+                          if (isGeneralSection && 'path' in tab) {
+                            navigate(tab.path);
+                          } else {
+                            handleTabSelect(tab.id);
+                          }
+                        };
 
-                      {/* Center section (fixed space for protruding button) */}
-                      <div className="w-16 flex-shrink-0 relative h-12 flex items-center justify-center">
-                        <button
-                          onClick={() => {
-                            if (isGeneralSection) {
-                              navigate('/general');
-                            } else {
-                              navigate(`/liga/${activeLeagueId}/partidos`);
-                            }
-                          }}
-                          className={`
-                            absolute -top-7 w-16 h-16 rounded-full flex flex-col items-center justify-center border-4 border-[#0f172a] shadow-lg transition-all duration-200 active:scale-90
-                            ${isPartidosActive
-                              ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
-                              : 'bg-slate-800 text-slate-300 shadow-md hover:bg-slate-700'
-                            }
-                          `}
-                        >
-                          <span className="text-2xl -mb-0.5">⚽</span>
-                          <span className="text-[9px] font-extrabold tracking-tight uppercase leading-none mt-0.5">Partidos</span>
-                        </button>
-                      </div>
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={handleClick}
+                            className={`
+                              flex flex-col items-center justify-center py-1 rounded-xl flex-1 min-w-[50px] max-w-[72px] transition-all duration-100
+                              ${isActive ? 'text-emerald-400 font-bold bg-emerald-500/10' : 'text-slate-400 hover:text-white'}
+                            `}
+                          >
+                            <span className="text-lg mb-0.5">{tab.icon}</span>
+                            <span className="text-[9px] leading-none tracking-wide text-center truncate w-full">{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                      {/* Right section (flexible space) */}
-                      <div className="flex-1 flex items-center justify-around gap-1 px-1 min-w-0">
-                        {rightItems.map((tab) => {
-                          const isActive = isGeneralSection
-                            ? (generalTabActive === tab.id)
-                            : (activeTabId === tab.id);
+                    {/* Center section (fixed space for protruding button) */}
+                    <div className="w-16 flex-shrink-0 relative h-12 flex items-center justify-center">
+                      <button
+                        onClick={() => {
+                          if (isGeneralSection) {
+                            navigate('/general');
+                          } else {
+                            navigate(`/liga/${activeLeagueId}/partidos`);
+                          }
+                        }}
+                        className={`
+                          absolute -top-7 w-16 h-16 rounded-full flex items-center justify-center border-4 border-[#0f172a] shadow-lg transition-all duration-200 active:scale-90
+                          ${isPartidosActive
+                            ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
+                            : 'bg-slate-800 text-slate-300 shadow-md hover:bg-slate-700'
+                          }
+                        `}
+                      >
+                        <span className="text-3xl">⚽</span>
+                      </button>
+                    </div>
 
-                          const handleClick = () => {
-                            if (isGeneralSection && 'path' in tab) {
-                              navigate(tab.path);
-                            } else {
-                              handleTabSelect(tab.id);
-                            }
-                          };
+                    {/* Right section (flexible space) */}
+                    <div className="flex-1 flex items-center justify-around gap-1 px-1 min-w-0">
+                      {rightItems.map((tab) => {
+                        const isActive = isGeneralSection
+                          ? (generalTabActive === tab.id)
+                          : (activeTabId === tab.id);
 
-                          return (
-                            <button
-                              key={tab.id}
-                              onClick={handleClick}
-                              className={`
-                                flex flex-col items-center justify-center py-1 rounded-xl flex-1 min-w-[50px] max-w-[72px] transition-all duration-100
-                                ${isActive ? 'text-emerald-400 font-bold bg-emerald-500/10' : 'text-slate-400 hover:text-white'}
-                              `}
-                            >
-                              <span className="text-lg mb-0.5">{tab.icon}</span>
-                              <span className="text-[9px] leading-none tracking-wide text-center truncate w-full">{tab.label}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </>
-                  );
-                })()
-              )}
-            </div>
-          </>
+                        const handleClick = () => {
+                          if (isGeneralSection && 'path' in tab) {
+                            navigate(tab.path);
+                          } else {
+                            handleTabSelect(tab.id);
+                          }
+                        };
+
+                        return (
+                          <button
+                            key={tab.id}
+                            onClick={handleClick}
+                            className={`
+                              flex flex-col items-center justify-center py-1 rounded-xl flex-1 min-w-[50px] max-w-[72px] transition-all duration-100
+                              ${isActive ? 'text-emerald-400 font-bold bg-emerald-500/10' : 'text-slate-400 hover:text-white'}
+                            `}
+                          >
+                            <span className="text-lg mb-0.5">{tab.icon}</span>
+                            <span className="text-[9px] leading-none tracking-wide text-center truncate w-full">{tab.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()
+            )}
+          </div>
         )}
 
       </main>

@@ -856,12 +856,23 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
       {/* Prediction mode banner */}
       {isPredictionMode && (
-        <div className="flex items-center gap-3 warning-banner border rounded-2xl px-5 py-3">
-          <span className="text-lg">🔒</span>
-          <p className="text-sm font-semibold">
-            <strong className="font-black">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
-            <strong className="font-black">1 hora antes</strong> del comienzo del partido.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/20 backdrop-blur-sm border border-white/5 rounded-2xl p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🔒</span>
+            <p className="text-sm font-semibold text-slate-300">
+              <strong className="font-black text-white">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
+              <strong className="font-black text-white">1 hora antes</strong> del comienzo del partido.
+            </p>
+          </div>
+          {activeLeague.id === 'mundial' && (
+            <button
+              onClick={() => navigate('/liga/mundial/simulacion')}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-sm shadow-[0_4px_15px_rgba(99,102,241,0.3)] transition-all duration-150 active:scale-95 shrink-0 self-start sm:self-auto"
+            >
+              <span>🪄</span>
+              <span>Ir al Simulador</span>
+            </button>
+          )}
         </div>
       )}
 
