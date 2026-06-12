@@ -428,6 +428,7 @@ const MatchRow = memo(({
 export default function LeagueMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const { activeLeague } = useOutletContext<{ activeLeague: LeagueType }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);

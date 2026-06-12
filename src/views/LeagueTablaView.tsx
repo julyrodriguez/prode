@@ -104,7 +104,6 @@ export default function LeagueTablaView() {
       <h1 className="relative z-10 text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-indigo-400">
         📊 Tabla de Posiciones
       </h1>
-      <p className="relative z-10 text-slate-400 font-medium mt-1">{activeLeague.name}</p>
     </div>
   );
 
