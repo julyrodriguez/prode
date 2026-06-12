@@ -80,6 +80,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
       if (showLoading) {
         setLoading(true);
         setError(null);
+        setAllMatches([]); // Clear matches to trigger skeleton immediately
       }
       try {
         const url = new URL('https://apivacas.jariel.com.ar/api/matches/optimized');

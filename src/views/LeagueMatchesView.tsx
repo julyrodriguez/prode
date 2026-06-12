@@ -185,6 +185,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       if (showLoading) {
         setLoading(true);
         setError(null);
+        setAllMatches([]); // Clear matches to trigger skeleton immediately
       }
       try {
         let events: Match[] = [];
