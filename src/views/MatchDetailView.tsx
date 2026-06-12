@@ -518,40 +518,161 @@ export default function MatchDetailView() {
         </div>
       )}
 
-      {/* Data Section: Detalles, Alineaciones y Estadísticas */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 md:gap-4">
-
-        {/* COLUMNA IZQUIERDA: Info + Alineaciones + Predicciones */}
-        <div className="xl:col-span-1 flex flex-col gap-3 md:gap-4">
-
-          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
-            <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
-            <div className="flex flex-col gap-2 z-10">
-              {dateStr && (
-                <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                    <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Fecha Programada</span>
-                    <span className="text-[10px] md:text-xs text-slate-200 font-bold capitalize">{dateStr}</span>
-                  </div>
-                </div>
-              )}
-
-              {timeStr && (
-                <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                    <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Hora (Local)</span>
-                    <span className="text-[10px] md:text-xs text-slate-200 font-bold">{timeStr} HS</span>
-                  </div>
-                </div>
-              )}
+      {/* Estadísticas (Movido debajo de la Cronología de Eventos) */}
+      {match.live_statistics && match.live_statistics.length > 0 && (
+        <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
+          <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
+              <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas</h3>
+            </div>
+            <div className="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest bg-black/30 px-2 py-0.5 md:px-3 md:py-1 rounded-lg border border-white/5">
+              <span className="text-emerald-400 truncate max-w-[70px] md:max-w-[80px]" title={hName}>{hName}</span>
+              <span className="text-slate-600 font-sans select-none">-</span>
+              <span className="text-indigo-400 truncate max-w-[70px] md:max-w-[80px]" title={aName}>{aName}</span>
             </div>
           </div>
+
+          {/* Iteramos sobre los grupos de estadísticas */}
+          <div className="flex flex-col gap-4 md:gap-6">
+            {match.live_statistics.map((group: any, gIdx: number) => (
+              <div key={gIdx} className="flex flex-col gap-2 md:gap-4">
+                <h4 className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest pl-1.5 md:pl-2 border-l-2 border-slate-600">
+                  {translateGroup(group.groupName)}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 md:gap-y-3">
+                  {group.statisticsItems.map((stat: any, idx: number) => {
+                    const homeVal = parseStatValue(stat.home);
+                    const awayVal = parseStatValue(stat.away);
+                    const total = homeVal + awayVal || 1;
+                    const hPct = (homeVal / total) * 100;
+                    const aPct = (awayVal / total) * 100;
+
+                    const isHomeWinner = homeVal > awayVal;
+                    const isAwayWinner = awayVal > homeVal;
+
+                    return (
+                      <div key={idx} className="flex flex-col gap-1">
+                        <div className="flex justify-between items-center px-1">
+                          <span className={`text-[10px] md:text-xs ${isHomeWinner ? 'text-emerald-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.home}</span>
+                          <span className="text-slate-400 text-[8px] md:text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
+                          <span className={`text-[10px] md:text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
+                        </div>
+                        <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
+                          {/* Barra local: crece hacia la izquierda */}
+                          <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
+                            <div
+                              className="h-full bg-emerald-500/90 shadow-[0_0_6px_rgba(16,185,129,0.4)] rounded-full transition-all duration-1000 ease-out"
+                              style={{ width: `${hPct}%` }}
+                            />
+                          </div>
+                          {/* Barra visitante: crece hacia la derecha */}
+                          <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-start border border-white/5">
+                            <div
+                              className="h-full bg-indigo-500/90 shadow-[0_0_6px_rgba(99,102,241,0.4)] rounded-full transition-all duration-1000 ease-out"
+                              style={{ width: `${aPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Data Section: Detalles, Alineaciones y Pronósticos */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-3 md:gap-4">
+
+        {/* COLUMNA IZQUIERDA: Alineaciones, Posiciones e Historial */}
+        <div className="xl:col-span-1 flex flex-col gap-3 md:gap-4">
+
+          {/* Detalles (solo antes de empezar el partido) */}
+          {!hasStarted && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
+              <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
+              <div className="flex flex-col gap-2 z-10">
+                {dateStr && (
+                  <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                      <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Fecha Programada</span>
+                      <span className="text-[10px] md:text-xs text-slate-200 font-bold capitalize">{dateStr}</span>
+                    </div>
+                  </div>
+                )}
+
+                {timeStr && (
+                  <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                      <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Hora (Local)</span>
+                      <span className="text-[10px] md:text-xs text-slate-200 font-bold">{timeStr} HS</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Alineaciones */}
+          {match.lineups && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-[10px] md:text-xs">📋</span>
+                <h3 className="text-xs md:text-sm font-bold text-slate-200">Alineaciones Iniciales</h3>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase tracking-widest px-1 pb-2 border-b border-white/5">
+                  <span className="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">{match.lineups.home?.formation || 'Local'}</span>
+                  <span className="text-indigo-400 bg-indigo-400/10 px-1.5 py-0.5 rounded border border-indigo-400/20">{match.lineups.away?.formation || 'Visitante'}</span>
+                </div>
+
+                <div className="flex w-full gap-2">
+                  {/* LOCAL */}
+                  <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
+                    {(match.lineups.home?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 group min-w-0">
+                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0">
+                          {p.jerseyNumber}
+                        </span>
+                        <div className="flex flex-col truncate border-b border-transparent group-hover:border-emerald-500/30 transition-all overflow-hidden w-full">
+                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
+                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Divisor */}
+                  <div className="w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+
+                  {/* VISITANTE */}
+                  <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
+                    {(match.lineups.away?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
+                      <div key={i} className="flex items-center justify-end gap-2 group text-right min-w-0">
+                        <div className="flex flex-col truncate items-end border-b border-transparent group-hover:border-indigo-500/30 transition-all overflow-hidden w-full">
+                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
+                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                        </div>
+                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0">
+                          {p.jerseyNumber}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Posiciones en la tabla */}
           {match.posiciones && (
@@ -633,60 +754,10 @@ export default function MatchDetailView() {
             </div>
           )}
 
+        </div>
 
-          {/* Alineaciones */}
-          {match.lineups && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4">
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-[10px] md:text-xs">📋</span>
-                <h3 className="text-xs md:text-sm font-bold text-slate-200">Alineaciones Iniciales</h3>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase tracking-widest px-1 pb-2 border-b border-white/5">
-                  <span className="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">{match.lineups.home?.formation || 'Local'}</span>
-                  <span className="text-indigo-400 bg-indigo-400/10 px-1.5 py-0.5 rounded border border-indigo-400/20">{match.lineups.away?.formation || 'Visitante'}</span>
-                </div>
-
-                <div className="flex w-full gap-2">
-                  {/* LOCAL */}
-                  <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
-                    {(match.lineups.home?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 group min-w-0">
-                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0">
-                          {p.jerseyNumber}
-                        </span>
-                        <div className="flex flex-col truncate border-b border-transparent group-hover:border-emerald-500/30 transition-all overflow-hidden w-full">
-                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
-                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Divisor */}
-                  <div className="w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
-
-                  {/* VISITANTE */}
-                  <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
-                    {(match.lineups.away?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
-                      <div key={i} className="flex items-center justify-end gap-2 group text-right min-w-0">
-                        <div className="flex flex-col truncate items-end border-b border-transparent group-hover:border-indigo-500/30 transition-all overflow-hidden w-full">
-                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
-                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                        </div>
-                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0">
-                          {p.jerseyNumber}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Sección: Predicciones de usuarios movida a la izquierda debajo de alineaciones */}
+        {/* COLUMNA DERECHA: Pronósticos */}
+        <div className="xl:col-span-2 flex flex-col gap-3 md:gap-4">
           {(() => {
             const nowSec = Math.floor(Date.now() / 1000);
             const start = match.startTimestamp ?? 0;
@@ -789,82 +860,7 @@ export default function MatchDetailView() {
               </div>
             );
           })()}
-
         </div>
-
-        {/* COLUMNA DERECHA: Estadísticas */}
-        <div className="xl:col-span-2 flex flex-col gap-3 md:gap-4">
-          {match.live_statistics && match.live_statistics.length > 0 ? (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
-              <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
-                <div className="flex items-center gap-1.5 md:gap-2">
-                  <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
-                  <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas</h3>
-                </div>
-                <div className="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest bg-black/30 px-2 py-0.5 md:px-3 md:py-1 rounded-lg border border-white/5">
-                  <span className="text-emerald-400 truncate max-w-[70px] md:max-w-[80px]" title={hName}>{hName}</span>
-                  <span className="text-slate-600 font-sans select-none">-</span>
-                  <span className="text-indigo-400 truncate max-w-[70px] md:max-w-[80px]" title={aName}>{aName}</span>
-                </div>
-              </div>
-
-              {/* Iteramos sobre los grupos de estadísticas */}
-              <div className="flex flex-col gap-4 md:gap-6">
-                {match.live_statistics.map((group: any, gIdx: number) => (
-                  <div key={gIdx} className="flex flex-col gap-2 md:gap-4">
-                    <h4 className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest pl-1.5 md:pl-2 border-l-2 border-slate-600">
-                      {translateGroup(group.groupName)}
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 md:gap-y-3">
-                      {group.statisticsItems.map((stat: any, idx: number) => {
-                        const homeVal = parseStatValue(stat.home);
-                        const awayVal = parseStatValue(stat.away);
-                        const total = homeVal + awayVal || 1;
-                        const hPct = (homeVal / total) * 100;
-                        const aPct = (awayVal / total) * 100;
-
-                        const isHomeWinner = homeVal > awayVal;
-                        const isAwayWinner = awayVal > homeVal;
-
-                        return (
-                          <div key={idx} className="flex flex-col gap-1">
-                            <div className="flex justify-between items-center px-1">
-                              <span className={`text-[10px] md:text-xs ${isHomeWinner ? 'text-emerald-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.home}</span>
-                              <span className="text-slate-400 text-[8px] md:text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
-                              <span className={`text-[10px] md:text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
-                            </div>
-                            <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
-                              {/* Barra local: crece hacia la izquierda */}
-                              <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
-                                <div
-                                  className="h-full bg-emerald-500/90 shadow-[0_0_6px_rgba(16,185,129,0.4)] rounded-full transition-all duration-1000 ease-out"
-                                  style={{ width: `${hPct}%` }}
-                                />
-                              </div>
-                              {/* Barra visitante: crece hacia la derecha */}
-                              <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-start border border-white/5">
-                                <div
-                                  className="h-full bg-indigo-500/90 shadow-[0_0_6px_rgba(99,102,241,0.4)] rounded-full transition-all duration-1000 ease-out"
-                                  style={{ width: `${aPct}%` }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center text-slate-500 h-full min-h-[150px] md:min-h-[200px]">
-              <div className="text-2xl md:text-3xl mb-2 md:mb-3 opacity-30">📊</div>
-              <p className="text-[10px] md:text-[11px] font-medium z-10 text-center px-4">Estadísticas disponibles pronto.</p>
-            </div>
-          )}
-        </div>
-      </div>
 
     </div>
   );
