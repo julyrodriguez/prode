@@ -979,60 +979,60 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
             )}
           </div>
         ) : (
-          <div className="relative overflow-hidden podium-card rounded-[2rem] p-6 flex flex-col gap-6 backdrop-blur-xl border border-white/10 shadow-xl">
+          <div className="relative overflow-hidden podium-card rounded-[2rem] p-4 md:p-5 flex flex-col gap-3 backdrop-blur-xl border border-white/10 shadow-xl">
             {/* Decorative Glow Blob */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex flex-col items-center text-center gap-1.5 relative z-10">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl animate-pulse">🏆</span>
-                <h2 className="text-xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-200 to-emerald-400">
+            <div className="flex flex-col items-center text-center gap-1 relative z-10">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xl animate-pulse">🏆</span>
+                <h2 className="text-lg font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-200 to-emerald-400">
                   Tus Pronósticos del Podio
                 </h2>
               </div>
-              <p className="text-slate-400 text-xs font-semibold">
+              <p className="text-slate-400 text-[10px] md:text-xs font-semibold">
                 Esta es tu predicción definitiva guardada para las primeras tres posiciones del Mundial.
               </p>
             </div>
 
             {/* Visual Podium Container */}
-            <div className="flex items-end justify-center gap-3 md:gap-5 pt-8 pb-4 relative z-10 max-w-lg mx-auto w-full">
+            <div className="flex items-end justify-center gap-3 md:gap-5 pt-3 pb-1 relative z-10 max-w-lg mx-auto w-full">
               
               {/* 2nd Place (Left) */}
-              <div className="flex-1 flex flex-col items-center gap-2 max-w-[130px] md:max-w-[140px]">
-                <span className="text-slate-200 font-extrabold text-xs md:text-sm truncate text-center w-full px-1">
+              <div className="flex-1 flex flex-col items-center gap-1.5 max-w-[130px] md:max-w-[140px]">
+                <span className="text-slate-200 font-extrabold text-[11px] md:text-xs truncate text-center w-full px-1">
                   {podiumRunnerUp || '—'}
                 </span>
-                <div className="w-full h-24 md:h-28 rounded-t-2xl bg-gradient-to-t from-slate-900/90 to-slate-800/40 border-t border-x border-slate-500/30 flex flex-col items-center justify-center p-3 shadow-lg backdrop-blur-sm group hover:border-slate-400/40 transition-all">
-                  <span className="text-2xl md:text-3xl mb-1">🥈</span>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-300">2° Puesto</span>
+                <div className="w-full h-16 md:h-20 rounded-t-2xl bg-gradient-to-t from-slate-900/90 to-slate-800/40 border-t border-x border-slate-500/30 flex flex-col items-center justify-center p-2.5 shadow-lg backdrop-blur-sm group hover:border-slate-400/40 transition-all">
+                  <span className="text-xl md:text-2xl mb-0.5">🥈</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-300">2° Puesto</span>
                 </div>
               </div>
 
               {/* 1st Place (Middle - Taller) */}
-              <div className="flex-1 flex flex-col items-center gap-2 max-w-[140px] md:max-w-[150px]">
-                <span className="text-amber-400 font-black text-sm md:text-base truncate text-center w-full px-1 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)]">
+              <div className="flex-1 flex flex-col items-center gap-1.5 max-w-[140px] md:max-w-[150px]">
+                <span className="text-amber-400 font-black text-xs md:text-sm truncate text-center w-full px-1 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)]">
                   {podiumChampion || '—'}
                 </span>
-                <div className="w-full h-32 md:h-36 rounded-t-2xl bg-gradient-to-t from-amber-950/70 to-amber-500/10 border-t border-x border-amber-500/40 flex flex-col items-center justify-center p-3 shadow-[0_0_20px_rgba(245,158,11,0.1)] backdrop-blur-sm group hover:border-amber-400/50 transition-all relative">
+                <div className="w-full h-22 md:h-26 rounded-t-2xl bg-gradient-to-t from-amber-950/70 to-amber-500/10 border-t border-x border-amber-500/40 flex flex-col items-center justify-center p-2.5 shadow-[0_0_20px_rgba(245,158,11,0.1)] backdrop-blur-sm group hover:border-amber-400/50 transition-all relative">
                   {/* Crown badge */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-black font-black text-[9px] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow">
+                  <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-500 text-black font-black text-[8px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow">
                     Campeón
                   </div>
-                  <span className="text-3xl md:text-4xl mb-1 mt-1">🥇</span>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">1° Lugar</span>
+                  <span className="text-2xl md:text-3xl mb-0.5 mt-0.5">🥇</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-400">1° Lugar</span>
                 </div>
               </div>
 
               {/* 3rd Place (Right) */}
-              <div className="flex-1 flex flex-col items-center gap-2 max-w-[130px] md:max-w-[140px]">
-                <span className="text-orange-300 font-extrabold text-xs md:text-sm truncate text-center w-full px-1">
+              <div className="flex-1 flex flex-col items-center gap-1.5 max-w-[130px] md:max-w-[140px]">
+                <span className="text-orange-300 font-extrabold text-[11px] md:text-xs truncate text-center w-full px-1">
                   {podiumThirdPlace || '—'}
                 </span>
-                <div className="w-full h-20 md:h-22 rounded-t-2xl bg-gradient-to-t from-orange-950/90 to-orange-900/30 border-t border-x border-orange-700/30 flex flex-col items-center justify-center p-3 shadow-lg backdrop-blur-sm group hover:border-orange-500/40 transition-all">
-                  <span className="text-2xl md:text-3xl mb-1">🥉</span>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-400">3° Puesto</span>
+                <div className="w-full h-12 md:h-14 rounded-t-2xl bg-gradient-to-t from-orange-950/90 to-orange-900/30 border-t border-x border-orange-700/30 flex flex-col items-center justify-center p-2.5 shadow-lg backdrop-blur-sm group hover:border-orange-500/40 transition-all">
+                  <span className="text-xl md:text-2xl mb-0.5">🥉</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider text-orange-400">3° Puesto</span>
                 </div>
               </div>
 
