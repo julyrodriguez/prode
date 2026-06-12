@@ -533,6 +533,86 @@ export default function MatchDetailView() {
             </div>
           </div>
 
+          {/* Posiciones en la tabla */}
+          {match.posiciones && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 text-[10px] md:text-xs">🏆</span>
+                <h3 className="text-xs md:text-sm font-bold text-slate-200">Posiciones</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {/* LOCAL */}
+                <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1 truncate max-w-full">{hName}</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg md:text-2xl font-black text-emerald-400">#{match.posiciones.home?.posicion || match.posiciones.home?.position || '-'}</span>
+                    <span className="text-[9px] text-slate-500 font-bold">Pos</span>
+                  </div>
+                  <span className="text-[10px] text-slate-300 font-semibold mt-0.5">{match.posiciones.home?.puntos || match.posiciones.home?.points || '0'} pts</span>
+                </div>
+                {/* VISITANTE */}
+                <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                  <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1 truncate max-w-full">{aName}</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-lg md:text-2xl font-black text-indigo-400">#{match.posiciones.away?.posicion || match.posiciones.away?.position || '-'}</span>
+                    <span className="text-[9px] text-slate-500 font-bold">Pos</span>
+                  </div>
+                  <span className="text-[10px] text-slate-300 font-semibold mt-0.5">{match.posiciones.away?.puntos || match.posiciones.away?.points || '0'} pts</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Historial / Enfrentamientos Previos */}
+          {match.historial && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20 text-[10px] md:text-xs">⚔️</span>
+                <h3 className="text-xs md:text-sm font-bold text-slate-200">Historial Reciente</h3>
+              </div>
+
+              {typeof match.historial === 'string' ? (
+                <p className="text-[10px] md:text-xs text-slate-300 bg-black/20 p-2 rounded-xl border border-white/5 leading-relaxed">{match.historial}</p>
+              ) : (
+                <div className="flex flex-col gap-2 bg-black/20 p-2.5 rounded-xl border border-white/5">
+                  <div className="flex justify-between items-center text-[9px] md:text-[10px] font-bold text-slate-400">
+                    <span>Jugaron {match.historial.jugaron || match.historial.total || 0} partidos</span>
+                    {match.historial.diferencia && (
+                      <span className="text-amber-400 font-black uppercase tracking-wider">{match.historial.diferencia}</span>
+                    )}
+                  </div>
+
+                  {/* Barra de distribución */}
+                  {(() => {
+                    const hWins = Number(match.historial.ganadosHome || match.historial.homeWins || 0);
+                    const aWins = Number(match.historial.ganadosAway || match.historial.awayWins || 0);
+                    const draws = Number(match.historial.empataron || match.historial.draws || 0);
+                    const total = hWins + aWins + draws || 1;
+
+                    const hPct = (hWins / total) * 100;
+                    const dPct = (draws / total) * 100;
+                    const aPct = (aWins / total) * 100;
+
+                    return (
+                      <div className="flex flex-col gap-2">
+                        <div className="w-full h-2 rounded-full overflow-hidden flex bg-white/5">
+                          <div className="h-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.3)]" style={{ width: `${hPct}%` }} title={`Ganó ${hName}`} />
+                          <div className="h-full bg-slate-600" style={{ width: `${dPct}%` }} title="Empates" />
+                          <div className="h-full bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.3)]" style={{ width: `${aPct}%` }} title={`Ganó ${aName}`} />
+                        </div>
+                        <div className="flex justify-between text-[9px] md:text-[10px] font-bold">
+                          <span className="text-emerald-400">{hWins} {hWins === 1 ? 'victoria' : 'victorias'}</span>
+                          <span className="text-slate-400">{draws} Empate{draws !== 1 ? 's' : ''}</span>
+                          <span className="text-indigo-400">{aWins} {aWins === 1 ? 'victoria' : 'victorias'}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+
 
           {/* Alineaciones */}
           {match.lineups && (
