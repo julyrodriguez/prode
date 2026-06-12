@@ -186,7 +186,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const getMatchTime = (match: Match) => {
     const statusDesc = typeof match.status === 'object' ? match.status?.description?.toLowerCase() : match.status?.toLowerCase();
 
-    if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ENTRETIEMPO';
+    if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ET';
 
     if (statusDesc?.includes('1st') || statusDesc?.includes('first')) {
       return 'PRIMER TIEMPO';

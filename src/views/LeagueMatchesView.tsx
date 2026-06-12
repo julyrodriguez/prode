@@ -150,7 +150,7 @@ const parseMatchStatus = (match: Match) => {
 
 const getMatchTime = (match: Match) => {
   const statusDesc = typeof match.status === 'object' ? match.status?.description?.toLowerCase() : match.status?.toLowerCase();
-  if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ENTRETIEMPO';
+  if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ET';
   if (statusDesc?.includes('1st') || statusDesc?.includes('first')) return 'PRIMER TIEMPO';
   if (statusDesc?.includes('2nd') || statusDesc?.includes('second')) return 'SEGUNDO TIEMPO';
   if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
