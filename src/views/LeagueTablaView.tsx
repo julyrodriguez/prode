@@ -122,15 +122,14 @@ export default function LeagueTablaView() {
   };
 
   const Header = () => (
-    <div className="relative bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-6 lg:p-8 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] mb-2">
-      <div className="absolute top-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none translate-x-1/2 translate-y-1/2" />
-      <h1 className="relative z-10 text-3xl lg:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-tight drop-shadow-md">
+    <div className="relative bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-3xl p-5 sm:p-6 overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.5)] mb-2">
+      <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none translate-x-1/2 translate-y-1/2" />
+      <h1 className="relative z-10 text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-250 to-emerald-400 tracking-tight drop-shadow-md">
         📊 Tabla de Posiciones
       </h1>
-      <p className="text-slate-400 text-sm font-semibold mt-1.5 flex items-center gap-1.5 relative z-10">
-        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-        {activeLeague.name}
+      <p className="text-slate-400 text-xs font-semibold mt-1 relative z-10">
+        Estadísticas oficiales de la fase de grupos
       </p>
     </div>
   );
@@ -140,7 +139,7 @@ export default function LeagueTablaView() {
       <div className="w-full flex flex-col gap-6 pb-10">
         <Header />
         <div className="flex-1 min-h-[300px] flex flex-col justify-center items-center bg-white/[0.02] border border-white/5 rounded-[2rem] gap-4">
-          <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-cyan-400 border-r-2 border-transparent" />
+          <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
           <span className="text-slate-400 font-medium">Cargando tabla de posiciones...</span>
         </div>
       </div>
@@ -163,7 +162,7 @@ export default function LeagueTablaView() {
       <div className="w-full flex flex-col gap-6 pb-10">
         <Header />
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-16 flex flex-col items-center gap-5 text-center">
-          <div className="w-20 h-20 rounded-3xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-5xl shadow-[0_0_40px_rgba(6,182,212,0.1)]">
+          <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-5xl shadow-[0_0_40px_rgba(245,158,11,0.1)]">
             🏟️
           </div>
           <div>
@@ -184,7 +183,7 @@ export default function LeagueTablaView() {
   const dataForLegend = (isGroupLeague ? availableTabs : tabsToShow).flatMap(tab => standingsData[tab] || []);
 
   return (
-    <div className="w-full flex flex-col gap-6 pb-10">
+    <div className="w-full flex flex-col gap-6 pb-10 animate-fade-in">
       <Header />
 
       {/* Group Selector Tabs for Mundial/Group Tournaments */}
@@ -194,7 +193,7 @@ export default function LeagueTablaView() {
             onClick={() => setSelectedGroupTab('all')}
             className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border border-transparent cursor-pointer whitespace-nowrap ${
               selectedGroupTab === 'all'
-                ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
@@ -206,7 +205,7 @@ export default function LeagueTablaView() {
               onClick={() => setSelectedGroupTab(tabKey)}
               className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border border-transparent cursor-pointer whitespace-nowrap ${
                 selectedGroupTab === tabKey
-                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                  ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -224,7 +223,7 @@ export default function LeagueTablaView() {
               key={tabKey}
               onClick={() => setActiveTab(tabKey)}
               className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === tabKey
-                  ? 'bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.4)]'
+                  ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
             >
@@ -250,22 +249,22 @@ export default function LeagueTablaView() {
             <div key={tab} className="flex flex-col gap-3">
               {isGroupLeague && (
                 <div className="flex items-center pl-2 group-header-container">
-                  <div className="w-1.5 h-6 bg-cyan-400 rounded-full mr-3 shadow-[0_0_10px_rgba(34,211,238,0.4)]" />
+                  <div className="w-1.5 h-6 bg-amber-500 rounded-full mr-3 shadow-[0_0_10px_rgba(245,158,11,0.4)]" />
                   <h3 className="text-xl font-bold group-header-gradient">
                     {formatTabName(tab)}
                   </h3>
                 </div>
               )}
-              <div className="overflow-hidden bg-[#0b1015]/60 rounded-[2rem] border border-cyan-500/10 relative shadow-2xl backdrop-blur-md">
+              <div className="overflow-hidden bg-[#0b1015]/60 rounded-[2rem] border border-white/5 relative shadow-2xl backdrop-blur-md">
                 <div className="w-full h-full overflow-auto custom-scrollbar max-h-[800px]">
                   <table className={`w-full text-left border-collapse ${minW} text-sm`}>
-                    <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-350 sticky top-0 z-10 text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
+                    <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-300 sticky top-0 z-10 text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
                       <tr>
                         <th className={`${headPY} px-2 sm:px-3 w-8 sm:w-10 text-center`}>#</th>
                         <th className={`${headPY} px-2 text-left`}>Equipo</th>
                         {isPromedios ? (
                           <>
-                            <th className={`${headPY} px-2 text-center text-cyan-400`}>Prom</th>
+                            <th className={`${headPY} px-2 text-center text-amber-400`}>Prom</th>
                             <th className={`${headPY} px-2 text-center`}>Pts</th>
                             <th className={`${headPY} px-2 text-center`}>PJ</th>
                             <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Act</th>
@@ -274,7 +273,7 @@ export default function LeagueTablaView() {
                           </>
                         ) : (
                           <>
-                            <th className={`${headPY} px-1 sm:px-2 text-center text-cyan-400`}>Pts</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center text-amber-400`}>Pts</th>
                             <th className={`${headPY} px-1 sm:px-2 text-center`}>PJ</th>
                             <th className={`${headPY} px-1 sm:px-2 text-center`}>G</th>
                             <th className={`${headPY} px-1 sm:px-2 text-center`}>E</th>
@@ -293,7 +292,7 @@ export default function LeagueTablaView() {
                           <tr
                             key={row.equipoId || idx}
                             onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
-                            className="hover:bg-cyan-500/[0.05] transition-colors group cursor-pointer"
+                            className="hover:bg-amber-500/[0.04] transition-colors group cursor-pointer"
                           >
                             <td className={`${bodyPY} px-2 sm:px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
                               {row.posicion || idx + 1}
@@ -318,22 +317,22 @@ export default function LeagueTablaView() {
 
                             {isPromedios ? (
                               <>
-                                <td className={`${bodyPY} px-2 text-center font-black text-cyan-400 bg-cyan-500/5`}>{row.coeficiente?.toFixed(3)}</td>
+                                <td className={`${bodyPY} px-2 text-center font-black text-amber-400 bg-amber-500/5`}>{row.coeficiente?.toFixed(3)}</td>
                                 <td className={`${bodyPY} px-2 text-center font-black text-white`}>{row.puntosTotales}</td>
                                 <td className={`${bodyPY} px-2 text-center text-slate-400 font-medium`}>{row.partidosTotales}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
                               </>
                             ) : (
                               <>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center font-black text-cyan-400 bg-cyan-500/5`}>{row.puntos ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center font-black text-amber-400 bg-amber-500/5`}>{row.puntos ?? '-'}</td>
                                 <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-450 font-medium`}>{row.partidosJugados ?? '-'}</td>
                                 <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-350 font-medium`}>{row.ganados ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.empatados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-450`}>{row.empatados ?? '-'}</td>
                                 <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.perdidos ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
                                 <td className={`${bodyPY} px-1 sm:px-2 text-center font-bold text-slate-350`}>{row.diferenciaGoles ?? '-'}</td>
                               </>
                             )}
