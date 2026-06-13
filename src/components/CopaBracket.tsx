@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Trophy } from 'lucide-react';
 
 interface BracketMatch {
@@ -19,13 +19,13 @@ interface BracketData {
 }
 
 function TeamRow({ name, teamId, hasBorder }: { name: string; teamId?: number; hasBorder?: boolean }) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const clickable = !!teamId;
 
   return (
     <div
       className={`px-3 py-2 flex items-center gap-2${hasBorder ? ' border-b border-white/5' : ''}${clickable ? ' cursor-pointer hover:bg-white/10' : ''}`}
-      onClick={clickable ? () => navigate(`/team/${teamId}`) : undefined}
+      onClick={clickable ? () => router.push(`/team/${teamId}`) : undefined}
       title={clickable ? `Ver ${name}` : name}
     >
       {teamId ? (
