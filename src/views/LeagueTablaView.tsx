@@ -39,6 +39,9 @@ export default function LeagueTablaView() {
   const [error, setError] = useState<string | null>(null);
   const [standingsData, setStandingsData] = useState<Record<string, any[]>>({});
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [selectedGroupTab, setSelectedGroupTab] = useState<string>('all');
+
+  const availableTabs = Object.keys(standingsData);
 
   useEffect(() => {
     let isMounted = true;
@@ -68,10 +71,10 @@ export default function LeagueTablaView() {
 
         setStandingsData(filledTables);
 
-        const availableTabs = Object.keys(filledTables);
-        if (availableTabs.length > 0) {
-          if (!activeTab || !availableTabs.includes(activeTab)) {
-            setActiveTab(availableTabs[0]);
+        const available = Object.keys(filledTables);
+        if (available.length > 0) {
+          if (!activeTab || !available.includes(activeTab)) {
+            setActiveTab(available[0]);
           }
         } else {
           setActiveTab(null);
@@ -91,6 +94,23 @@ export default function LeagueTablaView() {
     };
   }, [tournamentId]);
 
+  // Handle auto-focus of group tab on mobile layout
+  useEffect(() => {
+    if (availableTabs.length === 0) return;
+    
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSelectedGroupTab(prev => prev === 'all' ? availableTabs[0] : prev);
+      } else {
+        setSelectedGroupTab('all');
+      }
+    };
+    
+    handleResize(); // Run initially
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [standingsData]);
+
   const getBackgroundColorForPromotion = (promoDesc: string | null) => {
     if (!promoDesc) return '';
     const dl = promoDesc.toLowerCase();
@@ -102,11 +122,16 @@ export default function LeagueTablaView() {
   };
 
   const Header = () => (
-    <div className="relative bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 lg:p-8 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.5)] mb-2">
-      <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-cyan-500/8 to-transparent blur-3xl pointer-events-none" />
-      <h1 className="relative z-10 text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-indigo-400">
+    <div className="relative bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-6 lg:p-8 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)] mb-2">
+      <div className="absolute top-0 left-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none translate-x-1/2 translate-y-1/2" />
+      <h1 className="relative z-10 text-3xl lg:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-indigo-400 tracking-tight drop-shadow-md">
         📊 Tabla de Posiciones
       </h1>
+      <p className="text-slate-400 text-sm font-semibold mt-1.5 flex items-center gap-1.5 relative z-10">
+        <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+        {activeLeague.name}
+      </p>
     </div>
   );
 
@@ -133,8 +158,6 @@ export default function LeagueTablaView() {
     );
   }
 
-  const availableTabs = Object.keys(standingsData);
-
   if (availableTabs.length === 0) {
     return (
       <div className="w-full flex flex-col gap-6 pb-10">
@@ -155,14 +178,45 @@ export default function LeagueTablaView() {
   }
 
   const isGroupLeague = activeLeague.id === 'mundial' || activeLeague.id === 'libertadores';
-  const tabsToShow = isGroupLeague ? availableTabs : (activeTab ? [activeTab] : []);
-  const dataForLegend = tabsToShow.flatMap(tab => standingsData[tab] || []);
+  const tabsToShow = isGroupLeague
+    ? (selectedGroupTab === 'all' ? availableTabs : [selectedGroupTab])
+    : (activeTab ? [activeTab] : []);
+  const dataForLegend = (isGroupLeague ? availableTabs : tabsToShow).flatMap(tab => standingsData[tab] || []);
 
   return (
     <div className="w-full flex flex-col gap-6 pb-10">
       <Header />
 
-      {/* Tabs */}
+      {/* Group Selector Tabs for Mundial/Group Tournaments */}
+      {isGroupLeague && availableTabs.length > 1 && (
+        <div className="flex items-center gap-1.5 p-1.5 bg-slate-900/40 border border-white/5 rounded-2xl overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-inner">
+          <button
+            onClick={() => setSelectedGroupTab('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border border-transparent cursor-pointer whitespace-nowrap ${
+              selectedGroupTab === 'all'
+                ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            Ver Todos
+          </button>
+          {availableTabs.map(tabKey => (
+            <button
+              key={tabKey}
+              onClick={() => setSelectedGroupTab(tabKey)}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border border-transparent cursor-pointer whitespace-nowrap ${
+                selectedGroupTab === tabKey
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.15)]'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {formatTabName(tabKey)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs for Standard Leagues */}
       {!isGroupLeague && availableTabs.length > 1 && (
         <div className="flex flex-wrap items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner">
           {availableTabs.map(tabKey => (
@@ -181,16 +235,16 @@ export default function LeagueTablaView() {
       )}
 
       {/* Table Containers */}
-      <div className={`flex-1 ${isGroupLeague ? 'grid grid-cols-1 xl:grid-cols-2 gap-6' : 'flex flex-col gap-8'}`}>
+      <div className={`flex-1 ${isGroupLeague && selectedGroupTab === 'all' ? 'grid grid-cols-1 xl:grid-cols-2 gap-6' : 'flex flex-col gap-8'}`}>
         {tabsToShow.map((tab) => {
           const currentData = standingsData[tab] || [];
           const isPromedios = tab === 'promedios';
 
-          const headPY = isGroupLeague ? 'py-3' : 'py-5';
-          const bodyPY = isGroupLeague ? 'py-2' : 'py-3.5';
-          const iconSize = isGroupLeague ? 'w-6 h-6 p-0.5' : 'w-8 h-8 p-1';
-          const textSize = isGroupLeague ? 'text-sm' : 'text-[15px]';
-          const minW = isGroupLeague ? 'min-w-[480px]' : 'min-w-[600px] sm:min-w-[700px]';
+          const headPY = isGroupLeague ? 'py-3.5' : 'py-5';
+          const bodyPY = isGroupLeague ? 'py-2.5' : 'py-3.5';
+          const iconSize = isGroupLeague ? 'w-7 h-7 p-0.5' : 'w-8 h-8 p-1';
+          const textSize = isGroupLeague ? 'text-xs sm:text-sm' : 'text-[15px]';
+          const minW = isGroupLeague ? 'w-full md:min-w-[480px]' : 'w-full md:min-w-[700px]';
 
           return (
             <div key={tab} className="flex flex-col gap-3">
@@ -205,29 +259,29 @@ export default function LeagueTablaView() {
               <div className="overflow-hidden bg-[#0b1015]/60 rounded-[2rem] border border-cyan-500/10 relative shadow-2xl backdrop-blur-md">
                 <div className="w-full h-full overflow-auto custom-scrollbar max-h-[800px]">
                   <table className={`w-full text-left border-collapse ${minW} text-sm`}>
-                    <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-300 sticky top-0 z-10 text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
+                    <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-350 sticky top-0 z-10 text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
                       <tr>
-                        <th className={`${headPY} px-3 w-10 text-center`}>#</th>
+                        <th className={`${headPY} px-2 sm:px-3 w-8 sm:w-10 text-center`}>#</th>
                         <th className={`${headPY} px-2 text-left`}>Equipo</th>
                         {isPromedios ? (
                           <>
                             <th className={`${headPY} px-2 text-center text-cyan-400`}>Prom</th>
                             <th className={`${headPY} px-2 text-center`}>Pts</th>
                             <th className={`${headPY} px-2 text-center`}>PJ</th>
-                            <th className={`${headPY} px-2 text-center opacity-70`}>Act</th>
-                            <th className={`${headPY} px-2 text-center opacity-70`}>Ant</th>
-                            <th className={`${headPY} px-2 text-center opacity-70`}>Tras</th>
+                            <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Act</th>
+                            <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Ant</th>
+                            <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Tras</th>
                           </>
                         ) : (
                           <>
-                            <th className={`${headPY} px-2 text-center text-cyan-400`}>Pts</th>
-                            <th className={`${headPY} px-2 text-center`}>PJ</th>
-                            <th className={`${headPY} px-2 text-center`}>G</th>
-                            <th className={`${headPY} px-2 text-center`}>E</th>
-                            <th className={`${headPY} px-2 text-center`}>P</th>
-                            <th className={`${headPY} px-2 text-center opacity-70`}>GF</th>
-                            <th className={`${headPY} px-2 text-center opacity-70`}>GC</th>
-                            <th className={`${headPY} px-2 text-center`}>DIF</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center text-cyan-400`}>Pts</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center`}>PJ</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center`}>G</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center`}>E</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center`}>P</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center opacity-70 hidden sm:table-cell`}>GF</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center opacity-70 hidden sm:table-cell`}>GC</th>
+                            <th className={`${headPY} px-1 sm:px-2 text-center`}>DIF</th>
                           </>
                         )}
                       </tr>
@@ -241,12 +295,12 @@ export default function LeagueTablaView() {
                             onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
                             className="hover:bg-cyan-500/[0.05] transition-colors group cursor-pointer"
                           >
-                            <td className={`${bodyPY} px-3 text-center font-black text-slate-500 group-hover:text-slate-300 transition-colors ${borderClass}`}>
+                            <td className={`${bodyPY} px-2 sm:px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
                               {row.posicion || idx + 1}
                             </td>
                             <td className={`${bodyPY} px-2`}>
                               <TeamHoverCard teamId={row.equipoId} teamName={row.nombre} className="w-full flex items-center">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2.5">
                                   <div className={`${iconSize} flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors`}>
                                     <img
                                       src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
@@ -255,7 +309,7 @@ export default function LeagueTablaView() {
                                       onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
                                     />
                                   </div>
-                                  <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[150px] sm:max-w-xs transition-colors ${textSize}`}>
+                                  <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[100px] xs:max-w-[140px] sm:max-w-xs transition-colors ${textSize}`}>
                                     {row.nombre}
                                   </span>
                                 </div>
@@ -267,20 +321,20 @@ export default function LeagueTablaView() {
                                 <td className={`${bodyPY} px-2 text-center font-black text-cyan-400 bg-cyan-500/5`}>{row.coeficiente?.toFixed(3)}</td>
                                 <td className={`${bodyPY} px-2 text-center font-black text-white`}>{row.puntosTotales}</td>
                                 <td className={`${bodyPY} px-2 text-center text-slate-400 font-medium`}>{row.partidosTotales}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500`}>{row.ptsTemporadaActual}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500`}>{row.ptsTemporadaAnterior}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500`}>{row.ptsTemporadaTrasanterior}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
                               </>
                             ) : (
                               <>
-                                <td className={`${bodyPY} px-2 text-center font-black text-cyan-400 bg-cyan-500/5`}>{row.puntos ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-400 font-medium`}>{row.partidosJugados ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-300 font-medium`}>{row.ganados ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-400`}>{row.empatados ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-400`}>{row.perdidos ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500`}>{row.golesAFavor ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-500`}>{row.golesEnContra ?? '-'}</td>
-                                <td className={`${bodyPY} px-2 text-center font-bold text-slate-300`}>{row.diferenciaGoles ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center font-black text-cyan-400 bg-cyan-500/5`}>{row.puntos ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-450 font-medium`}>{row.partidosJugados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-350 font-medium`}>{row.ganados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.empatados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.perdidos ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center font-bold text-slate-350`}>{row.diferenciaGoles ?? '-'}</td>
                               </>
                             )}
                           </tr>
