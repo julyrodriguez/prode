@@ -310,10 +310,11 @@ export default function LeagueRankingView() {
           </div>
 
           <div className="divide-y divide-white/[0.03]">
-            {activeRanking.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 italic">No hay participantes en esta tabla todavía.</div>
+            {activeRanking.length <= 2 ? (
+              <div className="p-8 text-center text-slate-500 italic">No hay más participantes en esta tabla.</div>
             ) : (
-              activeRanking.map((entry, idx) => {
+              activeRanking.slice(2).map((entry, sliceIdx) => {
+              const idx = sliceIdx + 2;
               const isMe = user && entry.userId === user.uid;
               const isMundial = activeLeague.id === 'mundial';
               const isTop3 = idx < 3;
