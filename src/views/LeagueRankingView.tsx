@@ -291,7 +291,7 @@ export default function LeagueRankingView() {
               return (
                 <div
                   key={entry.userId}
-                  onClick={() => router.push(`/predictions/${entry.userId}?tournamentId=activeLeague.tournamentId&tournamentName=activeLeague.name`)}
+                  onClick={() => router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`)}
                   className={`grid grid-cols-[40px_1fr_56px_56px_48px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                 >
                   <div className="flex items-center justify-center">
