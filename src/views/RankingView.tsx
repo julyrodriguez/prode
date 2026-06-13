@@ -193,6 +193,95 @@ export default function RankingView() {
         </div>
       )}
 
+      {/* ── Podio de Ganadores Showcase ── */}
+      {!loading && !error && activeRanking.length >= 2 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+          
+          {/* 1ER PUESTO (GOLD) */}
+          {activeRanking[0] && (
+            <div 
+              onClick={() => router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${selectedLeague.tournamentId}&tournamentName=${encodeURIComponent(selectedLeague.name)}`)}
+              className="relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border border-amber-500/40 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(245,158,11,0.12)] hover:scale-[1.02] hover:border-amber-500/60 transition-all duration-300 group"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
+              <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+                <span>👑</span> <span>1º PUESTO</span>
+              </div>
+              
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-2">
+                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden relative">
+                  <span className="absolute z-0 text-xl font-black text-slate-700">{activeRanking[0].name?.slice(0, 1).toUpperCase()}</span>
+                  <img
+                    src={`https://apivacas.jariel.com.ar/users/${activeRanking[0].userId}.webp`}
+                    alt={activeRanking[0].name}
+                    className="w-full h-full object-cover relative z-10"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 mt-2">
+                <h4 className="text-[10px] font-black text-amber-450 uppercase tracking-widest">Puntero del Prode</h4>
+                <span className="block font-black text-white text-base truncate group-hover:text-amber-300 transition-colors">
+                  {activeRanking[0].name}
+                </span>
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                  <span><b>{activeRanking[0].totalPoints}</b> PTS</span>
+                  <span className="text-slate-700">·</span>
+                  <span><b>{activeRanking[0].exactResults}</b> exactos</span>
+                </div>
+              </div>
+              
+              <div className="text-right shrink-0 pr-2">
+                <span className="text-3xl filter drop-shadow-md">🏆</span>
+              </div>
+            </div>
+          )}
+
+          {/* 2DO PUESTO (SILVER) */}
+          {activeRanking[1] && (
+            <div 
+              onClick={() => router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${selectedLeague.tournamentId}&tournamentName=${encodeURIComponent(selectedLeague.name)}`)}
+              className="relative overflow-hidden bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border border-slate-400/30 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(148,163,184,0.08)] hover:scale-[1.02] hover:border-slate-400/50 transition-all duration-300 group"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
+              <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+                <span>🥈</span> <span>2º PUESTO</span>
+              </div>
+              
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-2">
+                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden relative">
+                  <span className="absolute z-0 text-xl font-black text-slate-700">{activeRanking[1].name?.slice(0, 1).toUpperCase()}</span>
+                  <img
+                    src={`https://apivacas.jariel.com.ar/users/${activeRanking[1].userId}.webp`}
+                    alt={activeRanking[1].name}
+                    className="w-full h-full object-cover relative z-10"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 mt-2">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Escolta</h4>
+                <span className="block font-black text-white text-base truncate group-hover:text-slate-350 transition-colors">
+                  {activeRanking[1].name}
+                </span>
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                  <span><b>{activeRanking[1].totalPoints}</b> PTS</span>
+                  <span className="text-slate-700">·</span>
+                  <span><b>{activeRanking[1].exactResults}</b> exactos</span>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0 pr-2">
+                <span className="text-3xl filter drop-shadow-md">🥈</span>
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+
       {/* ── Tabla ── */}
       {!loading && !error && ranking.length > 0 && (
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden shadow-lg">
