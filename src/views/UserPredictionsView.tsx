@@ -88,7 +88,14 @@ export default function UserPredictionsView() {
   const { userId } = useParams<{ userId: string }>();
   const router = useRouter();
   const pathname = usePathname(); const searchParams = useSearchParams();
-  const stateTournamentId = searchParams.get('tournamentId') ? parseInt(searchParams.get('tournamentId'), 10) : undefined;
+  const rawTournamentId = searchParams.get('tournamentId');
+  let stateTournamentId: number | undefined = undefined;
+  if (rawTournamentId && rawTournamentId !== 'null' && rawTournamentId !== 'undefined') {
+    const parsed = parseInt(rawTournamentId, 10);
+    if (!isNaN(parsed)) {
+      stateTournamentId = parsed;
+    }
+  }
   const stateTournamentName = searchParams.get('tournamentName') || undefined;
   // Use Liga Argentina (155) as fallback 
   const tournament = {
@@ -166,21 +173,43 @@ export default function UserPredictionsView() {
     fetch_();
   }, [userId, tournament.tournamentId]);
 
-  // ─── Fetch nombre del usuario desde el ranking (si no viene en predicciones) ──
+  // ─── Fetch nombre del usuario desde la lista global de usuarios o ranking ──
   useEffect(() => {
     if (!userId) return;
-    const getRankingName = async () => {
+    const getUserName = async () => {
+      try {
+        const resUsers = await fetch('https://apivacas.jariel.com.ar/api/users');
+        if (resUsers.ok) {
+          const users = await resUsers.json();
+          if (Array.isArray(users)) {
+            const found = users.find((u: any) => u._id === userId);
+            if (found && found.name) {
+              setUserName(found.name);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching global users list:", e);
+      }
+
+      // Fallback a ranking
       try {
         const res = await fetch(`https://apivacas.jariel.com.ar/api/ranking/${tournament.tournamentId}`);
-        if (!res.ok) return;
-        const data: { userId: string; name: string; avatarUrl?: string }[] = await res.json();
-        const found = data.find((r) => r.userId === userId);
-        if (found) {
-          setUserName(found.name);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            const found = data.find((r: any) => r.userId === userId);
+            if (found && found.name) {
+              setUserName(found.name);
+            }
+          }
         }
-      } catch {/* silencio */ }
+      } catch (e) {
+        console.error("Error fetching ranking fallback:", e);
+      }
     };
-    getRankingName();
+    getUserName();
   }, [userId, tournament.tournamentId]);
 
   // Create a quick lookup map for matches
