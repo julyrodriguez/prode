@@ -698,11 +698,11 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
 
                     {/* Card Header: stage and date */}
                     <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-extrabold uppercase tracking-wider">
-                        <Calendar className="w-3 h-3 text-slate-650" />
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-300 font-extrabold uppercase tracking-wider">
+                        <Calendar className="w-3 h-3 text-slate-400" />
                         <span>{dateStr}</span>
-                        <span className="text-slate-700">·</span>
-                        <Clock className="w-3 h-3 text-slate-650" />
+                        <span className="text-slate-500">·</span>
+                        <Clock className="w-3 h-3 text-slate-400" />
                         <span>{timeStr}</span>
                       </div>
 
