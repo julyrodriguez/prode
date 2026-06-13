@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useContext } from 'react';
+import { createPortal } from 'react-dom';
 import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
 import { useAuth } from '../context/AuthContext';
@@ -643,7 +644,7 @@ export default function LeagueRankingView() {
       )}
 
       {/* ── Glassmorphic Page Loading Overlay ── */}
-      {navigatingUserId && (
+      {navigatingUserId && typeof window !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 transition-all duration-300">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-indigo-500 animate-spin" />
@@ -652,7 +653,8 @@ export default function LeagueRankingView() {
           <p className="text-white font-black text-sm uppercase tracking-widest animate-pulse">
             Cargando predicciones de {activeRanking.find(r => r.userId === navigatingUserId)?.name || 'usuario'}...
           </p>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
