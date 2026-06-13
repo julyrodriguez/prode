@@ -48,6 +48,7 @@ export default function LeagueRankingView() {
   const [rankingTab, setRankingTab] = useState<'prode' | 'pobres'>('prode');
   const [podiumPredictions, setPodiumPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
+  const [navigatingUserId, setNavigatingUserId] = useState<string | null>(null);
 
   const tournamentId = activeLeague.tournamentId;
 
@@ -217,7 +218,10 @@ export default function LeagueRankingView() {
           {/* 1ER PUESTO (GOLD) */}
           {activeRanking[0] && (
             <div 
-              onClick={() => router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`)}
+              onClick={() => {
+                setNavigatingUserId(activeRanking[0].userId);
+                router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+              }}
               className="relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border border-amber-500/40 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(245,158,11,0.12)] hover:scale-[1.02] hover:border-amber-500/60 transition-all duration-300 group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
@@ -258,7 +262,10 @@ export default function LeagueRankingView() {
           {/* 2DO PUESTO (SILVER) */}
           {activeRanking[1] && (
             <div 
-              onClick={() => router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`)}
+              onClick={() => {
+                setNavigatingUserId(activeRanking[1].userId);
+                router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+              }}
               className="relative overflow-hidden bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border border-slate-400/30 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(148,163,184,0.08)] hover:scale-[1.02] hover:border-slate-400/50 transition-all duration-300 group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
@@ -381,7 +388,10 @@ export default function LeagueRankingView() {
               return (
                 <div
                   key={entry.userId}
-                  onClick={() => router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`)}
+                  onClick={() => {
+                    setNavigatingUserId(entry.userId);
+                    router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                  }}
                   className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                 >
                   <div className="flex items-center justify-center">
@@ -629,6 +639,19 @@ export default function LeagueRankingView() {
               Entendido
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── Glassmorphic Page Loading Overlay ── */}
+      {navigatingUserId && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 transition-all duration-300">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-indigo-500 animate-spin" />
+            <span className="absolute inset-0 flex items-center justify-center text-xl">🔮</span>
+          </div>
+          <p className="text-white font-black text-sm uppercase tracking-widest animate-pulse">
+            Cargando predicciones de {activeRanking.find(r => r.userId === navigatingUserId)?.name || 'usuario'}...
+          </p>
         </div>
       )}
     </div>
