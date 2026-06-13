@@ -75,6 +75,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const [localPredictions, setLocalPredictions] = useState<Record<number, { home: string, away: string }>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);;
+  const [redirectingMatchId, setRedirectingMatchId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchMatchesAndPredictions = async (showLoading = false) => {
@@ -425,25 +426,33 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                     const canPredict = isPredictionMode && !status.hasStarted && !isLocked && !!user;
                     const hasPrediction = !!(localPredictions[match.id]?.home !== undefined && localPredictions[match.id]?.away !== undefined);
                     const liveTime = status.isLive ? getMatchTime(match) : null;
+                    const isRedirecting = redirectingMatchId === match.id;
 
                     return (
                       <div
                         key={match.id || idx}
-                        className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-colors duration-75 ${status.isLive
+                        className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-all duration-300 active:scale-[0.98] ${status.isLive
                           ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
                           : 'hover:bg-white/[0.03]'
-                          }`}
-                        onClick={() => handleCardClick(match.id)}
+                          } ${isRedirecting ? 'scale-[0.97] opacity-60 pointer-events-none animate-pulse' : ''}`}
+                        onClick={() => {
+                          setRedirectingMatchId(match.id);
+                          handleCardClick(match.id);
+                        }}
                       >
                         {/* Columna Izquierda: Logo Torneo y Tiempo */}
                         <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
                           <div className="w-5 h-5 md:w-6 md:h-6 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
-                            <img
-                              src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
-                              alt="torneo"
-                              className="w-full h-full object-contain"
-                              onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
-                            />
+                            {isRedirecting ? (
+                              <div className="animate-spin w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent" />
+                            ) : (
+                              <img
+                                src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
+                                alt="torneo"
+                                className="w-full h-full object-contain"
+                                onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+                              />
+                            )}
                           </div>
                           {status.isLive ? (
                             <span className="text-red-500 text-[10px] md:text-xs font-black animate-pulse drop-shadow-[0_0_5px_rgba(239,68,68,0.5)] text-center leading-tight break-words">

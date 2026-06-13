@@ -208,6 +208,7 @@ const MatchRow = memo(({
   onStepScore
 }: MatchRowProps) => {
   const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const status = parseMatchStatus(match);
   const hScore = getScore(match, 'home');
@@ -228,21 +229,28 @@ const MatchRow = memo(({
 
   return (
     <div
-      className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-colors duration-75 ${status.isLive
+      className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-all duration-300 active:scale-[0.98] ${status.isLive
         ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
         : 'hover:bg-white/[0.03]'
-        }`}
-      onClick={() => router.push(`/match/${match.id}`)}
+        } ${isRedirecting ? 'scale-[0.97] opacity-60 pointer-events-none animate-pulse' : ''}`}
+      onClick={() => {
+        setIsRedirecting(true);
+        router.push(`/match/${match.id}`);
+      }}
     >
       {/* Columna Izquierda: Logo Torneo y Tiempo */}
       <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
         <div className="w-5 h-5 md:w-6 md:h-6 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
-          <img
-            src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
-            alt="torneo"
-            className="w-full h-full object-contain"
-            onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
-          />
+          {isRedirecting ? (
+            <div className="animate-spin w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent" />
+          ) : (
+            <img
+              src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
+              alt="torneo"
+              className="w-full h-full object-contain"
+              onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+            />
+          )}
         </div>
         {viewMode === 'week' && match.startTimestamp && (
           <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
@@ -279,13 +287,7 @@ const MatchRow = memo(({
 
           {/* HOME TEAM */}
           <TeamHoverCard teamId={hId} teamName={hName} className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
-            <div
-              className="flex items-center justify-end gap-2 md:gap-3 text-right min-w-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (hId) router.push(`/team/${hId}`);
-              }}
-            >
+            <div className="flex items-center justify-end gap-2 md:gap-3 text-right min-w-0">
               <div className="flex flex-col items-end justify-center min-w-0">
                 <div className="relative inline-block">
                   <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
@@ -347,13 +349,7 @@ const MatchRow = memo(({
 
           {/* AWAY TEAM */}
           <TeamHoverCard teamId={aId} teamName={aName} className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
-            <div
-              className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (aId) router.push(`/team/${aId}`);
-              }}
-            >
+            <div className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0">
               <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
                 {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
               </div>
