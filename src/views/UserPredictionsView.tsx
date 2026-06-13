@@ -111,6 +111,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
   const [error, setError] = useState<string | null>(null);
   const [podium, setPodium] = useState<{ champion: string; runnerUp: string; thirdPlace: string } | null>(null);
   const [matches, setMatches] = useState<any[]>([]);
+  const [resolvedUserId, setResolvedUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -131,10 +132,10 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
   const isBlurred = Date.now() < new Date('2026-06-12T00:00:00-03:00').getTime();
 
   useEffect(() => {
-    if (!userId || tournament.tournamentId !== 16) return;
+    if (!resolvedUserId || tournament.tournamentId !== 16) return;
     const fetchPodium = async () => {
       try {
-        const res = await fetch(`https://apivacas.jariel.com.ar/api/mundial/predictions/${userId}`);
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/mundial/predictions/${resolvedUserId}`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
@@ -150,12 +151,14 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
       }
     };
     fetchPodium();
-  }, [userId, tournament.tournamentId]);
+  }, [resolvedUserId, tournament.tournamentId]);
 
   useEffect(() => {
-    if (!userId) {
-      setError('No se especificó un identificador de usuario válido.');
-      setLoading(false);
+    if (!resolvedUserId) {
+      if (userId === undefined) {
+        setError('No se especificó un identificador de usuario válido.');
+        setLoading(false);
+      }
       return;
     }
     const fetch_ = async () => {
@@ -163,7 +166,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
       setError(null);
       try {
         const res = await fetch(
-          `https://apivacas.jariel.com.ar/api/predictions/user/${userId}/tournament/${tournament.tournamentId}`
+          `https://apivacas.jariel.com.ar/api/predictions/user/${resolvedUserId}/tournament/${tournament.tournamentId}`
         );
         if (!res.ok) throw new Error('No se pudieron cargar las predicciones');
         const data: Prediction[] = await res.json();
@@ -177,20 +180,23 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
       }
     };
     fetch_();
-  }, [userId, tournament.tournamentId]);
+  }, [resolvedUserId, tournament.tournamentId]);
 
-  // ─── Fetch nombre del usuario desde la lista global de usuarios o ranking ──
+  // ─── Fetch nombre del usuario y resolver id de forma case-insensitive ──
   useEffect(() => {
     if (!userId) return;
     const getUserName = async () => {
+      let foundUserId = userId; // Fallback al ID original si no se encuentra
+      
       try {
         const resUsers = await fetch('https://apivacas.jariel.com.ar/api/users');
         if (resUsers.ok) {
           const users = await resUsers.json();
           if (Array.isArray(users)) {
-            const found = users.find((u: any) => u._id === userId);
-            if (found && found.name) {
+            const found = users.find((u: any) => u._id && u._id.toLowerCase() === userId.toLowerCase());
+            if (found) {
               setUserName(found.name);
+              setResolvedUserId(found._id);
               return;
             }
           }
@@ -205,15 +211,20 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
-            const found = data.find((r: any) => r.userId === userId);
-            if (found && found.name) {
+            const found = data.find((r: any) => r.userId && r.userId.toLowerCase() === userId.toLowerCase());
+            if (found) {
               setUserName(found.name);
+              setResolvedUserId(found.userId);
+              return;
             }
           }
         }
       } catch (e) {
         console.error("Error fetching ranking fallback:", e);
       }
+
+      // Si no se encuentra en las listas, se usa el ID original tal como viene en la URL
+      setResolvedUserId(foundUserId);
     };
     getUserName();
   }, [userId, tournament.tournamentId]);
@@ -261,7 +272,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
             <div className="relative w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-2xl font-black text-indigo-300 shrink-0 shadow-lg overflow-hidden">
               <span className="absolute z-0">{userName?.slice(0, 1).toUpperCase() || '?'}</span>
               <img
-                src={`https://apivacas.jariel.com.ar/users/${userId}.webp`}
+                src={`https://apivacas.jariel.com.ar/users/${resolvedUserId || userId}.webp`}
                 alt="Avatar"
                 className="w-full h-full object-cover relative z-10"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}

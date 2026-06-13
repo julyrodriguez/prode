@@ -8,7 +8,8 @@ export function middleware(request: NextRequest) {
   if (
     pathname !== pathname.toLowerCase() &&
     !pathname.startsWith('/api') &&
-    !pathname.startsWith('/_next')
+    !pathname.startsWith('/_next') &&
+    !pathname.startsWith('/predictions')
   ) {
     const url = request.nextUrl.clone();
     url.pathname = pathname.toLowerCase();
