@@ -179,7 +179,14 @@ export default function AppLayout() {
   const [overriddenLeagueId, setOverriddenLeagueId] = useState<LeagueId | null>(null);
 
   useEffect(() => {
-    setOverriddenLeagueId(null);
+    const isOverridePage =
+      location.pathname.startsWith('/match/') ||
+      location.pathname.startsWith('/team/') ||
+      location.pathname.startsWith('/predictions/');
+
+    if (!isOverridePage) {
+      setOverriddenLeagueId(null);
+    }
   }, [location.pathname]);
 
   // Detect if we're on a league sub-route

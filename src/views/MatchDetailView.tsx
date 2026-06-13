@@ -37,6 +37,11 @@ export default function MatchDetailView() {
         setOverriddenLeagueId('brasileirao');
       }
     }
+    return () => {
+      if (setOverriddenLeagueId) {
+        setOverriddenLeagueId(null);
+      }
+    };
   }, [match, setOverriddenLeagueId]);
 
   // Cuenta regresiva del partido

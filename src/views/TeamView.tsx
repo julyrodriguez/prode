@@ -149,6 +149,11 @@ export default function TeamView() {
         setOverriddenLeagueId('brasileirao');
       }
     }
+    return () => {
+      if (setOverriddenLeagueId) {
+        setOverriddenLeagueId(null);
+      }
+    };
   }, [team, setOverriddenLeagueId]);
 
   useEffect(() => {

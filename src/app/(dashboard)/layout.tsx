@@ -192,7 +192,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [overriddenLeagueId, setOverriddenLeagueId] = useState<LeagueId | null>(null);
 
   useEffect(() => {
-    setOverriddenLeagueId(null);
+    const isOverridePage =
+      pathname.startsWith('/match/') ||
+      pathname.startsWith('/team/') ||
+      pathname.startsWith('/predictions/');
+
+    if (!isOverridePage) {
+      setOverriddenLeagueId(null);
+    }
   }, [pathname]);
 
   // Detect if we're on a league sub-route
