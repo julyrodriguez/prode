@@ -85,8 +85,9 @@ const RESULT_CONFIG = {
 };
 
 export default function UserPredictionsView({ userId: propUserId }: { userId?: string } = {}) {
-  const params = useParams<{ userId: string }>();
-  const userId = propUserId || params?.userId;
+  const params = useParams<any>();
+  const rawUserId = propUserId || params?.userId || params?.userid;
+  const userId = (rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null') ? rawUserId : undefined;
   const router = useRouter();
   const pathname = usePathname(); const searchParams = useSearchParams();
   const rawTournamentId = searchParams.get('tournamentId');
@@ -152,7 +153,11 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
   }, [userId, tournament.tournamentId]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setError('No se especificó un identificador de usuario válido.');
+      setLoading(false);
+      return;
+    }
     const fetch_ = async () => {
       setLoading(true);
       setError(null);

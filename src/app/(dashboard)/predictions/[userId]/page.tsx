@@ -1,13 +1,10 @@
 'use client';
 
-import { use } from 'react';
+import { useParams } from 'next/navigation';
 import UserPredictionsView from '../../../../views/UserPredictionsView';
 
-interface PageProps {
-  params: Promise<{ userId: string }>;
-}
-
-export default function Page({ params }: PageProps) {
-  const resolvedParams = use(params);
-  return <UserPredictionsView userId={resolvedParams?.userId} />;
+export default function Page() {
+  const params = useParams<any>();
+  const userId = params?.userId || params?.userid;
+  return <UserPredictionsView userId={userId} />;
 }
