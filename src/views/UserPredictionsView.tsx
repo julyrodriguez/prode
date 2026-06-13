@@ -547,10 +547,21 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                 <span className="text-3xl filter drop-shadow-md mb-2">🥈</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Subcampeón</span>
                 <div className="flex items-center gap-2 mt-3">
-                  <span className="text-2xl">{getCountryEmoji(podium.runnerUp)}</span>
-                  <span className={`text-base font-black text-white ${isBlurred ? 'blur-md select-none' : ''}`}>
-                    {podium.runnerUp || 'Sin elegir'}
+                  <span className="text-2xl" aria-hidden="true">
+                    {isBlurred ? '🔒' : getCountryEmoji(podium.runnerUp)}
                   </span>
+                  {isBlurred ? (
+                    <>
+                      <span className="sr-only">Pronóstico oculto</span>
+                      <span className="text-base font-black text-white blur-md select-none" aria-hidden="true">
+                        ••••••••
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-base font-black text-white">
+                      {podium.runnerUp || 'Sin elegir'}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="hidden md:flex w-24 h-12 bg-slate-800/40 border-x border-t border-slate-700/30 rounded-t-xl items-center justify-center mt-3 shadow-inner">
@@ -567,10 +578,21 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                 <span className="text-4xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] mb-2 animate-bounce">🏆</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">Campeón</span>
                 <div className="flex items-center gap-2 mt-3">
-                  <span className="text-3xl">{getCountryEmoji(podium.champion)}</span>
-                  <span className={`text-lg font-black text-white ${isBlurred ? 'blur-md select-none' : ''}`}>
-                    {podium.champion || 'Sin elegir'}
+                  <span className="text-3xl" aria-hidden="true">
+                    {isBlurred ? '🔒' : getCountryEmoji(podium.champion)}
                   </span>
+                  {isBlurred ? (
+                    <>
+                      <span className="sr-only">Pronóstico oculto</span>
+                      <span className="text-lg font-black text-white blur-md select-none" aria-hidden="true">
+                        ••••••••
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-lg font-black text-white">
+                      {podium.champion || 'Sin elegir'}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="hidden md:flex w-28 h-20 bg-amber-500/10 border-x border-t border-amber-500/25 rounded-t-2xl items-center justify-center mt-3 shadow-inner">
@@ -585,10 +607,21 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                 <span className="text-3xl filter drop-shadow-md mb-2">🥉</span>
                 <span className="text-[10px] font-black uppercase tracking-widest text-amber-600">Tercer Puesto</span>
                 <div className="flex items-center gap-2 mt-3">
-                  <span className="text-2xl">{getCountryEmoji(podium.thirdPlace)}</span>
-                  <span className={`text-base font-black text-white ${isBlurred ? 'blur-md select-none' : ''}`}>
-                    {podium.thirdPlace || 'Sin elegir'}
+                  <span className="text-2xl" aria-hidden="true">
+                    {isBlurred ? '🔒' : getCountryEmoji(podium.thirdPlace)}
                   </span>
+                  {isBlurred ? (
+                    <>
+                      <span className="sr-only">Pronóstico oculto</span>
+                      <span className="text-base font-black text-white blur-md select-none" aria-hidden="true">
+                        ••••••••
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-base font-black text-white">
+                      {podium.thirdPlace || 'Sin elegir'}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="hidden md:flex w-24 h-8 bg-slate-800/20 border-x border-t border-slate-700/20 rounded-t-xl items-center justify-center mt-3 shadow-inner">

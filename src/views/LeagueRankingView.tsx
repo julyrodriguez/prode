@@ -519,9 +519,18 @@ export default function LeagueRankingView() {
                             <span>🥇</span>
                             <span>Campeón:</span>
                           </div>
-                          <span className={`font-extrabold text-slate-300 ${isUserBlurred ? 'blur-md select-none' : ''}`}>
-                            {pred.champion}
-                          </span>
+                          {isUserBlurred ? (
+                            <>
+                              <span className="sr-only">Pronóstico oculto</span>
+                              <span className="font-extrabold text-slate-350 blur-md select-none" aria-hidden="true">
+                                ••••••••
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-extrabold text-slate-300">
+                              {pred.champion}
+                            </span>
+                          )}
                         </div>
                         {/* Subcampeón */}
                         <div className="flex items-center justify-between text-xs">
@@ -529,9 +538,18 @@ export default function LeagueRankingView() {
                             <span>🥈</span>
                             <span>Subcampeón:</span>
                           </div>
-                          <span className={`font-extrabold text-slate-300 ${isUserBlurred ? 'blur-md select-none' : ''}`}>
-                            {pred.runnerUp}
-                          </span>
+                          {isUserBlurred ? (
+                            <>
+                              <span className="sr-only">Pronóstico oculto</span>
+                              <span className="font-extrabold text-slate-350 blur-md select-none" aria-hidden="true">
+                                ••••••••
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-extrabold text-slate-300">
+                              {pred.runnerUp}
+                            </span>
+                          )}
                         </div>
                         {/* Tercero */}
                         <div className="flex items-center justify-between text-xs">
@@ -539,9 +557,18 @@ export default function LeagueRankingView() {
                             <span>🥉</span>
                             <span>Tercer Puesto:</span>
                           </div>
-                          <span className={`font-extrabold text-slate-300 ${isUserBlurred ? 'blur-md select-none' : ''}`}>
-                            {pred.thirdPlace}
-                          </span>
+                          {isUserBlurred ? (
+                            <>
+                              <span className="sr-only">Pronóstico oculto</span>
+                              <span className="font-extrabold text-slate-350 blur-md select-none" aria-hidden="true">
+                                ••••••••
+                              </span>
+                            </>
+                          ) : (
+                            <span className="font-extrabold text-slate-300">
+                              {pred.thirdPlace}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

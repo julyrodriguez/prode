@@ -861,9 +861,16 @@ export default function MatchDetailView() {
                         </div>
                         <span className="flex-1 text-[11px] md:text-xs font-semibold text-slate-300 truncate">{userName}</span>
                         {predMode === 'hidden' ? (
-                          <div className="px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-md border border-white/10 bg-white/5 text-slate-500 text-[10px] md:text-xs font-black select-none" style={{ filter: 'blur(5px)' }}>
-                            {scoreStr}
-                          </div>
+                          <>
+                            <span className="sr-only">Pronóstico oculto</span>
+                            <div 
+                              className="px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-md border border-white/10 bg-white/5 text-slate-500 text-[10px] md:text-xs font-black select-none" 
+                              style={{ filter: 'blur(5px)' }}
+                              aria-hidden="true"
+                            >
+                              ? - ?
+                            </div>
+                          </>
                         ) : (
                           <div className={`px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-md border text-[10px] md:text-xs font-black ${colorClasses[color] || colorClasses.grey}`}>
                             {scoreStr}
