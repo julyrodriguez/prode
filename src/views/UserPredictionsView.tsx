@@ -84,8 +84,9 @@ const RESULT_CONFIG = {
   wrong: { label: 'Errado', icon: '❌', color: 'text-slate-500', bg: 'bg-white/[0.01]', border: 'border-white/5' },
 };
 
-export default function UserPredictionsView() {
-  const { userId } = useParams<{ userId: string }>();
+export default function UserPredictionsView({ userId: propUserId }: { userId?: string } = {}) {
+  const params = useParams<{ userId: string }>();
+  const userId = propUserId || params?.userId;
   const router = useRouter();
   const pathname = usePathname(); const searchParams = useSearchParams();
   const rawTournamentId = searchParams.get('tournamentId');
