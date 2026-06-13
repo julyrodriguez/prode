@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useParams, useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Trophy, Star, Award, X, Calendar, Clock, TrendingUp, Zap, HelpCircle } from 'lucide-react';
+import { DashboardContext } from '../app/(dashboard)/layout';
 
 interface Prediction {
   _id: string;
@@ -144,7 +145,7 @@ const getCountryEmoji = (countryName: string): string => {
   if (name.includes('polonia') || name.includes('poland')) return '🇵🇱';
   if (name.includes('serbia')) return '🇷🇸';
   if (name.includes('ghana')) return '🇬🇭';
-  if (name.includes('gales') || name.includes('wales')) return '🏴󠁧󠁢󠁷󠁬󠁳󠁿';
+  if (name.includes('gales') || name.includes('wales')) return '🏴󠁧󠁢uí󠁿';
   if (name.includes('tunez') || name.includes('túnez') || name.includes('tunisia')) return '🇹🇳';
   return '🏳️';
 };
@@ -215,6 +216,27 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
   // Custom filters
   const [filter, setFilter] = useState<'all' | 'exact' | 'tendency' | 'wrong'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const outletContext = useContext(DashboardContext);
+  const setOverriddenLeagueId = outletContext?.setOverriddenLeagueId;
+
+  // Sync active league with background layout
+  useEffect(() => {
+    if (setOverriddenLeagueId) {
+      if (tournament.tournamentId === 16) {
+        setOverriddenLeagueId('mundial');
+      } else if (tournament.tournamentId === 155) {
+        setOverriddenLeagueId('liga-arg');
+      } else if (tournament.tournamentId === 325) {
+        setOverriddenLeagueId('brasileirao');
+      }
+    }
+    return () => {
+      if (setOverriddenLeagueId) {
+        setOverriddenLeagueId(null);
+      }
+    };
+  }, [tournament.tournamentId, setOverriddenLeagueId]);
 
   useEffect(() => {
     const fetchMatches = async () => {
