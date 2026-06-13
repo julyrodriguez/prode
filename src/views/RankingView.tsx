@@ -198,11 +198,11 @@ export default function RankingView() {
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden shadow-lg">
 
           {/* Header de columnas */}
-          <div className="grid grid-cols-[40px_1fr_56px_56px_48px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
+          <div className="grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jugador</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Tend.</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Exact.</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Tends</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Exacts</span>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Pts</span>
           </div>
 
@@ -220,7 +220,7 @@ export default function RankingView() {
                 : MEDAL[idx];
 
               const rowPadding = idx === 0
-                ? 'py-6 md:py-8'
+                ? 'py-5 md:py-8'
                 : (isMundial && idx === 1)
                   ? 'py-4 md:py-5'
                   : 'py-3.5';
@@ -242,13 +242,13 @@ export default function RankingView() {
                   : 'text-xl';
 
               const avatarSize = idx === 0
-                ? 'w-20 h-20 md:w-24 md:h-24 shadow-[0_0_20px_rgba(245,158,11,0.2)] border-amber-400/40'
+                ? 'w-12 h-12 md:w-24 md:h-24 shadow-[0_0_20px_rgba(245,158,11,0.2)] border-amber-400/40'
                 : (isMundial && idx === 1)
                   ? 'w-10 h-10 md:w-11 md:h-11'
                   : 'w-8 h-8';
 
               const initialsTextSize = idx === 0
-                ? 'text-3xl md:text-4xl'
+                ? 'text-xl md:text-4xl'
                 : (isMundial && idx === 1)
                   ? 'text-sm md:text-base'
                   : 'text-xs';
@@ -264,13 +264,13 @@ export default function RankingView() {
                       : 'bg-white/5 border-white/10 text-slate-400';
 
               const nameTextClass = idx === 0
-                ? 'text-xl md:text-2xl font-black text-amber-300'
+                ? 'text-base md:text-2xl font-black text-amber-300'
                 : (isMundial && idx === 1)
                   ? 'text-sm md:text-base font-extrabold text-slate-200'
                   : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
               const pointsClass = idx === 0
-                ? 'text-2xl md:text-3xl font-black text-amber-400'
+                ? 'text-xl md:text-3xl font-black text-amber-400'
                 : (isMundial && idx === 1)
                   ? 'text-base md:text-lg font-black text-slate-200'
                   : `text-base font-black ${isMe ? 'text-amber-400' : (idx < 3) ? 'text-white' : 'text-slate-300'}`;
@@ -279,7 +279,7 @@ export default function RankingView() {
                 <div
                   key={entry.userId}
                   onClick={() => router.push(`/predictions/${entry.userId}?tournamentId=${selectedLeague.tournamentId}&tournamentName=${encodeURIComponent(selectedLeague.name)}`)}
-                  className={`grid grid-cols-[40px_1fr_56px_56px_48px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
+                  className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                 >
                   {/* Posición */}
                   <div className="flex items-center justify-center">
