@@ -46,10 +46,19 @@ export default function LeagueRankingView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [rankingTab, setRankingTab] = useState<'prode' | 'pobres'>('prode');
+  const [rankingTab, setRankingTab] = useState<'prode' | 'stats'>('prode');
   const [podiumPredictions, setPodiumPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [navigatingUserId, setNavigatingUserId] = useState<string | null>(null);
+  const [statsData, setStatsData] = useState<Record<string, {
+    exact: number;
+    tendency: number;
+    wrong: number;
+    totalPreds: number;
+    pointsPerMatch: number;
+    hitRate: number;
+  }>>({});
+  const [loadingStats, setLoadingStats] = useState(false);
 
   const tournamentId = activeLeague.tournamentId;
 
@@ -107,9 +116,85 @@ export default function LeagueRankingView() {
     return () => clearInterval(interval);
   }, [tournamentId]);
 
-  const activeRanking = rankingTab === 'prode'
-    ? ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId))
-    : ranking;
+  useEffect(() => {
+    // Clear stats when tournament changes
+    setStatsData({});
+  }, [tournamentId]);
+
+  useEffect(() => {
+    if (rankingTab !== 'stats' || !tournamentId || ranking.length === 0) return;
+    
+    const prodeEntries = ranking.filter(entry => PRODE_USER_IDS.has(entry.userId));
+    if (prodeEntries.length === 0) return;
+    
+    const hasAllStats = prodeEntries.every(entry => statsData[entry.userId] !== undefined);
+    if (hasAllStats) return;
+
+    let isMounted = true;
+    const fetchAllStats = async () => {
+      setLoadingStats(true);
+      try {
+        const statsMap: Record<string, any> = {};
+        await Promise.all(
+          prodeEntries.map(async (entry) => {
+            try {
+              const res = await fetch(
+                `https://apivacas.jariel.com.ar/api/predictions/user/${entry.userId}/tournament/${tournamentId}`
+              );
+              if (res.ok) {
+                const data: any[] = await res.json();
+                const evaluated = data.filter((p) => p.estadoProde === 'evaluated');
+                
+                const exact = evaluated.filter(p => {
+                  const { miPronosticoLocal: pl, miPronosticoVisita: pv, golesRealesLocal: gl, golesRealesVisita: gv } = p;
+                  return pl === gl && pv === gv;
+                }).length;
+
+                const tendency = evaluated.filter(p => {
+                  const { miPronosticoLocal: pl, miPronosticoVisita: pv, golesRealesLocal: gl, golesRealesVisita: gv } = p;
+                  if (pl === gl && pv === gv) return false;
+                  const predSign = pl > pv ? 1 : pl < pv ? -1 : 0;
+                  const realSign = gl > gv ? 1 : gl < gv ? -1 : 0;
+                  return predSign === realSign;
+                }).length;
+
+                const totalPreds = evaluated.length;
+                const wrong = totalPreds - exact - tendency;
+                
+                statsMap[entry.userId] = {
+                  exact,
+                  tendency,
+                  wrong,
+                  totalPreds,
+                  pointsPerMatch: totalPreds ? (entry.totalPoints / totalPreds) : 0,
+                  hitRate: totalPreds ? Math.round(((exact + tendency) / totalPreds) * 100) : 0,
+                };
+              }
+            } catch (err) {
+              console.error(`Error fetching stats for user ${entry.userId}:`, err);
+            }
+          })
+        );
+        if (isMounted) {
+          setStatsData(prev => ({ ...prev, ...statsMap }));
+        }
+      } catch (err) {
+        console.error("Error fetching all stats:", err);
+      } finally {
+        if (isMounted) {
+          setLoadingStats(false);
+        }
+      }
+    };
+
+    fetchAllStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [rankingTab, tournamentId, ranking]);
+
+  const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
 
   const myEntry = user ? activeRanking.find((r) => r.userId === user.uid) : null;
   const myPos = myEntry ? activeRanking.indexOf(myEntry) : -1;
@@ -200,14 +285,14 @@ export default function LeagueRankingView() {
             PRODE
           </button>
           <button
-            onClick={() => setRankingTab('pobres')}
+            onClick={() => setRankingTab('stats')}
             className={`flex-1 text-center px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
-              rankingTab === 'pobres'
+              rankingTab === 'stats'
                 ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
                 : 'text-slate-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            POBRES
+            ESTADÍSTICAS
           </button>
         </div>
       )}
@@ -308,139 +393,407 @@ export default function LeagueRankingView() {
       )}
 
       {!loading && !error && ranking.length > 0 && (
-        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden shadow-lg">
-          <div className="grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jugador</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Tends</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Exacts</span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Pts</span>
-          </div>
+        <div className="flex items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner mb-4 w-full">
+          <button
+            onClick={() => setRankingTab('prode')}
+            className={`flex-1 text-center px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+              rankingTab === 'prode'
+                ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            PRODE
+          </button>
+          <button
+            onClick={() => setRankingTab('stats')}
+            className={`flex-1 text-center px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+              rankingTab === 'stats'
+                ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            ESTADÍSTICAS
+          </button>
+        </div>
+      )}
 
+      {/* ── Podio de Ganadores Showcase ── */}
+      {!loading && !error && rankingTab === 'prode' && activeRanking.length >= 2 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+          
+          {/* 1ER PUESTO (GOLD) */}
+          {activeRanking[0] && (
+            <div 
+              onClick={() => {
+                setNavigatingUserId(activeRanking[0].userId);
+                router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+              }}
+              className="relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border border-amber-500/40 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(245,158,11,0.12)] hover:scale-[1.02] hover:border-amber-500/60 transition-all duration-300 group"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
+              <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+                <span>👑</span> <span>1º PUESTO</span>
+              </div>
+              
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-2">
+                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden relative">
+                  <span className="absolute z-0 text-xl font-black text-slate-700">{activeRanking[0].name?.slice(0, 1).toUpperCase()}</span>
+                  <img
+                    src={`https://apivacas.jariel.com.ar/users/${activeRanking[0].userId}.webp`}
+                    alt={activeRanking[0].name}
+                    className="w-full h-full object-cover relative z-10"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 mt-2">
+                <h4 className="text-[10px] font-black text-amber-450 uppercase tracking-widest">Puntero del Prode</h4>
+                <span className="block font-black text-white text-base truncate group-hover:text-amber-300 transition-colors">
+                  {activeRanking[0].name}
+                </span>
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                  <span><b>{activeRanking[0].totalPoints}</b> PTS</span>
+                  <span className="text-slate-700">·</span>
+                  <span><b>{activeRanking[0].exactResults}</b> exactos</span>
+                </div>
+              </div>
+              
+              <div className="text-right shrink-0 pr-2">
+                <span className="text-3xl filter drop-shadow-md">🏆</span>
+              </div>
+            </div>
+          )}
+
+          {/* 2DO PUESTO (SILVER) */}
+          {activeRanking[1] && (
+            <div 
+              onClick={() => {
+                setNavigatingUserId(activeRanking[1].userId);
+                router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+              }}
+              className="relative overflow-hidden bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border border-slate-400/30 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(148,163,184,0.08)] hover:scale-[1.02] hover:border-slate-400/50 transition-all duration-300 group"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
+              <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+                <span>🥈</span> <span>2º PUESTO</span>
+              </div>
+              
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-2">
+                <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden relative">
+                  <span className="absolute z-0 text-xl font-black text-slate-700">{activeRanking[1].name?.slice(0, 1).toUpperCase()}</span>
+                  <img
+                    src={`https://apivacas.jariel.com.ar/users/${activeRanking[1].userId}.webp`}
+                    alt={activeRanking[1].name}
+                    className="w-full h-full object-cover relative z-10"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-0 mt-2">
+                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Escolta</h4>
+                <span className="block font-black text-white text-base truncate group-hover:text-slate-350 transition-colors">
+                  {activeRanking[1].name}
+                </span>
+                <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                  <span><b>{activeRanking[1].totalPoints}</b> PTS</span>
+                  <span className="text-slate-700">·</span>
+                  <span><b>{activeRanking[1].exactResults}</b> exactos</span>
+                </div>
+              </div>
+
+              <div className="text-right shrink-0 pr-2">
+                <span className="text-3xl filter drop-shadow-md">🥈</span>
+              </div>
+            </div>
+          )}
+
+        </div>
+      )}
+
+      {/* ── Tabla ── */}
+      {!loading && !error && ranking.length > 0 && (
+        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden shadow-lg">
+
+          {/* Header de columnas */}
+          {rankingTab === 'stats' ? (
+            <div className="grid grid-cols-[36px_1fr_60px_60px_100px] md:grid-cols-[48px_1fr_90px_90px_200px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jugador</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Pts/Part</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Eficacia</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-left">Distribución</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jugador</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Tends</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Exacts</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-right">Pts</span>
+            </div>
+          )}
+
+          {/* Filas */}
           <div className="divide-y divide-white/[0.03]">
-            {activeRanking.length <= 2 ? (
+            {rankingTab === 'stats' && loadingStats ? (
+              <div className="w-full py-16 flex flex-col items-center justify-center gap-3">
+                <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Calculando estadísticas de los jugadores...</span>
+              </div>
+            ) : rankingTab === 'stats' ? (
+              activeRanking.map((entry, idx) => {
+                const isMe = user && entry.userId === user.uid;
+                const rowPadding = 'py-3.5';
+                const rowBg = isMe
+                  ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
+                  : 'hover:bg-white/[0.04]';
+                const avatarSize = 'w-8 h-8';
+                const initialsTextSize = 'text-xs';
+                const avatarBgClass = isMe
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                  : 'bg-white/5 border-white/10 text-slate-400';
+                const nameTextClass = `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
+
+                const userStats = statsData[entry.userId];
+
+                return (
+                  <div
+                    key={entry.userId}
+                    onClick={() => {
+                      setNavigatingUserId(entry.userId);
+                      router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                    }}
+                    className={`grid grid-cols-[36px_1fr_60px_60px_100px] md:grid-cols-[48px_1fr_90px_90px_200px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
+                  >
+                    {/* Posición */}
+                    <div className="flex items-center justify-center">
+                      <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>
+                        {idx + 1}
+                      </span>
+                    </div>
+
+                    {/* Nombre e Imagen */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`relative rounded-full flex items-center justify-center font-black shrink-0 border overflow-hidden ${avatarSize} ${avatarBgClass}`}>
+                        <span className={`absolute z-0 ${initialsTextSize}`}>{entry.name?.slice(0, 1).toUpperCase() || '?'}</span>
+                        <img
+                          src={`https://apivacas.jariel.com.ar/users/${entry.userId}.webp`}
+                          alt={entry.name}
+                          className="w-full h-full object-cover relative z-10"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <span className={`truncate ${nameTextClass}`}>
+                          {entry.name || 'Desconocido'}
+                          {isMe && <span className="ml-2 text-[10px] font-semibold text-amber-400/70">(vos)</span>}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Puntos / Partido */}
+                    <div className="text-center">
+                      {userStats ? (
+                        <span className="text-sm font-black text-white">
+                          {userStats.pointsPerMatch.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
+                        </span>
+                      ) : (
+                        <span className="text-sm font-bold text-slate-500">--</span>
+                      )}
+                    </div>
+
+                    {/* Eficacia */}
+                    <div className="text-center">
+                      {userStats ? (
+                        <span className="text-sm font-black text-emerald-400">
+                          {userStats.hitRate}%
+                        </span>
+                      ) : (
+                        <span className="text-sm font-bold text-slate-500">--</span>
+                      )}
+                    </div>
+
+                    {/* Distribución */}
+                    <div className="flex items-center min-w-0 pr-1">
+                      {userStats ? (
+                        <div className="flex flex-col gap-1 w-full">
+                          <div className="w-full h-2.5 bg-slate-950/80 rounded-full overflow-hidden flex border border-white/5 p-[1px]">
+                            {userStats.exact > 0 && (
+                              <div
+                                style={{ width: `${(userStats.exact / userStats.totalPreds) * 100}%` }}
+                                className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 first:rounded-l-full"
+                                title={`Exactos: ${userStats.exact}`}
+                              />
+                            )}
+                            {userStats.tendency > 0 && (
+                              <div
+                                style={{ width: `${(userStats.tendency / userStats.totalPreds) * 100}%` }}
+                                className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 first:rounded-l-full"
+                                title={`Tendencia: ${userStats.tendency}`}
+                              />
+                            )}
+                            {userStats.wrong > 0 && (
+                              <div
+                                style={{ width: `${(userStats.wrong / userStats.totalPreds) * 100}%` }}
+                                className="h-full bg-gradient-to-r from-slate-600 to-slate-750 last:rounded-r-full"
+                                title={`Errados: ${userStats.wrong}`}
+                              />
+                            )}
+                          </div>
+                          <div className="hidden md:flex justify-between text-[8px] text-slate-455 font-bold px-0.5 leading-none">
+                            <span className="text-emerald-400/95">{userStats.exact} Ex.</span>
+                            <span className="text-amber-400/95">{userStats.tendency} Ten.</span>
+                            <span className="text-slate-500">{userStats.wrong} Er.</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-2 bg-white/5 rounded-full animate-pulse" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : activeRanking.length <= 2 ? (
               <div className="p-8 text-center text-slate-500 italic">No hay más participantes en esta tabla.</div>
             ) : (
               activeRanking.slice(2).map((entry, sliceIdx) => {
-              const idx = sliceIdx + 2;
-              const isMe = user && entry.userId === user.uid;
-              const isMundial = activeLeague.id === 'mundial';
-              const isTop3 = idx < 3;
-              const medal = isMundial
-                ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : undefined)
-                : MEDAL[idx];
+                const idx = sliceIdx + 2;
+                const isMe = user && entry.userId === user.uid;
+                const isMundial = activeLeague.id === 'mundial';
+                const isTop3 = idx < 3;
+                const medal = isMundial
+                  ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : undefined)
+                  : MEDAL[idx];
 
-              const rowPadding = idx === 0
-                ? 'py-5 md:py-8'
-                : (isMundial && idx === 1)
-                  ? 'py-4 md:py-5'
-                  : 'py-3.5';
-
-              const rowBg = idx === 0
-                ? (isMe
-                  ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 border-l-4 border-amber-500 hover:from-amber-500/25 hover:to-amber-500/10'
-                  : 'bg-gradient-to-r from-amber-500/10 to-amber-500/[0.02] border-l-4 border-amber-500/50 hover:from-amber-500/15 hover:to-amber-500/[0.05]')
-                : isMe
-                  ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
+                const rowPadding = idx === 0
+                  ? 'py-5 md:py-8'
                   : (isMundial && idx === 1)
-                    ? 'bg-slate-500/[0.02] border-l-2 border-slate-400/20 hover:bg-slate-500/[0.05]'
-                    : 'hover:bg-white/[0.04]';
+                    ? 'py-4 md:py-5'
+                    : 'py-3.5';
 
-              const medalSize = idx === 0
-                ? 'text-3xl md:text-4xl'
-                : (isMundial && idx === 1)
-                  ? 'text-xl md:text-2xl'
-                  : 'text-xl';
+                const rowBg = idx === 0
+                  ? (isMe
+                    ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 border-l-4 border-amber-500 hover:from-amber-500/25 hover:to-amber-500/10'
+                    : 'bg-gradient-to-r from-amber-500/10 to-amber-500/[0.02] border-l-4 border-amber-500/50 hover:from-amber-500/15 hover:to-amber-500/[0.05]')
+                  : isMe
+                    ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
+                    : (isMundial && idx === 1)
+                      ? 'bg-slate-500/[0.02] border-l-2 border-slate-400/20 hover:bg-slate-500/[0.05]'
+                      : 'hover:bg-white/[0.04]';
 
-              const avatarSize = idx === 0
-                ? 'w-12 h-12 md:w-24 md:h-24 shadow-[0_0_20px_rgba(245,158,11,0.2)] border-amber-400/40'
-                : (isMundial && idx === 1)
-                  ? 'w-10 h-10 md:w-11 md:h-11'
-                  : 'w-8 h-8';
+                const medalSize = idx === 0
+                  ? 'text-3xl md:text-4xl'
+                  : (isMundial && idx === 1)
+                    ? 'text-xl md:text-2xl'
+                    : 'text-xl';
 
-              const initialsTextSize = idx === 0
-                ? 'text-xl md:text-4xl'
-                : (isMundial && idx === 1)
-                  ? 'text-sm md:text-base'
-                  : 'text-xs';
+                const avatarSize = idx === 0
+                  ? 'w-12 h-12 md:w-24 md:h-24 shadow-[0_0_20px_rgba(245,158,11,0.2)] border-amber-400/40'
+                  : (isMundial && idx === 1)
+                    ? 'w-10 h-10 md:w-11 md:h-11'
+                    : 'w-8 h-8';
 
-              const avatarBgClass = isMe
-                ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                : (isMundial && idx === 0)
+                const initialsTextSize = idx === 0
+                  ? 'text-xl md:text-4xl'
+                  : (isMundial && idx === 1)
+                    ? 'text-sm md:text-base'
+                    : 'text-xs';
+
+                const avatarBgClass = isMe
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                  : (isMundial && idx === 0)
+                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                    : (isMundial && idx === 1)
+                      ? 'bg-slate-500/20 border-slate-500/30 text-slate-300'
+                      : isTop3 && !isMundial
+                        ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
+                        : 'bg-white/5 border-white/10 text-slate-400';
+
+                const nameTextClass = idx === 0
+                  ? 'text-base md:text-2xl font-black text-amber-300'
                   : (isMundial && idx === 1)
-                    ? 'bg-slate-500/20 border-slate-500/30 text-slate-300'
-                    : isTop3 && !isMundial
-                      ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
-                      : 'bg-white/5 border-white/10 text-slate-400';
+                    ? 'text-sm md:text-base font-extrabold text-slate-200'
+                    : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
-              const nameTextClass = idx === 0
-                ? 'text-base md:text-2xl font-black text-amber-300'
-                : (isMundial && idx === 1)
-                  ? 'text-sm md:text-base font-extrabold text-slate-200'
-                  : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
+                const pointsClass = idx === 0
+                  ? 'text-xl md:text-3xl font-black text-amber-400'
+                  : (isMundial && idx === 1)
+                    ? 'text-base md:text-lg font-black text-slate-200'
+                    : `text-base font-black ${isMe ? 'text-amber-400' : (idx < 3) ? 'text-white' : 'text-slate-300'}`;
 
-              const pointsClass = idx === 0
-                ? 'text-xl md:text-3xl font-black text-amber-400'
-                : (isMundial && idx === 1)
-                  ? 'text-base md:text-lg font-black text-slate-200'
-                  : `text-base font-black ${isMe ? 'text-amber-400' : (idx < 3) ? 'text-white' : 'text-slate-300'}`;
-
-              return (
-                <div
-                  key={entry.userId}
-                  onClick={() => {
-                    setNavigatingUserId(entry.userId);
-                    router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
-                  }}
-                  className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
-                >
-                  <div className="flex items-center justify-center">
-                    {medal ? (
-                      <span className={medalSize}>{medal}</span>
-                    ) : (
-                      <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`relative rounded-full flex items-center justify-center font-black shrink-0 border overflow-hidden ${avatarSize} ${avatarBgClass}`}>
-                      <span className={`absolute z-0 ${initialsTextSize}`}>{entry.name?.slice(0, 1).toUpperCase() || '?'}</span>
-                      <img
-                        src={`https://apivacas.jariel.com.ar/users/${entry.userId}.webp`}
-                        alt={entry.name}
-                        className="w-full h-full object-cover relative z-10"
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
+                return (
+                  <div
+                    key={entry.userId}
+                    onClick={() => {
+                      setNavigatingUserId(entry.userId);
+                      router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                    }}
+                    className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
+                  >
+                    <div className="flex items-center justify-center">
+                      {medal ? (
+                        <span className={medalSize}>{medal}</span>
+                      ) : (
+                        <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
+                      )}
                     </div>
-                    <span className={`truncate ${nameTextClass}`}>
-                      {entry.name || 'Desconocido'}
-                      {isMe && <span className="ml-2 text-[10px] font-semibold text-amber-400/70">(vos)</span>}
-                    </span>
-                  </div>
 
-                  <div className="text-center">
-                    <span className="text-sm font-bold text-slate-300">{entry.correctTendencies}</span>
-                  </div>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`relative rounded-full flex items-center justify-center font-black shrink-0 border overflow-hidden ${avatarSize} ${avatarBgClass}`}>
+                        <span className={`absolute z-0 ${initialsTextSize}`}>{entry.name?.slice(0, 1).toUpperCase() || '?'}</span>
+                        <img
+                          src={`https://apivacas.jariel.com.ar/users/${entry.userId}.webp`}
+                          alt={entry.name}
+                          className="w-full h-full object-cover relative z-10"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                      <span className={`truncate ${nameTextClass}`}>
+                        {entry.name || 'Desconocido'}
+                        {isMe && <span className="ml-2 text-[10px] font-semibold text-amber-400/70">(vos)</span>}
+                      </span>
+                    </div>
 
-                  <div className="text-center">
-                    <span className={`text-sm font-bold ${entry.exactResults > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                      {entry.exactResults}
-                    </span>
-                  </div>
+                    <div className="text-center">
+                      <span className="text-sm font-bold text-slate-300">{entry.correctTendencies}</span>
+                    </div>
 
-                  <div className="text-right">
-                    <span className={pointsClass}>
-                      {entry.totalPoints}
-                    </span>
+                    <div className="text-center">
+                      <span className={`text-sm font-bold ${entry.exactResults > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        {entry.exactResults}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className={pointsClass}>
+                        {entry.totalPoints}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            }))}
+                );
+              })
+            )}
           </div>
 
           {/* Leyenda de puntos */}
-          {activeLeague.id !== 'mundial' && (
+          {rankingTab === 'stats' ? (
+            <div className="flex flex-wrap gap-4 px-6 py-4 border-t border-white/5 bg-black/10">
+              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span><strong className="text-slate-350">Exactos</strong> (Marcador idéntico)</span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span><strong className="text-slate-350">Tendencia</strong> (Ganador/empate correcto)</span>
+              </div>
+              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-650" />
+                <span><strong className="text-slate-350">Errados</strong> (Predicción incorrecta)</span>
+              </div>
+            </div>
+          ) : activeLeague.id !== 'mundial' && (
             <div className="flex flex-wrap gap-4 px-6 py-4 border-t border-white/5 bg-black/10">
               <div className="flex items-center gap-2 text-[11px] text-slate-500">
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
