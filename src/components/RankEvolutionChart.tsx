@@ -55,6 +55,7 @@ export const getColorForUser = (userId: string): string => {
 
 export default function RankEvolutionChart({ history, users, activeUserId }: RankEvolutionChartProps) {
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [hoveredStepIndex, setHoveredStepIndex] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -136,34 +137,48 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       <div className="flex flex-wrap gap-2 justify-center bg-black/20 p-4 border border-white/5 rounded-2xl">
         {users.map((u) => {
           const color = getColorForUser(u.userId);
-          const isHighlighted = hoveredUserId === u.userId;
+          const isHovered = hoveredUserId === u.userId;
+          const isSelected = selectedUserId === u.userId;
+          const isHighlighted = isHovered || isSelected;
           const isMe = u.userId === activeUserId;
-          const isAnyHighlighted = hoveredUserId !== null;
+          const isAnyHighlighted = hoveredUserId !== null || selectedUserId !== null;
 
           return (
             <button
               key={u.userId}
               onMouseEnter={() => setHoveredUserId(u.userId)}
               onMouseLeave={() => setHoveredUserId(null)}
+              onClick={() => setSelectedUserId(prev => prev === u.userId ? null : u.userId)}
               className={`
-                flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black border transition-all cursor-pointer
+                flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black border transition-all cursor-pointer select-none
                 ${isHighlighted 
-                  ? 'border-white/20 shadow-md scale-105' 
+                  ? 'scale-105 border-white/30' 
                   : isAnyHighlighted 
-                    ? 'border-transparent opacity-30 scale-95' 
+                    ? 'border-transparent opacity-20 scale-95' 
                     : 'border-white/5 opacity-80'}
               `}
               style={{
-                backgroundColor: `${color}15`,
+                backgroundColor: isSelected ? `${color}30` : isHovered ? `${color}20` : `${color}10`,
+                borderColor: isSelected ? color : undefined,
                 color: color,
+                boxShadow: isSelected ? `0 0 12px ${color}30` : undefined,
               }}
             >
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
               <span>{u.name}</span>
               {isMe && <span className="text-[9px] px-1 bg-white/10 rounded uppercase tracking-wider text-slate-300">Vos</span>}
+              {isSelected && <span className="text-[9px] font-bold text-white bg-white/20 px-1 rounded ml-0.5">📌</span>}
             </button>
           );
         })}
+        {selectedUserId !== null && (
+          <button
+            onClick={() => setSelectedUserId(null)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black border border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          >
+            <span>Limpiar filtro</span> <span>✕</span>
+          </button>
+        )}
       </div>
 
       {/* ── Chart Container ── */}
@@ -261,8 +276,10 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             {users.map((u) => {
               const color = getColorForUser(u.userId);
               const isHovered = hoveredUserId === u.userId;
+              const isSelected = selectedUserId === u.userId;
+              const isHighlighted = isHovered || isSelected;
               const isMe = u.userId === activeUserId;
-              const isAnyHovered = hoveredUserId !== null;
+              const isAnyHighlighted = hoveredUserId !== null || selectedUserId !== null;
 
               // Generate path points
               const points = history.map((step, idx) => {
@@ -286,6 +303,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     className="cursor-pointer"
                     onMouseEnter={() => setHoveredUserId(u.userId)}
                     onMouseLeave={() => setHoveredUserId(null)}
+                    onClick={() => setSelectedUserId(prev => prev === u.userId ? null : u.userId)}
                   />
 
                   {/* Main Line */}
@@ -293,12 +311,12 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     d={pathD}
                     fill="none"
                     stroke={color}
-                    strokeWidth={isHovered ? 4.5 : isMe ? 2.5 : 1.8}
+                    strokeWidth={isHighlighted ? 4.5 : isMe ? 2.5 : 1.8}
                     strokeDasharray={isMe ? undefined : undefined}
                     className="transition-all duration-200 pointer-events-none"
                     style={{
-                      opacity: isHovered ? 1 : isAnyHovered ? 0.12 : isMe ? 0.85 : 0.55,
-                      filter: isHovered ? 'url(#glow-filter)' : undefined,
+                      opacity: isHighlighted ? 1 : isAnyHighlighted ? 0.12 : isMe ? 0.85 : 0.55,
+                      filter: isHighlighted ? 'url(#glow-filter)' : undefined,
                       color: color,
                     }}
                   />
@@ -306,8 +324,8 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                   {/* Nodes on points */}
                   {points.map((p, idx) => {
                     const isStepHovered = hoveredStepIndex === idx;
-                    const radius = isHovered && isStepHovered ? 6 : isStepHovered ? 5 : isHovered ? 3.5 : isMe ? 2.5 : 1.5;
-                    const opacity = isHovered ? 1 : isAnyHovered ? 0.12 : isStepHovered ? 0.8 : isMe ? 0.7 : 0.45;
+                    const radius = isHighlighted && isStepHovered ? 6 : isStepHovered ? 5 : isHighlighted ? 3.5 : isMe ? 2.5 : 1.5;
+                    const opacity = isHighlighted ? 1 : isAnyHighlighted ? 0.12 : isStepHovered ? 0.8 : isMe ? 0.7 : 0.45;
 
                     return (
                       <circle
@@ -365,21 +383,31 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             const isMe = r.userId === activeUserId;
             const change = getPosChange(r.userId, activeIdx);
 
+            const isSelected = selectedUserId === r.userId;
+
             return (
               <div
                 key={`panel-r-${r.userId}`}
-                className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-25 ${
-                  isMe
-                    ? 'bg-amber-500/10 border-amber-500/35 shadow-[0_0_15px_rgba(245,158,11,0.06)]'
-                    : 'bg-black/25 border-white/5 hover:border-white/10'
+                onClick={() => setSelectedUserId(prev => prev === r.userId ? null : r.userId)}
+                className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 cursor-pointer select-none ${
+                  isSelected
+                    ? 'scale-[1.02]'
+                    : isMe
+                      ? 'bg-amber-500/10 border-amber-500/35 shadow-[0_0_15px_rgba(245,158,11,0.06)]'
+                      : 'bg-black/25 border-white/5 hover:border-white/10'
                 }`}
+                style={isSelected ? {
+                  borderColor: color,
+                  backgroundColor: `${color}20`,
+                  boxShadow: `0 0 10px ${color}20`,
+                } : undefined}
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className={`font-black text-xs w-5 text-slate-450 ${isMe ? 'text-amber-400' : ''}`}>
+                  <span className={`font-black text-xs w-5 ${isSelected ? 'text-white' : isMe ? 'text-amber-400' : 'text-slate-450'}`}>
                     {r.position}º
                   </span>
                   <div className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: color }} />
-                  <span className={`truncate font-bold text-xs ${isMe ? 'text-amber-300' : 'text-slate-300'}`}>
+                  <span className={`truncate font-bold text-xs ${isSelected ? 'text-white' : isMe ? 'text-amber-300' : 'text-slate-300'}`}>
                     {r.name}
                   </span>
                 </div>
