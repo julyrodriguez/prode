@@ -790,14 +790,14 @@ export default function MatchDetailView() {
               ? match.status?.type === 'finished'
               : match.status === 'finished';
             const isLiveMatch = isLive;
-            const isUnderOneHour = start > 0 && (nowSec >= start - 3600);
+            const isUnderTenMinutes = start > 0 && (nowSec >= start - 600);
             const predMode: 'hidden' | 'grey' | 'scored' =
               isFinished ? 'scored' :
-                (isLiveMatch || isUnderOneHour) ? 'grey' :
+                (isLiveMatch || isUnderTenMinutes) ? 'grey' :
                   'hidden';
-
+ 
             if (matchPredictions.length === 0) return null;
-
+ 
             const getColor = (p: any) => {
               if (predMode !== 'scored') return '';
               const rH = hScore !== '-' ? Number(hScore) : null;
@@ -811,7 +811,7 @@ export default function MatchDetailView() {
               if (rTrend === pTrend) return 'trend';
               return 'wrong';
             };
-
+ 
             const colorClasses: Record<string, string> = {
               exact: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
               trend: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
@@ -819,11 +819,11 @@ export default function MatchDetailView() {
               grey: 'border-white/10 bg-white/5 text-slate-300',
               '': 'border-white/10 bg-white/5 text-slate-300',
             };
-
+ 
             const visiblePredictions = showAllPredictions
               ? matchPredictions
               : matchPredictions.slice(0, 3);
-
+ 
             return (
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-lg h-fit">
                 <div className="flex items-center gap-2 px-3 py-2 border-b border-white/5">
@@ -831,10 +831,10 @@ export default function MatchDetailView() {
                   <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Pronósticos</span>
                   <span className="ml-auto text-[10px] font-semibold text-slate-500">{matchPredictions.length} participante{matchPredictions.length !== 1 ? 's' : ''}</span>
                 </div>
-
+ 
                 {predMode === 'hidden' && (
                   <p className="text-center text-slate-500 text-[10px] py-2 font-medium">
-                    🔒 Los scores se revelan 1 hora antes del partido
+                    🔒 Los scores se revelan 10 minutos antes del partido
                   </p>
                 )}
 

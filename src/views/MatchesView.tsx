@@ -273,7 +273,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
         .filter(m => {
           const pred = localPredictions[m.id];
           if (!pred || pred.home === '' || pred.away === '') return false;
-          if (!m.startTimestamp || m.startTimestamp <= now) return false; // anti-trampa
+          if (!m.startTimestamp || (m.startTimestamp - 600) <= now) return false; // anti-trampa (10 minutos antes)
           return true;
         })
         .map(m => ({
@@ -421,8 +421,8 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                     const aId = match.awayTeam?.id || match.away_team?.id;
 
                     const now = Math.floor(Date.now() / 1000);
-                    const oneHourBefore = match.startTimestamp ? match.startTimestamp - 3600 : null;
-                    const isLocked = status.isLive || (oneHourBefore !== null && now >= oneHourBefore);
+                    const tenMinutesBefore = match.startTimestamp ? match.startTimestamp - 600 : null;
+                    const isLocked = status.isLive || (tenMinutesBefore !== null && now >= tenMinutesBefore);
                     const canPredict = isPredictionMode && !status.hasStarted && !isLocked && !!user;
                     const hasPrediction = !!(localPredictions[match.id]?.home !== undefined && localPredictions[match.id]?.away !== undefined);
                     const liveTime = status.isLive ? getMatchTime(match) : null;
