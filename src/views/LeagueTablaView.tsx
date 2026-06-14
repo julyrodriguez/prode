@@ -311,6 +311,15 @@ export default function LeagueTablaView() {
                                   <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[100px] xs:max-w-[140px] sm:max-w-xs transition-colors ${textSize}`}>
                                     {row.nombre}
                                   </span>
+                                  {row.enVivo && (
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest bg-red-500/10 text-red-400 border border-red-500/20 rounded-md shrink-0 animate-pulse">
+                                      <span className="flex h-1.5 w-1.5 relative">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                                      </span>
+                                      Vivo
+                                    </span>
+                                  )}
                                 </div>
                               </TeamHoverCard>
                             </td>
