@@ -196,7 +196,10 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
         
         {/* SVG Wrapper */}
         <div ref={scrollContainerRef} className="w-full overflow-x-auto no-scrollbar scroll-smooth">
-          <div className="min-w-[1100px] lg:min-w-0 w-full h-[350px] md:h-[480px] relative">
+          <div 
+            style={{ ['--chart-min-width' as any]: `${Math.max(320, totalSteps * 75)}px` }}
+            className="min-w-[var(--chart-min-width)] lg:min-w-0 w-full h-[350px] md:h-[480px] relative"
+          >
           <svg
             ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}
