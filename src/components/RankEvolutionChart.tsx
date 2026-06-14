@@ -181,10 +181,11 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       </div>
 
       {/* ── Chart Container ── */}
-      <div className="relative w-full bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-4 md:p-6 overflow-visible shadow-2xl">
+      <div className="relative w-full bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-4 md:p-6 overflow-hidden shadow-2xl">
         
         {/* SVG Wrapper */}
-        <div className="relative w-full h-[380px] md:h-[480px]">
+        <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
+          <div className="min-w-[700px] lg:min-w-0 w-full h-[350px] md:h-[480px] relative">
           <svg
             ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}
@@ -344,7 +345,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
               );
             })}
           </svg>
-
+          </div>
         </div>
 
       </div>
@@ -437,8 +438,9 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
 
       {/* ── Subtitle explanation ── */}
       <div className="text-[11px] text-slate-400 italic text-center px-4 leading-normal">
-        Colocá el cursor sobre el gráfico para ver el detalle de posiciones en cada fecha. <br />
-        Pasá el mouse sobre los nombres arriba para resaltar el camino de cada jugador.
+        <span className="lg:hidden block mb-1">↔️ Deslizá horizontalmente sobre el gráfico para recorrer las fechas.</span>
+        Colocá el cursor o tocá sobre el gráfico para ver el detalle de posiciones en cada fecha. <br />
+        Pasá el mouse o tocá los nombres arriba para resaltar el camino de cada jugador.
       </div>
 
     </div>
