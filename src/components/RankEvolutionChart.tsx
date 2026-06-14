@@ -126,7 +126,8 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   };
 
   // Get active step details
-  const activeStep = hoveredStepIndex !== null ? history[hoveredStepIndex] : null;
+  const activeIdx = hoveredStepIndex !== null ? hoveredStepIndex : totalSteps - 1;
+  const activeStep = history[activeIdx];
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -327,92 +328,84 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             })}
           </svg>
 
-          {/* ── Glassmorphic Tooltip ── */}
-          {hoveredStepIndex !== null && activeStep && (
-            <div
-              style={{
-                left: `${tooltipPos.x}px`,
-                top: `${tooltipPos.y < 250 ? tooltipPos.y + 20 : tooltipPos.y - 20}px`,
-                transform: `translate(${tooltipPos.x > (svgRef.current?.getBoundingClientRect().width || 0) * 0.7 ? '-102%' : '2%'}, ${tooltipPos.y < 250 ? '0%' : '-100%'})`,
-              }}
-              className="absolute z-35 pointer-events-none w-[260px] md:w-[300px] bg-slate-950/85 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.7)] flex flex-col gap-3 transition-all duration-75 select-none"
-            >
-              {/* Tooltip Header */}
-              <div className="flex flex-col border-b border-white/15 pb-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                  {hoveredStepIndex === 0 ? 'Estado Inicial' : `Fecha ${hoveredStepIndex}`}
-                </span>
-                <span className="text-xs font-black text-white truncate mt-0.5">
-                  {activeStep.match ? (
-                    <>
-                      <span>{activeStep.match.equipoLocal} vs {activeStep.match.equipoVisita}</span>
-                      {activeStep.match.stage && (
-                        <span className="block text-[10px] text-slate-400 font-bold capitalize mt-0.5">
-                          {activeStep.match.stage}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    'Inicio del Torneo'
-                  )}
-                </span>
-              </div>
-
-              {/* Tooltip Standings List */}
-              <div className="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto pr-0.5 no-scrollbar pointer-events-none">
-                {activeStep.rankings.map((r) => {
-                  const color = getColorForUser(r.userId);
-                  const isMe = r.userId === activeUserId;
-                  const change = getPosChange(r.userId, hoveredStepIndex);
-                  
-                  return (
-                    <div
-                      key={`tooltip-r-${r.userId}`}
-                      className={`flex items-center justify-between text-xs py-0.5 px-1.5 rounded-lg ${isMe ? 'bg-white/10' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        {/* Position dot/number */}
-                        <span className="font-black text-slate-400 text-[10px] w-4 text-right">
-                          {r.position}º
-                        </span>
-                        {/* Color indicator */}
-                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                        {/* Name */}
-                        <span className={`truncate font-bold ${isMe ? 'text-amber-300' : 'text-slate-200'}`}>
-                          {r.name}
-                        </span>
-                      </div>
-                      
-                      {/* Points and change indicator */}
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="font-black text-white text-[11px]">
-                          {r.points} <span className="text-[9px] text-slate-500 font-normal">pts</span>
-                        </span>
-                        
-                        {/* Rise/Fall Indicator */}
-                        {change > 0 ? (
-                          <span className="text-emerald-400 font-black text-[10px] flex items-center">
-                            ▲{change}
-                          </span>
-                        ) : change < 0 ? (
-                          <span className="text-red-400 font-black text-[10px] flex items-center">
-                            ▼{Math.abs(change)}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 font-extrabold text-[10px] flex items-center">
-                            •
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
         </div>
 
+      </div>
+
+      {/* ── Detalle de la Fecha (Info Panel) ── */}
+      <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col gap-4">
+        {/* Panel Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/5 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🗓️</span>
+            <div className="flex flex-col">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-400">
+                {activeIdx === 0 ? 'Estado Inicial' : `Fecha ${activeIdx} de ${totalSteps - 1}`}
+              </h4>
+              <span className="text-base font-black text-white">
+                {activeStep.match ? (
+                  `${activeStep.match.equipoLocal} vs ${activeStep.match.equipoVisita}`
+                ) : (
+                  'Inicio del Torneo'
+                )}
+              </span>
+            </div>
+          </div>
+          {activeStep.match?.stage && (
+            <span className="self-start md:self-auto text-[10px] font-black uppercase tracking-wider bg-white/5 border border-white/10 px-3 py-1 rounded-full text-slate-300">
+              {activeStep.match.stage}
+            </span>
+          )}
+        </div>
+
+        {/* Panel Standings Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {activeStep.rankings.map((r) => {
+            const color = getColorForUser(r.userId);
+            const isMe = r.userId === activeUserId;
+            const change = getPosChange(r.userId, activeIdx);
+
+            return (
+              <div
+                key={`panel-r-${r.userId}`}
+                className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-25 ${
+                  isMe
+                    ? 'bg-amber-500/10 border-amber-500/35 shadow-[0_0_15px_rgba(245,158,11,0.06)]'
+                    : 'bg-black/25 border-white/5 hover:border-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`font-black text-xs w-5 text-slate-450 ${isMe ? 'text-amber-400' : ''}`}>
+                    {r.position}º
+                  </span>
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: color }} />
+                  <span className={`truncate font-bold text-xs ${isMe ? 'text-amber-300' : 'text-slate-300'}`}>
+                    {r.name}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  <span className="font-black text-white text-xs">
+                    {r.points} <span className="text-[9px] text-slate-500 font-normal">pts</span>
+                  </span>
+                  {change > 0 ? (
+                    <span className="text-emerald-400 font-black text-xs flex items-center gap-0.5">
+                      ▲{change}
+                    </span>
+                  ) : change < 0 ? (
+                    <span className="text-red-400 font-black text-xs flex items-center gap-0.5">
+                      ▼{Math.abs(change)}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500 font-extrabold text-xs flex items-center justify-center">
+                      •
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Subtitle explanation ── */}
