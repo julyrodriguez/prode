@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface MatchInfo {
   matchId: number;
@@ -59,6 +59,17 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   const [hoveredStepIndex, setHoveredStepIndex] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll to the end (latest date) on mobile when the chart loads
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [history]);
 
   if (!history || history.length === 0) {
     return (
@@ -184,7 +195,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       <div className="relative w-full bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-4 md:p-6 overflow-hidden shadow-2xl">
         
         {/* SVG Wrapper */}
-        <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
+        <div ref={scrollContainerRef} className="w-full overflow-x-auto no-scrollbar scroll-smooth">
           <div className="min-w-[1100px] lg:min-w-0 w-full h-[350px] md:h-[480px] relative">
           <svg
             ref={svgRef}
