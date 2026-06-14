@@ -150,23 +150,22 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
               onMouseLeave={() => setHoveredUserId(null)}
               onClick={() => setSelectedUserId(prev => prev === u.userId ? null : u.userId)}
               className={`
-                flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-black border transition-all cursor-pointer select-none
+                flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none
                 ${isHighlighted 
-                  ? 'scale-105 border-white/30' 
+                  ? 'scale-105 text-white font-black border-white/20' 
                   : isAnyHighlighted 
-                    ? 'border-transparent opacity-20 scale-95' 
-                    : 'border-white/5 opacity-80'}
+                    ? 'border-transparent opacity-20 scale-95 text-slate-400' 
+                    : 'border-white/5 opacity-90 text-slate-200 hover:text-white hover:border-white/10'}
               `}
               style={{
-                backgroundColor: isSelected ? `${color}30` : isHovered ? `${color}20` : `${color}10`,
-                borderColor: isSelected ? color : undefined,
-                color: color,
-                boxShadow: isSelected ? `0 0 12px ${color}30` : undefined,
+                backgroundColor: isSelected ? `${color}25` : isHovered ? `${color}15` : `${color}08`,
+                borderColor: isSelected ? color : isHovered ? `${color}40` : undefined,
+                boxShadow: isSelected ? `0 0 12px ${color}20` : undefined,
               }}
             >
               <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
               <span>{u.name}</span>
-              {isMe && <span className="text-[9px] px-1 bg-white/10 rounded uppercase tracking-wider text-slate-300">Vos</span>}
+              {isMe && <span className="text-[9px] px-1 bg-white/10 rounded uppercase tracking-wider text-slate-350">Vos</span>}
               {isSelected && <span className="text-[9px] font-bold text-white bg-white/20 px-1 rounded ml-0.5">📌</span>}
             </button>
           );
