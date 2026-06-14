@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useContext } from 'react';
 import { createPortal } from 'react-dom';
 import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
 import { useAuth } from '../context/AuthContext';
+import RankEvolutionChart from '../components/RankEvolutionChart';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -30,10 +31,65 @@ const PRODE_USER_IDS = new Set([
   'jTnexEDtihPrcP1r1dmFm4CFD0z2',
   'POYvW930tTUZZEnfNcIIy8O67692',
   'pffqgeno1jSwZMLws4h7sWmzjEj2',
-  'IS6Ap0JmN9OVoGBbvoPCQSIU0xU2',
-  'CPJ15xjLbaMJmiEc7fChoFUiDMw2',
   'aayngHYHpsNaw66u8FjG9RvF7Vk1'
 ]);
+
+function getResult(pred: any): 'exact' | 'tendency' | 'wrong' {
+  const { miPronosticoLocal: pl, miPronosticoVisita: pv, golesRealesLocal: gl, golesRealesVisita: gv } = pred;
+  if (pl === gl && pv === gv) return 'exact';
+  const predSign = pl > pv ? 1 : pl < pv ? -1 : 0;
+  const realSign = gl > gv ? 1 : gl < gv ? -1 : 0;
+  return predSign === realSign ? 'tendency' : 'wrong';
+}
+
+function getPointsForPrediction(
+  pred: any,
+  match: any | undefined,
+  tournamentId: number,
+  result: 'exact' | 'tendency' | 'wrong'
+): number {
+  if (result === 'wrong') return 0;
+
+  if (tournamentId === 16) {
+    const stage = (match?.stage || match?.round_name || '').toLowerCase();
+    const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
+
+    // Group stage detection
+    const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
+
+    if (isGroup) {
+      return result === 'exact' ? 4 : 2;
+    }
+
+    // Knockout phases
+    const is16avosTo4tos = 
+      stage.includes('32') || 
+      stage.includes('16') || 
+      stage.includes('octav') || 
+      stage.includes('dieciseis') || 
+      stage.includes('16av') || 
+      stage.includes('quarter') || 
+      stage.includes('cuart');
+
+    if (is16avosTo4tos) {
+      return result === 'exact' ? 8 : 4;
+    }
+
+    const isSemi = stage.includes('semi');
+    if (isSemi) {
+      return result === 'exact' ? 14 : 7;
+    }
+
+    const isFinal = stage.includes('final');
+    if (isFinal) {
+      return result === 'exact' ? 20 : 10;
+    }
+
+    return result === 'exact' ? 4 : 2;
+  }
+
+  return result === 'exact' ? 6 : 3;
+}
 
 export default function LeagueRankingView() {
   const params = useParams();
@@ -46,7 +102,7 @@ export default function LeagueRankingView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [rankingTab, setRankingTab] = useState<'prode' | 'stats'>('prode');
+  const [rankingTab, setRankingTab] = useState<'prode' | 'stats' | 'evolution'>('prode');
   const [podiumPredictions, setPodiumPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
   const [navigatingUserId, setNavigatingUserId] = useState<string | null>(null);
@@ -58,9 +114,134 @@ export default function LeagueRankingView() {
     pointsPerMatch: number;
     hitRate: number;
   }>>({});
+  const [predictionsData, setPredictionsData] = useState<Record<string, any[]>>({});
+  const [matches, setMatches] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(false);
 
   const tournamentId = activeLeague.tournamentId;
+
+  const rankingHistory = useMemo(() => {
+    if (ranking.length === 0 || Object.keys(predictionsData).length === 0 || !tournamentId) return [];
+
+    const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
+
+    // 1. Gather all unique matches from all users' predictions
+    const matchMap = new Map<number, { matchId: number; fechaUnix: number; equipoLocal: string; equipoVisita: string; stage?: string }>();
+    
+    Object.entries(predictionsData).forEach(([userId, preds]) => {
+      preds.forEach(p => {
+        if (!matchMap.has(p.matchId)) {
+          matchMap.set(p.matchId, {
+            matchId: p.matchId,
+            fechaUnix: p.fechaUnix,
+            equipoLocal: p.equipoLocal,
+            equipoVisita: p.equipoVisita,
+            stage: p.torneo,
+          });
+        }
+      });
+    });
+
+    // Sort matches chronologically
+    const sortedMatches = Array.from(matchMap.values()).sort((a, b) => a.fechaUnix - b.fechaUnix);
+
+    if (sortedMatches.length === 0) return [];
+
+    // Create lookup of matches from matches list to resolve stages if needed (for tournamentId 16)
+    const allMatchesMap = new Map<number, any>();
+    matches.forEach(m => {
+      const mId = m.id !== undefined ? m.id : m._id;
+      if (mId !== undefined) {
+        allMatchesMap.set(mId, m);
+      }
+    });
+
+    // For each user, index their predictions by matchId for O(1) lookup
+    const userPredsMap = new Map<string, Map<number, any>>();
+    Object.entries(predictionsData).forEach(([userId, preds]) => {
+      const pMap = new Map<number, any>();
+      preds.forEach(p => {
+        pMap.set(p.matchId, p);
+      });
+      userPredsMap.set(userId, pMap);
+    });
+
+    // Initialize state for each user
+    const userStates = activeRanking.map(user => ({
+      userId: user.userId,
+      name: user.name,
+      points: 0,
+      exacts: 0,
+      tendencies: 0,
+    }));
+
+    const steps: any[] = [];
+
+    // Initial step (Step 0) - sorted alphabetically
+    const initialRanked = [...userStates].sort((a, b) => a.name.localeCompare(b.name));
+    const initialPositions: Record<string, number> = {};
+    initialRanked.forEach((u, index) => {
+      initialPositions[u.userId] = index + 1;
+    });
+    
+    steps.push({
+      match: null,
+      rankings: initialRanked.map((u, index) => ({
+        userId: u.userId,
+        name: u.name,
+        points: 0,
+        position: index + 1,
+      })),
+      positionsMap: initialPositions,
+    });
+
+    // Loop through matches
+    sortedMatches.forEach((matchInfo, matchIdx) => {
+      userStates.forEach(userState => {
+        const uPredMap = userPredsMap.get(userState.userId);
+        if (uPredMap) {
+          const pred = uPredMap.get(matchInfo.matchId);
+          if (pred) {
+            const result = getResult(pred);
+            const matchDetail = allMatchesMap.get(matchInfo.matchId);
+            const points = getPointsForPrediction(pred, matchDetail, tournamentId, result);
+            userState.points += points;
+            if (result === 'exact') {
+              userState.exacts += 1;
+            } else if (result === 'tendency') {
+              userState.tendencies += 1;
+            }
+          }
+        }
+      });
+
+      // Sort users by points at this step
+      const ranked = [...userStates].sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.exacts !== a.exacts) return b.exacts - a.exacts;
+        if (b.tendencies !== a.tendencies) return b.tendencies - a.tendencies;
+        return a.name.localeCompare(b.name);
+      });
+
+      const positionsMap: Record<string, number> = {};
+      ranked.forEach((u, index) => {
+        positionsMap[u.userId] = index + 1;
+      });
+
+      steps.push({
+        match: matchInfo,
+        rankings: ranked.map((u, index) => ({
+          userId: u.userId,
+          name: u.name,
+          points: u.points,
+          position: index + 1,
+        })),
+        positionsMap,
+      });
+    });
+
+    return steps;
+  }, [ranking, predictionsData, matches, tournamentId]);
 
   useEffect(() => {
     if (activeLeague.id !== 'mundial') return;
@@ -119,10 +300,28 @@ export default function LeagueRankingView() {
   useEffect(() => {
     // Clear stats when tournament changes
     setStatsData({});
+    setPredictionsData({});
   }, [tournamentId]);
 
   useEffect(() => {
-    if (rankingTab !== 'stats' || !tournamentId || ranking.length === 0) return;
+    if ((rankingTab !== 'stats' && rankingTab !== 'evolution') || matches.length > 0) return;
+    
+    const fetchMatches = async () => {
+      try {
+        const res = await fetch('https://apivacas.jariel.com.ar/api/matches/all');
+        if (res.ok) {
+          const data = await res.json();
+          setMatches(data);
+        }
+      } catch (e) {
+        console.error("Error fetching matches:", e);
+      }
+    };
+    fetchMatches();
+  }, [rankingTab, matches.length]);
+
+  useEffect(() => {
+    if ((rankingTab !== 'stats' && rankingTab !== 'evolution') || !tournamentId || ranking.length === 0) return;
     
     const prodeEntries = ranking.filter(entry => PRODE_USER_IDS.has(entry.userId));
     if (prodeEntries.length === 0) return;
@@ -135,6 +334,7 @@ export default function LeagueRankingView() {
       setLoadingStats(true);
       try {
         const statsMap: Record<string, any> = {};
+        const predictionsMap: Record<string, any[]> = {};
         await Promise.all(
           prodeEntries.map(async (entry) => {
             try {
@@ -169,6 +369,7 @@ export default function LeagueRankingView() {
                   pointsPerMatch: totalPreds ? (entry.totalPoints / totalPreds) : 0,
                   hitRate: totalPreds ? Math.round(((exact + tendency) / totalPreds) * 100) : 0,
                 };
+                predictionsMap[entry.userId] = evaluated;
               }
             } catch (err) {
               console.error(`Error fetching stats for user ${entry.userId}:`, err);
@@ -177,6 +378,7 @@ export default function LeagueRankingView() {
         );
         if (isMounted) {
           setStatsData(prev => ({ ...prev, ...statsMap }));
+          setPredictionsData(prev => ({ ...prev, ...predictionsMap }));
         }
       } catch (err) {
         console.error("Error fetching all stats:", err);
@@ -294,6 +496,16 @@ export default function LeagueRankingView() {
           >
             ESTADÍSTICAS
           </button>
+          <button
+            onClick={() => setRankingTab('evolution')}
+            className={`flex-1 text-center px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${
+              rankingTab === 'evolution'
+                ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            EVOLUCIÓN
+          </button>
         </div>
       )}
 
@@ -395,7 +607,7 @@ export default function LeagueRankingView() {
 
 
       {/* ── Tabla ── */}
-      {!loading && !error && ranking.length > 0 && (
+      {!loading && !error && ranking.length > 0 && rankingTab !== 'evolution' && (
         <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] overflow-hidden shadow-lg">
 
           {/* Header de columnas */}
@@ -813,6 +1025,22 @@ export default function LeagueRankingView() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── Evolution Chart Tab ── */}
+      {!loading && !error && ranking.length > 0 && rankingTab === 'evolution' && (
+        loadingStats ? (
+          <div className="w-full py-16 flex flex-col items-center justify-center gap-3 bg-white/[0.02] border border-white/5 rounded-[2rem]">
+            <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
+            <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Calculando evolución de posiciones...</span>
+          </div>
+        ) : (
+          <RankEvolutionChart
+            history={rankingHistory}
+            users={activeRanking}
+            activeUserId={user?.uid}
+          />
+        )
       )}
 
       {/* ── Modal de Reglas Mundial ── */}
