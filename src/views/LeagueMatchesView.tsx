@@ -869,7 +869,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
             <span className="text-lg">🔒</span>
             <p className="text-sm font-semibold text-slate-300">
               <strong className="font-black text-white">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
-              <strong className="font-black text-white">1 hora antes</strong> del comienzo del partido.
+              <strong className="font-black text-white">10 minutos antes</strong> del comienzo del partido.
             </p>
           </div>
           {activeLeague.id === 'mundial' && (

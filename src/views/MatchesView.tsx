@@ -327,7 +327,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
         <div className="flex items-center gap-3 warning-banner border rounded-2xl px-5 py-3">
           <span className="text-lg">🔒</span>
           <p className="text-sm font-semibold">
-            <strong className="font-black">Regla:</strong> Los pronósticos se bloquean automáticamente <strong className="font-black">1 hora antes</strong> del comienzo del partido.
+            <strong className="font-black">Regla:</strong> Los pronósticos se bloquean automáticamente <strong className="font-black">10 minutos antes</strong> del comienzo del partido.
           </p>
         </div>
       )}
