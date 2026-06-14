@@ -71,10 +71,10 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   // Chart layout dimensions
   const width = 1000;
   const height = 550;
-  const paddingLeft = 35;
-  const paddingRight = 20;
-  const paddingTop = 25;
-  const paddingBottom = 35;
+  const paddingLeft = 25;
+  const paddingRight = 10;
+  const paddingTop = 20;
+  const paddingBottom = 30;
 
   const chartWidth = width - paddingLeft - paddingRight;
   const chartHeight = height - paddingTop - paddingBottom;
@@ -216,7 +216,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     strokeWidth={1}
                   />
                   <text
-                    x={paddingLeft - 10}
+                    x={paddingLeft - 7}
                     y={yVal + 4}
                     textAnchor="end"
                     className="text-[11px] font-black fill-slate-400"
