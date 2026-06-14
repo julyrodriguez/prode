@@ -134,7 +134,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
     <div className="w-full flex flex-col gap-6">
       
       {/* ── Legend pills ── */}
-      <div className="flex flex-wrap gap-2 justify-center bg-black/20 p-4 border border-white/5 rounded-2xl">
+      <div className="flex flex-wrap gap-2 justify-center bg-slate-950/80 backdrop-blur-md p-4 border border-white/10 rounded-2xl shadow-xl">
         {users.map((u) => {
           const color = getColorForUser(u.userId);
           const isHovered = hoveredUserId === u.userId;
