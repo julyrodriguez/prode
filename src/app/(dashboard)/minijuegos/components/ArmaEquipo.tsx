@@ -223,7 +223,12 @@ export default function ArmaEquipo({ onChampion, championRivals = [] }: ArmaEqui
   const pickRandomDraftTeam = useCallback((exclude: Set<number>) => {
     const available = DATA_MUNDIALES.filter(t => !exclude.has(t.id));
     if (!available.length) return DATA_MUNDIALES[0];
-    return available[Math.floor(Math.random() * available.length)];
+    // Selección Dorada (id 0) tiene 7x más chances que cualquier otro equipo
+    const dorada = DATA_MUNDIALES.find(t => t.id === 0);
+    const pool = (dorada && !exclude.has(dorada.id))
+      ? [...available, dorada, dorada, dorada, dorada, dorada, dorada] // +6 copias extra = 7x
+      : available;
+    return pool[Math.floor(Math.random() * pool.length)];
   }, []);
 
   /* ─── Pick rival (DATA_MUNDIALES + champion rivals) ── */
