@@ -1085,7 +1085,7 @@ export default function MatchDetailView() {
                 </div>
  
                 {isLiveMatch && (
-                  <div className="bg-amber-550/15 border-b border-white/10 px-3 py-2 text-[10px] font-bold text-amber-400 flex items-start gap-2 leading-relaxed shadow-sm">
+                  <div className="bg-orange-500/10 border-b border-white/10 px-3 py-2 text-[10px] font-bold text-orange-400 flex items-start gap-2 leading-relaxed shadow-sm">
                     <span className="text-xs shrink-0 select-none">⚠️</span>
                     <span>Los colores en vivo muestran aciertos parciales. Los puntos del prode se computarán oficialmente solo una vez finalizado el partido.</span>
                   </div>
