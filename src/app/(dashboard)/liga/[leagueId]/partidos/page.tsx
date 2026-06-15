@@ -3,7 +3,6 @@ import LeagueMatchesView from '../../../../../views/LeagueMatchesView';
 
 export async function generateStaticParams() {
   return [
-    { leagueId: 'mundial' },
     { leagueId: 'general' },
     { leagueId: 'cs2' },
     { leagueId: 'liga-arg' },
