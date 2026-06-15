@@ -6,12 +6,96 @@ import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
+import TeamHoverCard from '../components/TeamHoverCard';
 
 const parseStatValue = (val: string | number | undefined): number => {
   if (val === undefined || val === null) return 0;
   if (typeof val === 'number') return val;
   const cleaned = String(val).replace(/%/g, '').trim();
   return parseFloat(cleaned) || 0;
+};
+
+const translateTeamToSpanish = (name: string): string => {
+  if (!name) return '';
+  const translations: Record<string, string> = {
+    'Brazil': 'Brasil',
+    'France': 'Francia',
+    'Germany': 'Alemania',
+    'Spain': 'España',
+    'England': 'Inglaterra',
+    'Belgium': 'Bélgica',
+    'Croatia': 'Croacia',
+    'Netherlands': 'Países Bajos',
+    'Holland': 'Holanda',
+    'Japan': 'Japón',
+    'Saudi Arabia': 'Arabia Saudita',
+    'South Korea': 'Corea del Sur',
+    'Switzerland': 'Suiza',
+    'Denmark': 'Dinamarca',
+    'Poland': 'Polonia',
+    'Mexico': 'México',
+    'Morocco': 'Marruecos',
+    'United States': 'Estados Unidos',
+    'USA': 'Estados Unidos',
+    'Cameroon': 'Camerún',
+    'Canada': 'Canadá',
+    'Ecuador': 'Ecuador',
+    'Senegal': 'Senegal',
+    'Tunisia': 'Túnez',
+    'Wales': 'Gales',
+    'Qatar': 'Qatar',
+    'Serbia': 'Serbia',
+    'Ghana': 'Ghana',
+    'Uruguay': 'Uruguay',
+    'Argentina': 'Argentina',
+    'Portugal': 'Portugal',
+    'Italy': 'Italia',
+    'Colombia': 'Colombia',
+    'Chile': 'Chile',
+    'Peru': 'Perú',
+    'Paraguay': 'Paraguay',
+    'Venezuela': 'Venezuela',
+    'Bolivia': 'Bolivia',
+    'Algeria': 'Argelia',
+    'Austria': 'Austria',
+    'Egypt': 'Egipto',
+    'Sweden': 'Suecia',
+    'Norway': 'Noruega',
+    'Scotland': 'Escocia',
+    'Ireland': 'Irlanda',
+    'Greece': 'Grecia',
+    'Turkey': 'Turquía',
+    'Ukraine': 'Ucrania',
+    'Czech Republic': 'República Checa',
+    'Czechia': 'República Checa',
+    'Romania': 'Rumania',
+    'Russia': 'Rusia',
+    'New Zealand': 'Nueva Zelanda',
+    'South Africa': 'Sudáfrica',
+    'Panama': 'Panamá',
+    'Costa Rica': 'Costa Rica',
+    'Honduras': 'Honduras',
+    'El Salvador': 'El Salvador',
+    'Jamaica': 'Jamaica',
+    'Hungary': 'Hungría'
+  };
+  const trimmed = name.trim();
+  return translations[trimmed] || translations[trimmed.replace(/\s+/g, ' ')] || trimmed;
+};
+
+const formatTabName = (key: string) => {
+  const customMap: Record<string, string> = {
+    grupoA: 'Grupo A',
+    grupoB: 'Grupo B',
+    grupoC: 'Grupo C',
+    grupoD: 'Grupo D',
+    grupoE: 'Grupo E',
+    grupoF: 'Grupo F',
+    grupoG: 'Grupo G',
+    grupoH: 'Grupo H',
+  };
+  if (customMap[key]) return customMap[key];
+  return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 };
 
 export default function MatchDetailView() {
@@ -27,9 +111,13 @@ export default function MatchDetailView() {
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [now, setNow] = useState(Date.now());
 
+  const [mundialStandings, setMundialStandings] = useState<Record<string, any[]> | null>(null);
+  const [loadingMundialStandings, setLoadingMundialStandings] = useState(false);
+
+  const isMundialMatch = match && (match.tournament_id === 16 || match.tournament?.id === 16);
+
   useEffect(() => {
     if (match && setOverriddenLeagueId) {
-      const isMundialMatch = match.tournament_id === 16 || match.tournament?.id === 16;
       if (isMundialMatch) {
         setOverriddenLeagueId('mundial');
       } else if (match.tournament_id === 155 || match.tournament?.id === 155) {
@@ -43,7 +131,34 @@ export default function MatchDetailView() {
         setOverriddenLeagueId(null);
       }
     };
-  }, [match, setOverriddenLeagueId]);
+  }, [match, setOverriddenLeagueId, isMundialMatch]);
+
+  useEffect(() => {
+    if (!isMundialMatch) return;
+    
+    let isMounted = true;
+    const fetchMundialStandings = async () => {
+      setLoadingMundialStandings(true);
+      try {
+        const response = await fetch('https://apivacas.jariel.com.ar/api/standings/16');
+        if (response.ok) {
+          const json = await response.json();
+          if (isMounted) {
+            setMundialStandings(json.data || {});
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching mundial standings', err);
+      } finally {
+        if (isMounted) {
+          setLoadingMundialStandings(false);
+        }
+      }
+    };
+
+    fetchMundialStandings();
+    return () => { isMounted = false; };
+  }, [isMundialMatch]);
 
   // Cuenta regresiva del partido
   useEffect(() => {
@@ -126,6 +241,18 @@ export default function MatchDetailView() {
   const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
   const hId = match.homeTeam?.id || match.home_team?.id;
   const aId = match.awayTeam?.id || match.away_team?.id;
+
+  const getMatchGroupData = () => {
+    if (!mundialStandings) return null;
+    for (const [groupKey, groupTeams] of Object.entries(mundialStandings)) {
+      if (Array.isArray(groupTeams)) {
+        if (groupTeams.some((t: any) => t.equipoId === hId || t.equipoId === aId)) {
+          return { groupKey, groupTeams };
+        }
+      }
+    }
+    return null;
+  };
 
   const hLogoBase = match.homeTeam?.logoUrl || match.home_team?.logoUrl;
   const aLogoBase = match.awayTeam?.logoUrl || match.away_team?.logoUrl;
@@ -705,34 +832,153 @@ export default function MatchDetailView() {
             </div>
           )}
 
-          {/* Posiciones en la tabla */}
-          {match.posiciones && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 text-[10px] md:text-xs">🏆</span>
-                <h3 className="text-xs md:text-sm font-bold text-slate-200">Posiciones</h3>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {/* LOCAL */}
-                <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
-                  <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1 truncate max-w-full">{hName}</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-lg md:text-2xl font-black text-emerald-400">#{match.posiciones.home?.posicion || match.posiciones.home?.position || '-'}</span>
-                    <span className="text-[9px] text-slate-500 font-bold">Pos</span>
+          {/* Posiciones en la tabla / Tabla de Grupos Mundial */}
+          {isMundialMatch ? (
+            (() => {
+              const groupData = getMatchGroupData();
+              if (loadingMundialStandings && !groupData) {
+                return (
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg justify-center items-center h-48">
+                    <div className="animate-spin w-6 h-6 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent"></div>
+                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Cargando Tabla...</span>
                   </div>
-                  <span className="text-[10px] text-slate-300 font-semibold mt-0.5">{match.posiciones.home?.puntos || match.posiciones.home?.points || '0'} pts</span>
-                </div>
-                {/* VISITANTE */}
-                <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
-                  <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1 truncate max-w-full">{aName}</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-lg md:text-2xl font-black text-indigo-400">#{match.posiciones.away?.posicion || match.posiciones.away?.position || '-'}</span>
-                    <span className="text-[9px] text-slate-500 font-bold">Pos</span>
+                );
+              }
+              if (!groupData) return null;
+
+              const { groupKey, groupTeams } = groupData;
+              return (
+                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg relative overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 text-[10px] md:text-xs">🏆</span>
+                      <h3 className="text-xs md:text-sm font-bold text-slate-200">
+                        Tabla - {formatTabName(groupKey)}
+                      </h3>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-black/20 px-1.5 py-0.5 rounded border border-white/5">Mundial</span>
                   </div>
-                  <span className="text-[10px] text-slate-300 font-semibold mt-0.5">{match.posiciones.away?.puntos || match.posiciones.away?.points || '0'} pts</span>
+
+                  <div className="overflow-hidden bg-[#0b1015]/60 rounded-xl border border-white/5 relative shadow-inner">
+                    <div className="w-full overflow-x-auto no-scrollbar">
+                      <table className="w-full text-left border-collapse text-[11px] min-w-[300px]">
+                        <thead className="bg-[#121820] text-slate-400 font-extrabold uppercase text-[9px] tracking-wider border-b border-white/10">
+                          <tr>
+                            <th className="py-2 px-1 text-center w-6">#</th>
+                            <th className="py-2 px-2 text-left">Equipo</th>
+                            <th className="py-2 px-1 text-center text-amber-400">Pts</th>
+                            <th className="py-2 px-1 text-center">PJ</th>
+                            <th className="py-2 px-1 text-center">G</th>
+                            <th className="py-2 px-1 text-center">E</th>
+                            <th className="py-2 px-1 text-center">P</th>
+                            <th className="py-2 px-1.5 text-center">DIF</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.03]">
+                          {groupTeams.map((row: any, idx: number) => {
+                            const isHomeTeam = row.equipoId === hId;
+                            const isAwayTeam = row.equipoId === aId;
+                            const isCurrentMatchTeam = isHomeTeam || isAwayTeam;
+
+                            // Custom highlighting class
+                            const rowHighlightClass = isHomeTeam
+                              ? 'bg-emerald-500/5 hover:bg-emerald-500/10'
+                              : isAwayTeam
+                              ? 'bg-indigo-500/5 hover:bg-indigo-500/10'
+                              : 'hover:bg-white/[0.02]';
+
+                            const teamNameClass = isHomeTeam
+                              ? 'text-emerald-400 font-black'
+                              : isAwayTeam
+                              ? 'text-indigo-400 font-black'
+                              : 'text-slate-200 font-bold';
+
+                            return (
+                              <tr
+                                key={row.equipoId || idx}
+                                onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
+                                className={`transition-colors cursor-pointer ${rowHighlightClass}`}
+                              >
+                                <td className="py-2 px-1 text-center font-black text-slate-500">
+                                  {row.posicion || idx + 1}
+                                </td>
+                                <td className="py-2 px-2">
+                                  <TeamHoverCard teamId={row.equipoId} teamName={row.nombre} className="flex items-center">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <div className="w-5 h-5 flex-shrink-0 bg-white/5 rounded-full p-0.5 border border-white/5">
+                                        <img
+                                          src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
+                                          alt={row.nombre}
+                                          className="w-full h-full object-contain"
+                                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+                                        />
+                                      </div>
+                                      <span className={`truncate max-w-[90px] ${teamNameClass}`}>
+                                        {translateTeamToSpanish(row.nombre)}
+                                      </span>
+                                      {isCurrentMatchTeam && (
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isHomeTeam ? 'bg-emerald-400 shadow-[0_0_4px_#34d399]' : 'bg-indigo-400 shadow-[0_0_4px_#818cf8]'}`} />
+                                      )}
+                                    </div>
+                                  </TeamHoverCard>
+                                </td>
+                                <td className="py-2 px-1 text-center font-black text-amber-400 bg-amber-500/5">
+                                  {row.puntos ?? '-'}
+                                </td>
+                                <td className="py-2 px-1 text-center text-slate-400 font-medium">
+                                  {row.partidosJugados ?? '-'}
+                                </td>
+                                <td className="py-2 px-1 text-center text-slate-350">
+                                  {row.ganados ?? '-'}
+                                </td>
+                                <td className="py-2 px-1 text-center text-slate-450">
+                                  {row.empatados ?? '-'}
+                                </td>
+                                <td className="py-2 px-1 text-center text-slate-455">
+                                  {row.perdidos ?? '-'}
+                                </td>
+                                <td className="py-2 px-1.5 text-center font-bold text-slate-350">
+                                  {row.diferenciaGoles ?? '-'}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            match.posiciones && (
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 text-[10px] md:text-xs">🏆</span>
+                  <h3 className="text-xs md:text-sm font-bold text-slate-200">Posiciones</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* LOCAL */}
+                  <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1 truncate max-w-full">{hName}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-lg md:text-2xl font-black text-emerald-400">#{match.posiciones.home?.posicion || match.posiciones.home?.position || '-'}</span>
+                      <span className="text-[9px] text-slate-500 font-bold">Pos</span>
+                    </div>
+                    <span className="text-[10px] text-slate-300 font-semibold mt-0.5">{match.posiciones.home?.puntos || match.posiciones.home?.points || '0'} pts</span>
+                  </div>
+                  {/* VISITANTE */}
+                  <div className="bg-black/20 p-2.5 rounded-xl border border-white/5 flex flex-col items-center justify-center text-center">
+                    <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-1 truncate max-w-full">{aName}</span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-lg md:text-2xl font-black text-indigo-400">#{match.posiciones.away?.posicion || match.posiciones.away?.position || '-'}</span>
+                      <span className="text-[9px] text-slate-500 font-bold">Pos</span>
+                    </div>
+                    <span className="text-[10px] text-slate-300 font-semibold mt-0.5">{match.posiciones.away?.puntos || match.posiciones.away?.points || '0'} pts</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )
           )}
 
           {/* Historial / Enfrentamientos Previos */}
