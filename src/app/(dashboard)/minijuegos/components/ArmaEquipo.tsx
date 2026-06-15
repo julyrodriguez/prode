@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { DATA_MUNDIALES, type Seleccion, type Jugador } from '../data/mundiales';
 
 /* ─── Types ─────────────────────────────────────────────── */
@@ -248,7 +248,23 @@ export default function ArmaEquipo({ onChampion, championRivals = [] }: ArmaEqui
     setGamePhase('DRAFT');
   };
 
+  // Ref to scroll field into view when a player is selected
+  const fieldRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selectedPlayer && fieldRef.current) {
+      fieldRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [selectedPlayer]);
+
+  // Check if a player can still be placed anywhere on the field
+  const isPlayerPlaceable = useCallback((jugador: Jugador): boolean => {
+    return FIELD_SLOTS.some(
+      slot => slot.posicionesValidas.includes(jugador.posicion) && !slots[slot.key]
+    );
+  }, [slots]);
+
   const handlePlayerSelect = (jugador: Jugador) => {
+    if (!isPlayerPlaceable(jugador)) return; // blocked: no empty compatible slot
     setSelectedPlayer(prev => prev?.nombre === jugador.nombre ? null : jugador);
   };
 
@@ -424,7 +440,7 @@ export default function ArmaEquipo({ onChampion, championRivals = [] }: ArmaEqui
     return (
       <div className="flex flex-col lg:flex-row gap-6 min-h-screen px-2 py-6">
         {/* ── Left: Field ── */}
-        <div className="lg:w-1/2 flex flex-col gap-3">
+        <div ref={fieldRef} className="lg:w-1/2 flex flex-col gap-3">
           {/* Header */}
           <div className="flex items-center justify-between px-1">
             <div>
@@ -534,16 +550,21 @@ export default function ArmaEquipo({ onChampion, championRivals = [] }: ArmaEqui
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto max-h-[440px] pr-1 pb-1">
                 {availablePlayers.map(jugador => {
                   const isSelected = selectedPlayer?.nombre === jugador.nombre;
+                  const placeable = isPlayerPlaceable(jugador);
                   const rColor = getRatingColor(jugador.rating);
                   return (
                     <button
                       key={jugador.nombre}
                       onClick={() => handlePlayerSelect(jugador)}
+                      disabled={!placeable}
+                      title={!placeable ? 'No hay posiciones vacías disponibles para este jugador' : undefined}
                       className={`
-                        relative rounded-xl p-3 text-left transition-all duration-200 border cursor-pointer
-                        ${isSelected
-                          ? 'border-yellow-400 bg-yellow-400/15 shadow-lg shadow-yellow-500/20 scale-105'
-                          : 'border-slate-700 bg-slate-800/70 hover:border-slate-500 hover:bg-slate-700/70 hover:scale-[1.02]'
+                        relative rounded-xl p-3 text-left transition-all duration-200 border
+                        ${!placeable
+                          ? 'border-slate-800 bg-slate-900/50 opacity-35 cursor-not-allowed'
+                          : isSelected
+                            ? 'border-yellow-400 bg-yellow-400/15 shadow-lg shadow-yellow-500/20 scale-105 cursor-pointer'
+                            : 'border-slate-700 bg-slate-800/70 hover:border-slate-500 hover:bg-slate-700/70 hover:scale-[1.02] cursor-pointer'
                         }
                       `}
                     >
@@ -558,6 +579,12 @@ export default function ArmaEquipo({ onChampion, championRivals = [] }: ArmaEqui
                       </div>
                       {/* Name */}
                       <p className="text-white font-bold text-sm leading-tight">{jugador.nombre}</p>
+                      {/* Blocked indicator */}
+                      {!placeable && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-xl">
+                          <span className="text-slate-600 text-lg">🔒</span>
+                        </div>
+                      )}
                       {/* Selected indicator */}
                       {isSelected && (
                         <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-yellow-400 animate-ping" />
