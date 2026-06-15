@@ -150,6 +150,16 @@ export const LEAGUES = [
   { id: 'brasileirao', name: 'Brasileirao', icon: '🇧🇷', tournamentId: 325 },
   { id: 'champions', name: 'Champions League', icon: '⭐', tournamentId: 7 },
   { id: 'libertadores', name: 'Copa Libertadores', icon: '🏆', tournamentId: 384 },
+  { id: 'primera-nacional', name: 'Primera Nacional', icon: '🇦🇷', tournamentId: 10001 },
+  { id: 'primera-b-metro', name: 'Primera B Metro', icon: '🇦🇷', tournamentId: 10002 },
+  { id: 'federal-a', name: 'Federal A', icon: '🇦🇷', tournamentId: 10003 },
+  { id: 'primera-c', name: 'Primera C', icon: '🇦🇷', tournamentId: 10004 },
+  { id: 'copa-arg', name: 'Copa Argentina', icon: '🏆', tournamentId: 10005 },
+  { id: 'mls', name: 'MLS', icon: '🇺🇸', tournamentId: 10006 },
+  { id: 'premier-league', name: 'Premier League', icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', tournamentId: 10007 },
+  { id: 'laliga', name: 'La Liga', icon: '🇪🇸', tournamentId: 10008 },
+  { id: 'serie-a', name: 'Serie A', icon: '🇮🇹', tournamentId: 10009 },
+  { id: 'ligue-1', name: 'Ligue 1', icon: '🇫🇷', tournamentId: 10010 },
 ] as const;
 
 export type LeagueId = typeof LEAGUES[number]['id'];

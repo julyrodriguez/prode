@@ -9,6 +9,16 @@ export async function generateStaticParams() {
     { leagueId: 'brasileirao' },
     { leagueId: 'champions' },
     { leagueId: 'libertadores' },
+    { leagueId: 'primera-nacional' },
+    { leagueId: 'primera-b-metro' },
+    { leagueId: 'federal-a' },
+    { leagueId: 'primera-c' },
+    { leagueId: 'copa-arg' },
+    { leagueId: 'mls' },
+    { leagueId: 'premier-league' },
+    { leagueId: 'laliga' },
+    { leagueId: 'serie-a' },
+    { leagueId: 'ligue-1' },
   ];
 }
 
