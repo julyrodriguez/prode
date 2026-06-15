@@ -137,10 +137,21 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
 const parseMatchStatus = (match: Match) => {
   const startMs = (match.startTimestamp || 0) * 1000;
   const isPastTime = startMs > 0 && startMs < Date.now();
+  const isOverTwoHours = startMs > 0 && (Date.now() - startMs) > 120 * 60 * 1000; // 2 horas
 
   if (match.status === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
 
   if (typeof match.status === 'object' && match.status !== null) {
+    if (match.status.type === 'notstarted' && match.status.description === 'FRO') {
+      if (isPastTime) {
+        if (isOverTwoHours) {
+          return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
+        }
+        return { isLive: false, hasStarted: true, label: 'En juego (Sin vivo)' };
+      }
+      return { isLive: false, hasStarted: false, label: 'Solo Result. Final' };
+    }
+
     if (match.status.type === 'inprogress') return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
     if (match.status.type === 'finished') {
       const isPenalties = match.status.description === 'AP';
@@ -149,7 +160,12 @@ const parseMatchStatus = (match: Match) => {
     if (match.status.type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
   }
 
-  if (isPastTime) return { isLive: true, hasStarted: true, label: 'EN JUEGO' };
+  if (isPastTime) {
+    if (isOverTwoHours) {
+      return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
+    }
+    return { isLive: true, hasStarted: true, label: 'EN JUEGO' };
+  }
   return { isLive: false, hasStarted: false, label: 'Pendiente' };
 };
 
