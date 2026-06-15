@@ -12,6 +12,7 @@ import TeamHoverCard from '../components/TeamHoverCard';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../components/MatchSkeleton';
+import TeamLogo from '../components/TeamLogo';
 
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
@@ -298,7 +299,7 @@ const MatchRow = memo(({
                 </div>
               </div>
               <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-                {hLogo ? <img src={hLogo} alt={hName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+                <TeamLogo logoUrl={hLogo} teamName={hName} className="w-full h-full" />
               </div>
             </div>
           </TeamHoverCard>
@@ -351,7 +352,7 @@ const MatchRow = memo(({
           <TeamHoverCard teamId={aId} teamName={aName} className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
             <div className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0">
               <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-                {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+                <TeamLogo logoUrl={aLogo} teamName={aName} className="w-full h-full" />
               </div>
               <div className="flex flex-col items-start justify-center min-w-0">
                 <div className="relative inline-block">

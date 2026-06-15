@@ -160,25 +160,12 @@ const getTeamLogo = (match: any, team: 'home' | 'away') => {
   return logoUrl?.startsWith('/') ? `https://apivacas.jariel.com.ar/api${logoUrl}` : logoUrl;
 };
 
+import SharedTeamLogo from '../components/TeamLogo';
+
 function TeamLogo({ url, name }: { url?: string | null; name: string }) {
-  const [error, setError] = useState(false);
-
-  if (!url || error) {
-    return (
-      <div className="w-8 h-8 sm:w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/50 flex items-center justify-center text-[10px] sm:text-xs font-black text-slate-300 uppercase select-none shrink-0 shadow-inner">
-        {name.slice(0, 2)}
-      </div>
-    );
-  }
-
   return (
     <div className="w-8 h-8 sm:w-10 h-10 flex items-center justify-center bg-slate-900/40 rounded-xl border border-white/5 shrink-0 shadow-md">
-      <img
-        src={url}
-        alt={name}
-        onError={() => setError(true)}
-        className="w-6 h-6 sm:w-8 h-8 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] transition-transform duration-300 hover:scale-110"
-      />
+      <SharedTeamLogo logoUrl={url} teamName={name} className="w-6 h-6 sm:w-8 h-8" />
     </div>
   );
 }

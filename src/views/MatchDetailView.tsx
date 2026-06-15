@@ -5,6 +5,7 @@ import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
+import TeamLogo from '../components/TeamLogo';
 
 const parseStatValue = (val: string | number | undefined): number => {
   if (val === undefined || val === null) return 0;
@@ -336,7 +337,7 @@ export default function MatchDetailView() {
               className={`flex flex-col items-center gap-2 md:gap-4 w-full ${hId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
             >
               <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white/5 rounded-full border border-white/10 p-2 md:p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-emerald-500/40 transition-colors shrink-0 animate-[pulse_3s_infinite]">
-                {hLogo && <img src={hLogo} alt={hName} className="w-full h-full object-contain filter drop-shadow-xl z-20" />}
+                <TeamLogo logoUrl={hLogo} teamName={hName} className="w-full h-full z-20 filter drop-shadow-xl" />
                 <div className="absolute inset-0 bg-emerald-500/10 rounded-full blur-2xl z-0"></div>
               </div>
               <h2 className="text-xs sm:text-sm md:text-xl lg:text-3xl font-black text-center text-white break-words drop-shadow-md group-hover:text-emerald-300 transition-colors line-clamp-2 px-1">{hName}</h2>
@@ -388,7 +389,7 @@ export default function MatchDetailView() {
               className={`flex flex-col items-center gap-2 md:gap-4 w-full ${aId ? 'cursor-pointer hover:opacity-80 transition-opacity group' : ''}`}
             >
               <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 lg:w-32 lg:h-32 bg-white/5 rounded-full border border-white/10 p-2 md:p-4 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)] drop-shadow-2xl relative group-hover:border-indigo-500/40 transition-colors shrink-0 animate-[pulse_3s_infinite]">
-                {aLogo && <img src={aLogo} alt={aName} className="w-full h-full object-contain filter drop-shadow-xl z-20" />}
+                <TeamLogo logoUrl={aLogo} teamName={aName} className="w-full h-full z-20 filter drop-shadow-xl" />
                 <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-2xl z-0"></div>
               </div>
               <h2 className="text-xs sm:text-sm md:text-xl lg:text-3xl font-black text-center text-white break-words drop-shadow-md group-hover:text-indigo-300 transition-colors line-clamp-2 px-1">{aName}</h2>

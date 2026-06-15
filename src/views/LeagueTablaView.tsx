@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { LEAGUES } from '../components/layout/AppLayout';
 import TeamHoverCard from '../components/TeamHoverCard';
+import TeamForm from '../components/TeamForm';
+import TeamLogo from '../components/TeamLogo';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -301,11 +303,10 @@ export default function LeagueTablaView() {
                               <TeamHoverCard teamId={row.equipoId} teamName={row.nombre} className="w-full flex items-center">
                                 <div className="flex items-center gap-2.5">
                                   <div className={`${iconSize} flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors`}>
-                                    <img
-                                      src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
-                                      alt={row.nombre}
-                                      className="w-full h-full object-contain drop-shadow-md"
-                                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+                                    <TeamLogo
+                                      logoUrl={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
+                                      teamName={row.nombre}
+                                      className="w-full h-full"
                                     />
                                   </div>
                                   <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[100px] xs:max-w-[140px] sm:max-w-xs transition-colors ${textSize}`}>

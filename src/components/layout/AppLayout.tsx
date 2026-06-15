@@ -210,14 +210,22 @@ export default function AppLayout() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const argentineIds = ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'];
+  const copasIds = ['champions', 'libertadores'];
+  const ligasIds = ['brasileirao', 'mls', 'premier-league', 'laliga', 'serie-a', 'ligue-1'];
+
   const isArgActive = argentineIds.includes(activeLeagueId);
+  const isCopasActive = copasIds.includes(activeLeagueId);
+  const isLigasActive = ligasIds.includes(activeLeagueId);
+
   const [argentinaMenuOpen, setArgentinaMenuOpen] = useState(isArgActive);
+  const [copasMenuOpen, setCopasMenuOpen] = useState(isCopasActive);
+  const [ligasMenuOpen, setLigasMenuOpen] = useState(isLigasActive);
 
   useEffect(() => {
-    if (isArgActive) {
-      setArgentinaMenuOpen(true);
-    }
-  }, [activeLeagueId, isArgActive]);
+    if (isArgActive) setArgentinaMenuOpen(true);
+    if (isCopasActive) setCopasMenuOpen(true);
+    if (isLigasActive) setLigasMenuOpen(true);
+  }, [activeLeagueId, isArgActive, isCopasActive, isLigasActive]);
 
   const currentLeagueTabs = activeLeagueId === 'mundial'
     ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
@@ -309,59 +317,162 @@ export default function AppLayout() {
         {/* League Navigation */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto overflow-x-hidden">
           {LEAGUES.map((league) => {
-            // Saltear ligas argentinas secundarias del flujo principal
-            if (['primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'].includes(league.id)) {
+            // Saltear ligas agrupadas del flujo principal
+            if ([
+              'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg',
+              'champions', 'libertadores',
+              'brasileirao', 'mls', 'premier-league', 'laliga', 'serie-a', 'ligue-1'
+            ].includes(league.id)) {
               return null;
             }
 
             if (league.id === 'liga-arg') {
               return (
-                <div key="argentina-group" className="flex flex-col w-full">
-                  <button
-                    onClick={() => setArgentinaMenuOpen(!argentinaMenuOpen)}
-                    className={`
-                      flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
-                      ${isArgActive
-                        ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                      }
-                    `}
-                  >
-                    <span className="text-xl flex-shrink-0 w-6 text-center leading-none">🇦🇷</span>
-                    <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
-                      Argentina
-                    </span>
-                    <span className={`ml-auto text-[10px] transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100 opacity-100 ${argentinaMenuOpen ? 'rotate-180' : ''}`}>
-                      ▼
-                    </span>
-                  </button>
+                <div key="grouped-menus" className="flex flex-col w-full gap-1">
+                  {/* Argentina Group */}
+                  <div key="argentina-group" className="flex flex-col w-full">
+                    <button
+                      onClick={() => setArgentinaMenuOpen(!argentinaMenuOpen)}
+                      className={`
+                        flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
+                        ${isArgActive
+                          ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }
+                      `}
+                    >
+                      <span className="text-xl flex-shrink-0 w-6 text-center leading-none">🇦🇷</span>
+                      <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                        Argentina
+                      </span>
+                      <span className={`ml-auto text-[10px] transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100 opacity-100 ${argentinaMenuOpen ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
 
-                  {argentinaMenuOpen && (
-                    <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
-                      {LEAGUES.filter(l => ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'].includes(l.id)).map(subLeague => {
-                        const isSubActive = subLeague.id === activeLeagueId;
-                        const displayName = subLeague.id === 'liga-arg' ? 'Liga Profesional' : subLeague.name;
-                        return (
-                          <button
-                            key={subLeague.id}
-                            onClick={() => handleLeagueSelect(subLeague.id)}
-                            className={`
-                              flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer text-left
-                              ${isSubActive
-                                ? 'bg-emerald-500/10 text-emerald-400 font-bold shadow-[inset_0_1px_1px_rgba(16,185,129,0.05)]'
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                              }
-                            `}
-                          >
-                            <span className="mr-2 text-base flex-shrink-0">{subLeague.icon}</span>
-                            <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
-                              {displayName}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                    {argentinaMenuOpen && (
+                      <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
+                        {LEAGUES.filter(l => ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'].includes(l.id)).map(subLeague => {
+                          const isSubActive = subLeague.id === activeLeagueId;
+                          const displayName = subLeague.id === 'liga-arg' ? 'Liga Profesional' : subLeague.name;
+                          return (
+                            <button
+                              key={subLeague.id}
+                              onClick={() => handleLeagueSelect(subLeague.id)}
+                              className={`
+                                flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer text-left
+                                ${isSubActive
+                                  ? 'bg-emerald-500/10 text-emerald-400 font-bold shadow-[inset_0_1px_1px_rgba(16,185,129,0.05)]'
+                                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                }
+                              `}
+                            >
+                              <span className="mr-2 text-base flex-shrink-0">{subLeague.icon}</span>
+                              <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                                {displayName}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Copas Internacionales Group */}
+                  <div key="copas-group" className="flex flex-col w-full mt-1">
+                    <button
+                      onClick={() => setCopasMenuOpen(!copasMenuOpen)}
+                      className={`
+                        flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
+                        ${isCopasActive
+                          ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }
+                      `}
+                    >
+                      <span className="text-xl flex-shrink-0 w-6 text-center leading-none">🏆</span>
+                      <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                        Copas internacionales
+                      </span>
+                      <span className={`ml-auto text-[10px] transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100 opacity-100 ${copasMenuOpen ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
+
+                    {copasMenuOpen && (
+                      <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
+                        {LEAGUES.filter(l => copasIds.includes(l.id)).map(subLeague => {
+                          const isSubActive = subLeague.id === activeLeagueId;
+                          return (
+                            <button
+                              key={subLeague.id}
+                              onClick={() => handleLeagueSelect(subLeague.id)}
+                              className={`
+                                flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer text-left
+                                ${isSubActive
+                                  ? 'bg-emerald-500/10 text-emerald-400 font-bold shadow-[inset_0_1px_1px_rgba(16,185,129,0.05)]'
+                                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                }
+                              `}
+                            >
+                              <span className="mr-2 text-base flex-shrink-0">{subLeague.icon}</span>
+                              <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                                {subLeague.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Ligas Internacionales Group */}
+                  <div key="ligas-group" className="flex flex-col w-full mt-1">
+                    <button
+                      onClick={() => setLigasMenuOpen(!ligasMenuOpen)}
+                      className={`
+                        flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
+                        ${isLigasActive
+                          ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }
+                      `}
+                    >
+                      <span className="text-xl flex-shrink-0 w-6 text-center leading-none">🌐</span>
+                      <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                        Ligas internacionales
+                      </span>
+                      <span className={`ml-auto text-[10px] transition-transform duration-200 md:opacity-0 md:group-hover:opacity-100 opacity-100 ${ligasMenuOpen ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
+
+                    {ligasMenuOpen && (
+                      <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
+                        {LEAGUES.filter(l => ligasIds.includes(l.id)).map(subLeague => {
+                          const isSubActive = subLeague.id === activeLeagueId;
+                          return (
+                            <button
+                              key={subLeague.id}
+                              onClick={() => handleLeagueSelect(subLeague.id)}
+                              className={`
+                                flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer text-left
+                                ${isSubActive
+                                  ? 'bg-emerald-500/10 text-emerald-400 font-bold shadow-[inset_0_1px_1px_rgba(16,185,129,0.05)]'
+                                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                }
+                              `}
+                            >
+                              <span className="mr-2 text-base flex-shrink-0">{subLeague.icon}</span>
+                              <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                                {subLeague.name}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             }

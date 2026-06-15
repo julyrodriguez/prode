@@ -7,6 +7,7 @@ import CS2MatchesSection from '../components/CS2MatchesSection';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../components/MatchSkeleton';
+import TeamLogo from '../components/TeamLogo';
 
 interface MatchOdds {
   full_time?: { home?: number; draw?: number; away?: number };
@@ -490,7 +491,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                                 </div>
                               </div>
                               <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-                                {hLogo ? <img src={hLogo} alt={hName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+                                <TeamLogo logoUrl={hLogo} teamName={hName} className="w-full h-full" />
                               </div>
                             </div>
 
@@ -579,7 +580,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                             {/* AWAY TEAM */}
                             <div className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
                               <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
-                                {aLogo ? <img src={aLogo} alt={aName} className="w-full h-full object-contain" /> : <div className="w-full h-full bg-white/5 rounded-full" />}
+                                <TeamLogo logoUrl={aLogo} teamName={aName} className="w-full h-full" />
                               </div>
                               <div className="flex flex-col items-start justify-center min-w-0">
                                 <div className="relative inline-block">
