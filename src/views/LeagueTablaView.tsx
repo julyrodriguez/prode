@@ -9,7 +9,15 @@ import TeamLogo from '../components/TeamLogo';
 type LeagueType = typeof LEAGUES[number];
 
 // Function to format the key to a readable tab string
-function formatTabName(key: string) {
+function formatTabName(key: string, leagueId?: string) {
+  if (leagueId === 'mls') {
+    const mlsMap: Record<string, string> = {
+      zonaA: 'Conferencia Este',
+      zonaB: 'Conferencia Oeste'
+    };
+    if (mlsMap[key]) return mlsMap[key];
+  }
+
   const customMap: Record<string, string> = {
     zonaA: 'Zona A',
     zonaB: 'Zona B',
@@ -211,7 +219,7 @@ export default function LeagueTablaView() {
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              {formatTabName(tabKey)}
+              {formatTabName(tabKey, leagueId)}
             </button>
           ))}
         </div>
@@ -229,7 +237,7 @@ export default function LeagueTablaView() {
                   : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
             >
-              {formatTabName(tabKey)}
+              {formatTabName(tabKey, leagueId)}
             </button>
           ))}
         </div>
@@ -253,7 +261,7 @@ export default function LeagueTablaView() {
                 <div className="flex items-center pl-2 group-header-container">
                   <div className="w-1.5 h-6 bg-amber-500 rounded-full mr-3 shadow-[0_0_10px_rgba(245,158,11,0.4)]" />
                   <h3 className="text-xl font-bold group-header-gradient">
-                    {formatTabName(tab)}
+                    {formatTabName(tab, leagueId)}
                   </h3>
                 </div>
               )}
