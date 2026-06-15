@@ -342,7 +342,7 @@ function MinijuegosHub({
 
 /* ─── MAIN PAGE ─────────────────────────────────────────── */
 export default function MinijuegosPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('minijuegos');
+  const [activeTab, setActiveTab] = useState<Tab>('inicio');
   const [activeGame, setActiveGame] = useState<ActiveGame>(null);
 
   // Champion state

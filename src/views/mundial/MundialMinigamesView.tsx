@@ -7,6 +7,8 @@ import { LEAGUES } from '../../components/layout/AppLayout';
 import { useAuth } from '../../context/AuthContext';
 import KeepieUppieGame from '../../components/KeepieUppieGame';
 import PlayerWordleGame, { type Player } from '../../components/PlayerWordleGame';
+import ArmaEquipo, { FIELD_SLOTS } from '../../app/(dashboard)/minijuegos/components/ArmaEquipo';
+import type { Jugador, Seleccion } from '../../app/(dashboard)/minijuegos/data/mundiales';
 
 type LeagueType = typeof LEAGUES[number];
 
@@ -157,6 +159,121 @@ interface LeaderboardProps {
   onRefresh: () => void;
 }
 
+/* ─── Champion persistence helpers (per-user) ────────────── */
+interface SavedChampion {
+  slots: Record<string, Jugador>;
+  avg: number;
+  date: string;
+}
+
+const CHAMPION_ID = 9999;
+
+function lsChampionKey(uid: string) {
+  return `vl_champion_${uid}`;
+}
+function lsCountKey(uid: string) {
+  return `vl_champion_count_${uid}`;
+}
+
+function buildChampionSeleccion(saved: SavedChampion): Seleccion {
+  return {
+    id: CHAMPION_ID,
+    pais: '⭐ Tu Equipo',
+    anio: 'Histórico',
+    formacion: '4-3-3',
+    bandera: '🏅',
+    color: 'from-yellow-500 to-amber-600',
+    jugadores: Object.values(saved.slots),
+  };
+}
+
+function getRatingColor(rating: number) {
+  if (rating >= 95) return 'text-yellow-400';
+  if (rating >= 90) return 'text-emerald-400';
+  if (rating >= 85) return 'text-sky-400';
+  return 'text-white';
+}
+
+/* ─── Team Viewer Modal ─────────────────────────────────── */
+function TeamViewerModal({ champion, onClose }: { champion: SavedChampion; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-lg w-full bg-slate-900 border border-yellow-500/30 rounded-3xl p-6 shadow-2xl shadow-yellow-500/10 max-h-[90vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="text-center mb-5">
+          <div className="text-4xl mb-2">🏆</div>
+          <h2 className="text-xl font-black text-white">Último Equipo Campeón</h2>
+          <div className="flex items-center justify-center gap-4 mt-1 text-sm text-slate-400">
+            <span>Media: <span className="text-yellow-400 font-bold">{champion.avg}</span></span>
+            <span className="text-slate-700">•</span>
+            <span>{champion.date}</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {FIELD_SLOTS.map(slot => {
+            const j = champion.slots[slot.key];
+            if (!j) return (
+              <div key={slot.key} className="h-20 rounded-xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center text-slate-700 text-xs">{slot.label}</div>
+            );
+            return (
+              <div key={slot.key} className="bg-gradient-to-b from-yellow-500/10 to-slate-800/60 border border-yellow-500/20 rounded-xl p-2.5 text-center">
+                <div className="text-[10px] text-slate-500 font-bold mb-1">{slot.label}</div>
+                <div className={`text-xl font-black mb-0.5 ${getRatingColor(j.rating)}`}>{j.rating}</div>
+                <div className="text-white text-[11px] font-semibold leading-tight truncate">{j.nombre}</div>
+                <div className="text-slate-500 text-[9px] mt-0.5">{j.posicion}</div>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-5 w-full py-3 rounded-xl border border-slate-700 bg-slate-800/60 text-slate-300 hover:text-white hover:border-slate-500 transition text-sm font-semibold cursor-pointer"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Champion Stats Bar ────────────────────────────────── */
+function ChampionStatsBar({
+  count,
+  lastChampion,
+  onViewTeam,
+}: {
+  count: number;
+  lastChampion: SavedChampion | null;
+  onViewTeam: () => void;
+}) {
+  if (count === 0) return null;
+  return (
+    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-yellow-500/5 border border-yellow-500/20 mb-2">
+      <span className="text-2xl">🏆</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-yellow-400 font-black text-base">{count}× Campeón</span>
+        {lastChampion && (
+          <span className="text-slate-500 text-xs ml-2">· Media del último: <span className="text-emerald-400 font-bold">{lastChampion.avg}</span></span>
+        )}
+      </div>
+      {lastChampion && (
+        <button
+          onClick={onViewTeam}
+          className="shrink-0 px-3 py-1.5 rounded-xl bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 text-xs font-bold hover:bg-yellow-500/25 transition cursor-pointer"
+        >
+          Ver equipo →
+        </button>
+      )}
+    </div>
+  );
+}
+
 function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loading, error, onRefresh }: LeaderboardProps) {
   if (loading) {
     return (
@@ -183,17 +300,13 @@ function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loadin
 
   return (
     <div className="w-full max-w-md mx-auto bg-[#0b0f19]/90 border border-white/10 rounded-[2.5rem] p-6 shadow-2xl mt-8 relative overflow-hidden">
-      {/* Background radial glow */}
       <div className="absolute -top-12 -left-12 w-32 h-32 bg-indigo-500/5 rounded-full blur-[40px] pointer-events-none" />
       <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px] pointer-events-none" />
 
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-4 relative z-10">
         <div className="flex flex-col">
           <span className="text-[9px] tracking-widest text-slate-500 font-bold uppercase">POSICIONES</span>
-          <h3 className="text-base font-black text-white tracking-wide">
-            {title}
-          </h3>
+          <h3 className="text-base font-black text-white tracking-wide">{title}</h3>
         </div>
         <button
           onClick={onRefresh}
@@ -219,17 +332,8 @@ function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loadin
             const rowBg = isMe
               ? 'bg-emerald-500/10 border-l-2 border-emerald-500/50 hover:bg-emerald-500/15'
               : 'bg-white/[0.01] hover:bg-white/[0.03]';
-
-            const nameClass = isMe
-              ? 'text-emerald-400 font-black'
-              : 'text-slate-200 font-bold';
-
-            const scoreClass = isMe
-              ? 'text-emerald-400 font-black'
-              : isTop3
-                ? 'text-white font-extrabold'
-                : 'text-slate-300 font-medium';
-
+            const nameClass = isMe ? 'text-emerald-400 font-black' : 'text-slate-200 font-bold';
+            const scoreClass = isMe ? 'text-emerald-400 font-black' : isTop3 ? 'text-white font-extrabold' : 'text-slate-300 font-medium';
             const avatarBg = isMe
               ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
               : isTop3
@@ -245,7 +349,6 @@ function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loadin
                 key={entry.userId}
                 className={`flex items-center justify-between px-4 py-2.5 rounded-2xl border border-white/5 transition-all ${rowBg}`}
               >
-                {/* Left side: Position & Avatar & Name */}
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-5 flex items-center justify-center shrink-0">
                     {medal ? (
@@ -254,7 +357,6 @@ function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loadin
                       <span className="text-[11px] font-black text-slate-500">{idx + 1}</span>
                     )}
                   </div>
-
                   <div className={`relative w-8 h-8 rounded-full flex items-center justify-center font-black shrink-0 border overflow-hidden ${avatarBg}`}>
                     <span className="absolute z-0 text-xs">{entry.name?.slice(0, 1).toUpperCase() || '?'}</span>
                     <img
@@ -264,14 +366,11 @@ function MinigameLeaderboard({ title, entries, currentUserId, scoreLabel, loadin
                       onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   </div>
-
                   <span className={`text-xs truncate ${nameClass}`}>
                     {entry.name}
                     {isMe && <span className="ml-1 text-[9px] font-bold text-emerald-400/70">(vos)</span>}
                   </span>
                 </div>
-
-                {/* Right side: Points */}
                 <span className={`text-xs font-black tracking-wide ${scoreClass}`}>
                   {entry.score} {scoreLabel}
                 </span>
@@ -288,7 +387,58 @@ export default function MundialMinigamesView() {
   const leagueId = 'mundial';
   const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
   const { user } = useAuth();
-  const [activeGameTab, setActiveGameTab] = useState<'jueguitos' | 'wordle'>('jueguitos');
+  const [activeGameTab, setActiveGameTab] = useState<'jueguitos' | 'wordle' | 'arma-equipo'>('jueguitos');
+
+  // Champion state (per-user via Firebase uid)
+  const [championCount, setChampionCount] = useState(0);
+  const [lastChampion, setLastChampion] = useState<SavedChampion | null>(null);
+  const [championRivals, setChampionRivals] = useState<Seleccion[]>([]);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+
+  // Load champion data from localStorage when user is available
+  useEffect(() => {
+    if (!user?.uid) return;
+    try {
+      const raw = localStorage.getItem(lsChampionKey(user.uid));
+      if (raw) {
+        const saved: SavedChampion = JSON.parse(raw);
+        setLastChampion(saved);
+        setChampionRivals([buildChampionSeleccion(saved)]);
+      }
+      const cnt = localStorage.getItem(lsCountKey(user.uid));
+      if (cnt) setChampionCount(parseInt(cnt, 10));
+    } catch {
+      // ignore
+    }
+  }, [user?.uid]);
+
+  const handleChampion = useCallback((slots: Record<string, Jugador | null>) => {
+    if (!user?.uid) return;
+    try {
+      const filtered: Record<string, Jugador> = {};
+      for (const [k, v] of Object.entries(slots)) {
+        if (v) filtered[k] = v;
+      }
+      const vals = Object.values(filtered);
+      const avg = vals.length
+        ? Math.round(vals.reduce((s, j) => s + j.rating, 0) / vals.length)
+        : 0;
+      const date = new Date().toLocaleDateString('es-AR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+      });
+      const saved: SavedChampion = { slots: filtered, avg, date };
+      const newCount = championCount + 1;
+
+      setChampionCount(newCount);
+      setLastChampion(saved);
+      setChampionRivals([buildChampionSeleccion(saved)]);
+
+      localStorage.setItem(lsChampionKey(user.uid), JSON.stringify(saved));
+      localStorage.setItem(lsCountKey(user.uid), String(newCount));
+    } catch {
+      // ignore
+    }
+  }, [user?.uid, championCount]);
 
   // Rankings state
   const [users, setUsers] = useState<JarielUser[]>([]);
@@ -335,16 +485,13 @@ export default function MundialMinigamesView() {
     }
   }, []);
 
-  // Fetch rankings on mount and setup interval
   useEffect(() => {
     if (!user) return;
     fetchRankingsData(true);
-    const interval = setInterval(() => fetchRankingsData(false), 30000); // 30s background sync
+    const interval = setInterval(() => fetchRankingsData(false), 30000);
     return () => clearInterval(interval);
   }, [user, fetchRankingsData]);
 
-  // Aggregate Keepie Uppie (Jueguitos) rankings
-  // Shows highest points reached by each unique user
   const jueguitosRankings = Object.values(
     scores.reduce((acc, entry) => {
       if (entry.gameId !== 'jueguitos') return acc;
@@ -362,8 +509,6 @@ export default function MundialMinigamesView() {
     }, {} as Record<string, LeaderboardEntry>)
   ).sort((a, b) => b.score - a.score);
 
-  // Aggregate Wordle rankings
-  // Sums the points for all daily Wordle completions for each unique user
   const wordleRankings = Object.values(
     wordleEntries.reduce((acc, entry) => {
       if (entry.gameId !== 'wordle_jugador') return acc;
@@ -393,7 +538,6 @@ export default function MundialMinigamesView() {
     );
   }
 
-  // Get current daily player (using UTC to sync with server daily reset at 21:00 hs AR)
   const todayStr = new Date().toISOString().split('T')[0];
   const jugadorDelDia = getDailyPlayer(todayStr, PLAYERS_DATABASE);
 
@@ -404,78 +548,118 @@ export default function MundialMinigamesView() {
         <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-emerald-500/8 to-transparent blur-3xl pointer-events-none" />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/8 to-transparent blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
-              🎮 Minijuegos Mundialistas
-            </h1>
-            <p className="text-slate-400 font-medium mt-1">
-              {activeLeague.name} — Hacé jueguitos o adiviná el jugador oculto del día para sumar puntos en la tabla (No Prode).
-            </p>
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-400">
+                🎮 Minijuegos Mundialistas
+              </h1>
+              <p className="text-slate-400 font-medium mt-1">
+                {activeLeague.name} — Hacé jueguitos, adiviná el jugador o armá tu equipo histórico.
+              </p>
+            </div>
+
+            {/* Sub-Game Switcher */}
+            <div className="flex flex-wrap bg-black/40 p-1 rounded-2xl border border-white/5 gap-1 shrink-0">
+              <button
+                onClick={() => setActiveGameTab('jueguitos')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'jueguitos'
+                  ? 'bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-emerald-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                ⚽ Hacer Jueguitos
+              </button>
+              <button
+                onClick={() => setActiveGameTab('wordle')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'wordle'
+                  ? 'bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-emerald-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                🧩 Adiviná el Jugador
+              </button>
+              <button
+                onClick={() => setActiveGameTab('arma-equipo')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'arma-equipo'
+                  ? 'bg-yellow-500/20 text-yellow-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-yellow-500/20'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+              >
+                🏆 Arma tu Equipo
+                {championCount > 0 && (
+                  <span className="ml-1.5 text-[10px] bg-yellow-400/20 text-yellow-400 px-1.5 py-0.5 rounded-full">
+                    ×{championCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Sub-Game Switcher */}
-          <div className="flex bg-black/40 p-1 rounded-2xl border border-white/5 gap-1 shrink-0">
-            <button
-              onClick={() => setActiveGameTab('jueguitos')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'jueguitos'
-                ? 'bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-emerald-500/20'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
-            >
-              ⚽ Hacer Jueguitos
-            </button>
-            <button
-              onClick={() => setActiveGameTab('wordle')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-100 cursor-pointer ${activeGameTab === 'wordle'
-                ? 'bg-emerald-500/20 text-emerald-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] border border-emerald-500/20'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
-            >
-              🧩 Adiviná el Jugador
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Game Interface + Leaderboard */}
-      <div className="w-full flex flex-col gap-6 relative z-10">
-        <div className="w-full flex justify-center py-4">
-          {activeGameTab === 'jueguitos' ? (
-            <KeepieUppieGame userId={user.uid} />
-          ) : (
-            <PlayerWordleGame
-              userId={user.uid}
-              jugadorDelDia={jugadorDelDia}
-              playersList={PLAYERS_DATABASE}
+          {/* Champion bar — only show in arma-equipo tab */}
+          {activeGameTab === 'arma-equipo' && (
+            <ChampionStatsBar
+              count={championCount}
+              lastChampion={lastChampion}
+              onViewTeam={() => setShowTeamModal(true)}
             />
           )}
         </div>
+      </div>
 
-        {/* Leaderboards rendered directly below each active game */}
-        {activeGameTab === 'jueguitos' ? (
-          <MinigameLeaderboard
-            title="🏆 Récords de Jueguitos"
-            entries={jueguitosRankings}
-            currentUserId={user.uid}
-            scoreLabel="jueguitos"
-            loading={loadingRankings}
-            error={rankingsError}
-            onRefresh={() => fetchRankingsData(true)}
-          />
+      {/* Main Game Interface */}
+      <div className="w-full flex flex-col gap-6 relative z-10">
+        {activeGameTab === 'arma-equipo' ? (
+          /* Arma tu Equipo — full width, no leaderboard */
+          <div className="w-full">
+            <ArmaEquipo
+              onChampion={handleChampion}
+              championRivals={championRivals}
+            />
+          </div>
         ) : (
-          <MinigameLeaderboard
-            title="🏆 Puntos de Adiviná el Jugador"
-            entries={wordleRankings}
-            currentUserId={user.uid}
-            scoreLabel="pts"
-            loading={loadingRankings}
-            error={rankingsError}
-            onRefresh={() => fetchRankingsData(true)}
-          />
+          <>
+            <div className="w-full flex justify-center py-4">
+              {activeGameTab === 'jueguitos' ? (
+                <KeepieUppieGame userId={user.uid} />
+              ) : (
+                <PlayerWordleGame
+                  userId={user.uid}
+                  jugadorDelDia={jugadorDelDia}
+                  playersList={PLAYERS_DATABASE}
+                />
+              )}
+            </div>
+
+            {activeGameTab === 'jueguitos' ? (
+              <MinigameLeaderboard
+                title="🏆 Récords de Jueguitos"
+                entries={jueguitosRankings}
+                currentUserId={user.uid}
+                scoreLabel="jueguitos"
+                loading={loadingRankings}
+                error={rankingsError}
+                onRefresh={() => fetchRankingsData(true)}
+              />
+            ) : (
+              <MinigameLeaderboard
+                title="🏆 Puntos de Adiviná el Jugador"
+                entries={wordleRankings}
+                currentUserId={user.uid}
+                scoreLabel="pts"
+                loading={loadingRankings}
+                error={rankingsError}
+                onRefresh={() => fetchRankingsData(true)}
+              />
+            )}
+          </>
         )}
       </div>
+
+      {/* Team viewer modal */}
+      {showTeamModal && lastChampion && (
+        <TeamViewerModal champion={lastChampion} onClose={() => setShowTeamModal(false)} />
+      )}
     </div>
   );
 }
-
