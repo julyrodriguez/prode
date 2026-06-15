@@ -445,7 +445,7 @@ export default function MatchDetailView() {
                 }
                 if (inc.reason) detail = inc.reason;
               } else if (inc.incidentType === "woodwork") {
-                icon = "🥅";
+                icon = "🪵";
                 colorClass = "text-orange-300 bg-orange-500/10";
                 borderClass = "border-orange-500/30";
                 title = `Tiro al palo - ${inc.player?.shortName || inc.player?.name || ''}`;
