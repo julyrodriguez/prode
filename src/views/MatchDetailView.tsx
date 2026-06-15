@@ -1044,8 +1044,8 @@ export default function MatchDetailView() {
             const isLiveMatch = isLive;
             const isUnderTenMinutes = start > 0 && (nowSec >= start - 600);
             const predMode: 'hidden' | 'grey' | 'scored' =
-              isFinished ? 'scored' :
-                (isLiveMatch || isUnderTenMinutes) ? 'grey' :
+              (isFinished || isLiveMatch) ? 'scored' :
+                isUnderTenMinutes ? 'grey' :
                   'hidden';
  
             if (matchPredictions.length === 0) return null;
@@ -1083,6 +1083,13 @@ export default function MatchDetailView() {
                   <span className="text-xs font-black text-slate-200 uppercase tracking-wider">Pronósticos</span>
                   <span className="ml-auto text-[10px] font-semibold text-slate-500">{matchPredictions.length} participante{matchPredictions.length !== 1 ? 's' : ''}</span>
                 </div>
+ 
+                {isLiveMatch && (
+                  <div className="bg-amber-550/15 border-b border-white/10 px-3 py-2 text-[10px] font-bold text-amber-400 flex items-start gap-2 leading-relaxed shadow-sm">
+                    <span className="text-xs shrink-0 select-none">⚠️</span>
+                    <span>Los colores en vivo muestran aciertos parciales. Los puntos del prode se computarán oficialmente solo una vez finalizado el partido.</span>
+                  </div>
+                )}
  
                 {predMode === 'hidden' && (
                   <p className="text-center text-slate-500 text-[10px] py-2 font-medium">
