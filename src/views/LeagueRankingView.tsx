@@ -853,7 +853,9 @@ export default function LeagueRankingView() {
                     </div>
 
                     <div className="text-center">
-                      <span className="text-sm font-bold text-slate-300">{entry.correctTendencies}</span>
+                      <span className="text-sm font-bold text-slate-300">
+                        {Math.max(0, entry.correctTendencies - entry.exactResults)}
+                      </span>
                     </div>
 
                     <div className="text-center">
