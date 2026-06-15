@@ -444,6 +444,11 @@ export default function MatchDetailView() {
                   title = `Roja - ${inc.player?.shortName || inc.player?.name || ''}`;
                 }
                 if (inc.reason) detail = inc.reason;
+              } else if (inc.incidentType === "woodwork") {
+                icon = "🥅";
+                colorClass = "text-orange-300 bg-orange-500/10";
+                borderClass = "border-orange-500/30";
+                title = `Tiro al palo - ${inc.player?.shortName || inc.player?.name || ''}`;
               } else if (inc.incidentType === "substitution") {
                 icon = "⇄";
                 colorClass = "text-blue-300 bg-blue-500/10";
