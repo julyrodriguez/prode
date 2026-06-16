@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { prefetchMatches } from '../lib/matchCache';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
 import CS2MatchesSection from '../components/CS2MatchesSection';
@@ -165,6 +166,14 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     const interval = setInterval(() => fetchMatchesAndPredictions(false), 30000); // 30 segundos
     return () => clearInterval(interval);
   }, [user, selectedDate, searchDirection]);
+
+  // Prefetch de detalles: apenas cargan los partidos, los bajamos en background
+  useEffect(() => {
+    if (allMatches.length === 0) return;
+    const ids = allMatches.map(m => m.id);
+    const cancel = prefetchMatches(ids);
+    return cancel;
+  }, [allMatches]);
 
   const parseMatchStatus = (match: Match) => {
     const startMs = (match.startTimestamp || 0) * 1000;

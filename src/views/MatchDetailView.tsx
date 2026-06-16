@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { getMatch as getCachedMatch, setMatch as setCachedMatch } from '../lib/matchCache';
 import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
@@ -176,18 +177,26 @@ export default function MatchDetailView() {
 
     let isMounted = true;
 
+    // Usamos el caché para mostrar datos inmediatamente sin spinner
+    const cached = getCachedMatch(id);
+    if (cached) {
+      setMatch(cached);
+      setLoading(false);
+    }
+
     const fetchDetail = async (showLoading = false) => {
       try {
-        if (showLoading) setLoading(true);
+        if (showLoading && !cached) setLoading(true);
         const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/detail/${id}`);
         if (!res.ok) throw new Error('Error al cargar datos del partido');
         const data = await res.json();
         const matchData = data.events ? data.events[0] : data;
+        setCachedMatch(id, matchData);
         if (isMounted) {
           setMatch(matchData);
         }
       } catch (err: any) {
-        if (showLoading && isMounted) {
+        if (showLoading && !cached && isMounted) {
           setError(err.message);
         }
       } finally {
@@ -197,7 +206,8 @@ export default function MatchDetailView() {
       }
     };
 
-    fetchDetail(true);
+    // Si había caché, refrescamos en background sin mostrar loading
+    fetchDetail(!cached);
 
     const interval = setInterval(() => {
       fetchDetail(false);

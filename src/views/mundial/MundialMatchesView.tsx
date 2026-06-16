@@ -6,6 +6,7 @@ import { useContext } from 'react';
 import { DashboardContext } from '../../app/(dashboard)/layout';
 import { LEAGUES } from '../../components/layout/AppLayout';
 import { useAuth } from '../../context/AuthContext';
+import { prefetchMatches } from '../../lib/matchCache';
 import TeamForm from '../../components/TeamForm';
 
 import TeamHoverCard from '../../components/TeamHoverCard';
@@ -646,6 +647,14 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
     const interval = setInterval(() => fetchData(false), 30000); // 30 segundos
     return () => clearInterval(interval);
   }, [user, tournamentId, selectedDate, searchDirection, viewMode]);
+
+  // Prefetch de detalles: apenas cargan los partidos, los bajamos en background
+  useEffect(() => {
+    if (allMatches.length === 0) return;
+    const ids = allMatches.map(m => m.id);
+    const cancel = prefetchMatches(ids);
+    return cancel;
+  }, [allMatches]);
 
   // Obtener lista completa de países participantes desde la tabla de posiciones (torneo 16)
   useEffect(() => {
