@@ -443,7 +443,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                     const canPredict = isPredictionMode && !status.hasStarted && !isLocked && !!user;
                     const hasPrediction = !!(localPredictions[match.id]?.home !== undefined && localPredictions[match.id]?.away !== undefined);
                     const isArgentina = hName.toLowerCase().includes('argentina') || aName.toLowerCase().includes('argentina');
-                    const showGoldStyle = isPredictionMode && isArgentina;
+                    const showGoldStyle = isArgentina;
                     const liveTime = status.isLive ? getMatchTime(match) : null;
                     const isRedirecting = redirectingMatchId === match.id;
 
@@ -497,6 +497,11 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                             <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80 flex items-center justify-center gap-2">
                               {match.round_name && <span>{match.round_name}</span>}
                               {showGoldStyle && (
+                                <span className="bg-amber-500/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest">
+                                  🇦🇷 ARGENTINA
+                                </span>
+                              )}
+                              {showGoldStyle && isPredictionMode && (
                                 <span className="bg-amber-500/25 text-amber-400 border border-amber-500/35 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest animate-pulse">
                                   💥 X2 PUNTOS
                                 </span>
@@ -510,7 +515,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                               <div className="flex flex-col items-end justify-center min-w-0">
                                 <div className="relative inline-block">
                                   <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
-                                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{hName}</span>
+                                  <span className={`font-bold text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 ${hName.toLowerCase().includes('argentina') ? 'bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-slate-100'}`}>{hName}</span>
                                 </div>
                                 <div className="mt-1">
                                   <TeamForm teamId={hId} align="left" />
@@ -611,7 +616,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                               <div className="flex flex-col items-start justify-center min-w-0">
                                 <div className="relative inline-block">
                                   <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={false} />
-                                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2">{aName}</span>
+                                  <span className={`font-bold text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 ${aName.toLowerCase().includes('argentina') ? 'bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-slate-100'}`}>{aName}</span>
                                 </div>
                                 <div className="mt-1">
                                   <TeamForm teamId={aId} align="right" />
