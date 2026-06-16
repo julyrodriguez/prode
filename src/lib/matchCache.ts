@@ -6,7 +6,15 @@
  */
 
 const CACHE_KEY = '__matchDetailCache__';
-const TTL_MS = 60_000; // 1 minuto
+
+/** TTL por defecto: 60 segundos para partidos pendientes/finalizados */
+const TTL_DEFAULT_MS = 60_000;
+/**
+ * TTL corto para partidos en vivo: usamos 10 segundos.
+ * En la práctica esto significa que si los datos tienen más de 10 segundos,
+ * MatchDetailView los ignora y muestra el spinner (comportamiento original).
+ */
+export const TTL_LIVE_MS = 10_000;
 
 interface CacheEntry {
   data: any;
@@ -20,11 +28,14 @@ function store(): Record<string, CacheEntry> {
   return w[CACHE_KEY];
 }
 
-/** Devuelve los datos cacheados para un partido, o null si no existen / expiraron. */
-export function getMatch(id: string | number): any | null {
+/**
+ * Devuelve los datos cacheados para un partido, o null si no existen / expiraron.
+ * @param ttlMs TTL en ms (por defecto 60s). Pasar TTL_LIVE_MS para partidos en vivo.
+ */
+export function getMatch(id: string | number, ttlMs = TTL_DEFAULT_MS): any | null {
   const entry = store()[String(id)];
   if (!entry) return null;
-  if (Date.now() - entry.at > TTL_MS) return null;
+  if (Date.now() - entry.at > ttlMs) return null;
   return entry.data;
 }
 
@@ -35,9 +46,19 @@ export function setMatch(id: string | number, data: any): void {
 
 const API_BASE = 'https://apivacas.jariel.com.ar/api/matches/detail';
 
+/** Detecta si un partido está en vivo según sus datos */
+function isLiveMatch(matchData: any): boolean {
+  const status = matchData?.status;
+  if (!status) return false;
+  if (typeof status === 'string') return status === 'inprogress';
+  if (typeof status === 'object') return status.type === 'inprogress';
+  return false;
+}
+
 /**
  * Prefetchea los detalles de una lista de IDs de partidos en segundo plano,
  * escalonando las requests para no saturar la API.
+ * Los partidos en vivo se saltean (sus datos cambian demasiado rápido para ser útiles).
  *
  * @param ids         Lista de IDs a prefetchear
  * @param delayMs     Retardo inicial antes de empezar (default 800ms)
@@ -67,7 +88,11 @@ export function prefetchMatches(
         if (!res.ok) continue;
         const data = await res.json();
         const matchData = data.events ? data.events[0] : data;
-        setMatch(id, matchData);
+
+        // No cacheamos partidos en vivo — sus datos son demasiado volátiles
+        if (!isLiveMatch(matchData)) {
+          setMatch(id, matchData);
+        }
       } catch {
         // Silencioso — es prefetch, no bloqueante
       }

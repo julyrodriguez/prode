@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { getMatch as getCachedMatch, setMatch as setCachedMatch } from '../lib/matchCache';
+import { getMatch as getCachedMatch, setMatch as setCachedMatch, TTL_LIVE_MS } from '../lib/matchCache';
 import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
@@ -177,16 +177,25 @@ export default function MatchDetailView() {
 
     let isMounted = true;
 
-    // Usamos el caché para mostrar datos inmediatamente sin spinner
+    // Usamos el caché para mostrar datos inmediatamente sin spinner.
+    // Para partidos en vivo usamos TTL muy corto (10s) para no mostrar datos stale.
+    const isLive = (data: any) => {
+      const s = data?.status;
+      if (!s) return false;
+      if (typeof s === 'string') return s === 'inprogress';
+      return s?.type === 'inprogress';
+    };
     const cached = getCachedMatch(id);
-    if (cached) {
+    const cachedIsStaleForLive = cached && isLive(cached) && !getCachedMatch(id, TTL_LIVE_MS);
+    const useCache = cached && !cachedIsStaleForLive;
+    if (useCache) {
       setMatch(cached);
       setLoading(false);
     }
 
     const fetchDetail = async (showLoading = false) => {
       try {
-        if (showLoading && !cached) setLoading(true);
+        if (showLoading && !useCache) setLoading(true);
         const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/detail/${id}`);
         if (!res.ok) throw new Error('Error al cargar datos del partido');
         const data = await res.json();
@@ -196,7 +205,7 @@ export default function MatchDetailView() {
           setMatch(matchData);
         }
       } catch (err: any) {
-        if (showLoading && !cached && isMounted) {
+        if (showLoading && !useCache && isMounted) {
           setError(err.message);
         }
       } finally {
@@ -206,8 +215,8 @@ export default function MatchDetailView() {
       }
     };
 
-    // Si había caché, refrescamos en background sin mostrar loading
-    fetchDetail(!cached);
+    // Si había caché válido, refrescamos en background sin mostrar loading
+    fetchDetail(!useCache);
 
     const interval = setInterval(() => {
       fetchDetail(false);
