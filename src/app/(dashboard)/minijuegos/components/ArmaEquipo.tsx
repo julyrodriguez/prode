@@ -97,16 +97,16 @@ function generateMatchEvents(
   const minutes = [8, 15, 23, 31, 38, 44, 52, 61, 67, 72, 79, 85, 90];
   for (const minute of minutes) {
     const rand = Math.random();
-    if (rand < userGoalProb * 0.35) {
+    if (rand < userGoalProb * 0.31) {
       const scorer = attackers[Math.floor(Math.random() * attackers.length)] ?? 'Tu delantero';
       events.push({ minute, type: 'goal_user', text: `⚽ ¡GOOOOL! ${scorer} marca para tu equipo!` });
-    } else if (rand < 0.35) {
+    } else if (rand < 0.37 - 0.06 * userGoalProb) {
       const scorer = rivalAttackers[Math.floor(Math.random() * rivalAttackers.length)] ?? 'El rival';
       events.push({ minute, type: 'goal_rival', text: `💥 ${scorer} (${rivalTeam.pais}) marca. ¡El rival anota!` });
-    } else if (rand < 0.50) {
+    } else if (rand < 0.52) {
       const saver = Math.random() > 0.5 ? gk : rivalGk;
       events.push({ minute, type: 'save', text: `🧤 Paradón de ${saver}!` });
-    } else if (rand < 0.65) {
+    } else if (rand < 0.67) {
       const mid = mids[Math.floor(Math.random() * mids.length)] ?? 'Tu mediocampista';
       events.push({ minute, type: 'chance', text: `🎯 Min ${minute}: Gran chance de ${mid}, afuera por poco!` });
     } else {
