@@ -1098,6 +1098,14 @@ export default function MundialRankingView() {
                 </div>
               </div>
 
+              {/* Special Rule for Argentina */}
+              <div className="bg-amber-500/10 rounded-2xl border border-amber-500/20 p-3.5 flex items-center gap-3 shadow-inner shadow-amber-500/5">
+                <span className="text-xl">🇦🇷</span>
+                <p className="text-xs text-amber-300 font-semibold leading-normal">
+                  <strong className="font-black">Multiplicador Especial:</strong> Todos los partidos de <span className="font-black text-white">Argentina</span> (sin importar la fase) duplican sus puntos (<strong className="font-black">x2</strong>).
+                </p>
+              </div>
+
               {/* Podium section */}
               <div className="bg-black/25 rounded-2xl border border-white/5 p-4 flex flex-col gap-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Predicción del Podio</span>
