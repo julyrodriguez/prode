@@ -103,6 +103,19 @@ export default function MundialRankingView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
+
+  // Lock body scroll when rules modal is open
+  useEffect(() => {
+    if (showRulesModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showRulesModal]);
+
   const [rankingTab, setRankingTab] = useState<'prode' | 'stats' | 'evolution'>('prode');
   const [podiumPredictions, setPodiumPredictions] = useState<any[]>([]);
   const [loadingPredictions, setLoadingPredictions] = useState(false);
@@ -1047,8 +1060,8 @@ export default function MundialRankingView() {
       )}
 
       {/* ── Modal de Reglas Mundial ── */}
-      {showRulesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal-fade-in">
+      {showRulesModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal-fade-in">
           {/* Card */}
           <div className="relative w-full max-w-md bg-[#0b1015] border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl flex flex-col gap-6 animate-modal-scale-in">
             {/* Close Button */}
@@ -1101,7 +1114,7 @@ export default function MundialRankingView() {
               {/* Special Rule for Argentina */}
               <div className="bg-amber-500/10 rounded-2xl border border-amber-500/20 p-3.5 flex items-center gap-3 shadow-inner shadow-amber-500/5">
                 <span className="text-xl">🇦🇷</span>
-                <p className="text-xs text-amber-300 font-semibold leading-normal">
+                <p className="text-xs text-amber-350 font-semibold leading-normal">
                   <strong className="font-black">Multiplicador Especial:</strong> Todos los partidos de <span className="font-black text-white">Argentina</span> (sin importar la fase) duplican sus puntos (<strong className="font-black">x2</strong>).
                 </p>
               </div>
@@ -1141,7 +1154,8 @@ export default function MundialRankingView() {
               Entendido
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Glassmorphic Page Loading Overlay ── */}

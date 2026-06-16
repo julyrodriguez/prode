@@ -101,6 +101,19 @@ export default function RankingView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
+
+  // Lock body scroll when rules modal is open
+  useEffect(() => {
+    if (showRulesModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showRulesModal]);
+
   const [rankingTab, setRankingTab] = useState<'prode' | 'stats' | 'evolution'>('prode');
   const [navigatingUserId, setNavigatingUserId] = useState<string | null>(null);
   const [statsData, setStatsData] = useState<Record<string, {
@@ -925,8 +938,8 @@ export default function RankingView() {
       )}
 
       {/* ── Modal de Reglas Mundial ── */}
-      {showRulesModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal-fade-in">
+      {showRulesModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal-fade-in">
           {/* Card */}
           <div className="relative w-full max-w-md bg-[#0b1015] border border-white/10 rounded-[2rem] p-6 md:p-8 shadow-2xl flex flex-col gap-6 animate-modal-scale-in">
             {/* Close Button */}
@@ -1019,7 +1032,8 @@ export default function RankingView() {
               Entendido
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Glassmorphic Page Loading Overlay ── */}
