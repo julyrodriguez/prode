@@ -299,14 +299,9 @@ const MatchRow = memo(({
 
       {/* Columna Derecha: Equipos, Score y Prode */}
       <div className="flex flex-col py-2 px-2 md:px-4 justify-center relative">
-        {(match.round_name || showGoldStyle) && (
+        {(match.round_name || (showGoldStyle && isPredictionMode)) && (
           <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80 flex items-center justify-center gap-2">
             {match.round_name && <span>{match.round_name}</span>}
-            {showGoldStyle && (
-              <span className="bg-amber-500/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest">
-                🇦🇷 ARGENTINA
-              </span>
-            )}
             {showGoldStyle && isPredictionMode && (
               <span className="bg-amber-500/25 text-amber-400 border border-amber-500/35 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest animate-pulse">
                 💥 X2 PUNTOS
