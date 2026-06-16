@@ -88,6 +88,7 @@ function generateMatchEvents(
 
   const attackers = userTeam.filter(j => j && ['DC','EI','ED','MCO'].includes(j.posicion)).map(j => j!.nombre);
   const mids = userTeam.filter(j => j && ['MC','MCD'].includes(j.posicion)).map(j => j!.nombre);
+  const defenders = userTeam.filter(j => j && ['DFC','LI','LD'].includes(j.posicion)).map(j => j!.nombre);
   const gk = userTeam.find(j => j?.posicion === 'POR')?.nombre ?? 'Tu portero';
 
   const rivalAttackers = rivalTeam.jugadores.filter(j => ['DC','EI','ED'].includes(j.posicion)).map(j => j.nombre);
@@ -99,20 +100,22 @@ function generateMatchEvents(
     if (rand < userGoalProb * 0.35) {
       const scorer = attackers[Math.floor(Math.random() * attackers.length)] ?? 'Tu delantero';
       events.push({ minute, type: 'goal_user', text: `⚽ ¡GOOOOL! ${scorer} marca para tu equipo!` });
-    } else if (rand < 0.35 + (1 - userGoalProb) * 0.25) {
+    } else if (rand < 0.35) {
       const scorer = rivalAttackers[Math.floor(Math.random() * rivalAttackers.length)] ?? 'El rival';
       events.push({ minute, type: 'goal_rival', text: `💥 ${scorer} (${rivalTeam.pais}) marca. ¡El rival anota!` });
-    } else if (rand < 0.55) {
+    } else if (rand < 0.50) {
       const saver = Math.random() > 0.5 ? gk : rivalGk;
       events.push({ minute, type: 'save', text: `🧤 Paradón de ${saver}!` });
-    } else if (rand < 0.70) {
+    } else if (rand < 0.65) {
       const mid = mids[Math.floor(Math.random() * mids.length)] ?? 'Tu mediocampista';
       events.push({ minute, type: 'chance', text: `🎯 Min ${minute}: Gran chance de ${mid}, afuera por poco!` });
     } else {
+      const defender = defenders[Math.floor(Math.random() * defenders.length)] ?? 'Tu defensa';
       const neutrals = [
         `⚠️ Min ${minute}: El árbitro frena el juego. Tensión en el campo.`,
         `🔥 Min ${minute}: El partido se pone intenso. Tarjeta amarilla.`,
-        `📊 Min ${minute}: El rival intenta presionar pero tu defensa aguanta.`,
+        `📊 Min ${minute}: El rival intenta presionar pero ${defender} despeja con firmeza.`,
+        `🛡️ Min ${minute}: Excelente cruce defensivo de ${defender} para recuperar la pelota.`,
       ];
       events.push({ minute, type: 'neutral', text: neutrals[Math.floor(Math.random() * neutrals.length)] });
     }
@@ -641,8 +644,8 @@ export default function ArmaEquipo({ onChampion, championRivals = [] }: ArmaEqui
           <div className="flex items-center justify-center gap-8">
             <div className="text-center">
               <div className="text-slate-400 text-xs mb-1">Tu Media</div>
-              <div className={`text-4xl font-black ${expertMode ? 'text-slate-500' : getRatingColor(userAvg)}`}>
-                {expertMode ? '?' : userAvg}
+              <div className={`text-4xl font-black ${getRatingColor(userAvg)}`}>
+                {userAvg}
               </div>
             </div>
             <div className="text-center">
