@@ -35,6 +35,8 @@ function getPointsForPrediction(
 ): number {
   if (result === 'wrong') return 0;
 
+  let basePoints = 0;
+
   if (tournamentId === 16) {
     // Mundial (tournamentId 16) rules:
     const stage = (match?.stage || match?.round_name || '').toLowerCase();
@@ -44,39 +46,49 @@ function getPointsForPrediction(
     const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
 
     if (isGroup) {
-      return result === 'exact' ? 4 : 2;
+      basePoints = result === 'exact' ? 4 : 2;
+    } else {
+      // Knockout phases (16avos, Octavos, Cuartos):
+      const is16avosTo4tos = 
+        stage.includes('32') || 
+        stage.includes('16') || 
+        stage.includes('octav') || 
+        stage.includes('dieciseis') || 
+        stage.includes('16av') || 
+        stage.includes('quarter') || 
+        stage.includes('cuart');
+
+      if (is16avosTo4tos) {
+        basePoints = result === 'exact' ? 8 : 4;
+      } else {
+        const isSemi = stage.includes('semi');
+        if (isSemi) {
+          basePoints = result === 'exact' ? 14 : 7;
+        } else {
+          const isFinal = stage.includes('final');
+          if (isFinal) {
+            basePoints = result === 'exact' ? 20 : 10;
+          } else {
+            // Default fallback for Mundial (Group rules)
+            basePoints = result === 'exact' ? 4 : 2;
+          }
+        }
+      }
     }
-
-    // Knockout phases (16avos, Octavos, Cuartos):
-    const is16avosTo4tos = 
-      stage.includes('32') || 
-      stage.includes('16') || 
-      stage.includes('octav') || 
-      stage.includes('dieciseis') || 
-      stage.includes('16av') || 
-      stage.includes('quarter') || 
-      stage.includes('cuart');
-
-    if (is16avosTo4tos) {
-      return result === 'exact' ? 8 : 4;
-    }
-
-    const isSemi = stage.includes('semi');
-    if (isSemi) {
-      return result === 'exact' ? 14 : 7;
-    }
-
-    const isFinal = stage.includes('final');
-    if (isFinal) {
-      return result === 'exact' ? 20 : 10;
-    }
-
-    // Default fallback for Mundial (Group rules)
-    return result === 'exact' ? 4 : 2;
+  } else {
+    // Fallback for standard tournaments:
+    basePoints = result === 'exact' ? 6 : 3;
   }
 
-  // Fallback for standard tournaments:
-  return result === 'exact' ? 6 : 3;
+  const equipoLocal = (pred.equipoLocal || '').toLowerCase();
+  const equipoVisita = (pred.equipoVisita || '').toLowerCase();
+  const esArgentina = equipoLocal.includes('argentina') || equipoVisita.includes('argentina');
+
+  if (esArgentina) {
+    return basePoints * 2;
+  }
+
+  return basePoints;
 }
 
 const RESULT_CONFIG = {
@@ -708,13 +720,21 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                 });
                 const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+                const equipoLocal = (pred.equipoLocal || '').toLowerCase();
+                const equipoVisita = (pred.equipoVisita || '').toLowerCase();
+                const esArgentina = equipoLocal.includes('argentina') || equipoVisita.includes('argentina');
+
                 return (
                   <div
                     key={pred._id}
-                    className={`relative overflow-hidden ${cfg.bg} border ${cfg.border} ${cfg.glow} rounded-3xl p-5 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-2xl`}
+                    className={`relative overflow-hidden ${
+                      esArgentina
+                        ? 'bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/70 border-amber-500/40 shadow-[0_0_25px_rgba(245,158,11,0.15)]'
+                        : cfg.bg + ' border ' + cfg.border + ' ' + cfg.glow
+                    } rounded-3xl p-5 flex flex-col gap-4 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-2xl`}
                   >
                     {/* Left vertical border color indicator */}
-                    <div className={`absolute top-0 left-0 w-1 h-full ${cfg.barBg}`} />
+                    <div className={`absolute top-0 left-0 w-1 h-full ${esArgentina ? 'bg-amber-500' : cfg.barBg}`} />
 
                     {/* Card Header: stage and date */}
                     <div className="flex items-center justify-between pb-2 border-b border-white/5">
@@ -726,9 +746,9 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                         <span>{timeStr}</span>
                       </div>
 
-                      <span className={`px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${cfg.pill} shadow-sm`}>
+                      <span className={`px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${esArgentina ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : cfg.pill} shadow-sm`}>
                         <span>{cfg.icon}</span>
-                        <span>+{ptsObtenidos} PTS</span>
+                        <span>+{ptsObtenidos} PTS {esArgentina && '(x2)'}</span>
                       </span>
                     </div>
 
@@ -768,10 +788,15 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
 
                     {/* Card Footer: League and Result label */}
                     <div className="flex items-center justify-between pt-1 text-[10px]">
-                      <span className="text-indigo-400 font-extrabold uppercase tracking-wider">
-                        {pred.torneo || tournament.name}
+                      <span className="text-indigo-400 font-extrabold uppercase tracking-wider flex items-center gap-2">
+                        <span>{pred.torneo || tournament.name}</span>
+                        {esArgentina && (
+                          <span className="bg-amber-500/25 text-amber-400 border border-amber-500/35 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest uppercase animate-pulse">
+                            💥 X2 Puntos
+                          </span>
+                        )}
                       </span>
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${cfg.pill}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${esArgentina ? 'bg-amber-500/15 border-amber-500/30 text-amber-400' : cfg.pill}`}>
                         {cfg.label}
                       </span>
                     </div>

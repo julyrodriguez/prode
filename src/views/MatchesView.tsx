@@ -442,16 +442,21 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                     const isLocked = status.isLive || (tenMinutesBefore !== null && now >= tenMinutesBefore);
                     const canPredict = isPredictionMode && !status.hasStarted && !isLocked && !!user;
                     const hasPrediction = !!(localPredictions[match.id]?.home !== undefined && localPredictions[match.id]?.away !== undefined);
+                    const isArgentina = hName.toLowerCase().includes('argentina') || aName.toLowerCase().includes('argentina');
+                    const showGoldStyle = isPredictionMode && isArgentina;
                     const liveTime = status.isLive ? getMatchTime(match) : null;
                     const isRedirecting = redirectingMatchId === match.id;
 
                     return (
                       <div
                         key={match.id || idx}
-                        className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-all duration-300 active:scale-[0.98] ${status.isLive
-                          ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
-                          : 'hover:bg-white/[0.03]'
-                          } ${isRedirecting ? 'scale-[0.97] opacity-60 pointer-events-none animate-pulse' : ''}`}
+                        className={`group grid grid-cols-[60px_1fr] md:grid-cols-[80px_1fr] items-stretch border-b border-white/5 last:border-0 relative cursor-pointer transition-all duration-300 active:scale-[0.98] ${
+                          showGoldStyle
+                            ? 'bg-gradient-to-r from-amber-500/[0.08] via-amber-500/[0.02] to-transparent border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.15)] hover:bg-amber-500/[0.12] hover:border-amber-500/50'
+                            : status.isLive
+                              ? 'bg-red-500/[0.02] hover:bg-red-500/[0.05]'
+                              : 'hover:bg-white/[0.03]'
+                        } ${isRedirecting ? 'scale-[0.97] opacity-60 pointer-events-none animate-pulse' : ''}`}
                         onClick={() => {
                           setRedirectingMatchId(match.id);
                           handleCardClick(match.id);
@@ -488,9 +493,14 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
 
                         {/* Columna Derecha: Equipos, Score y Prode */}
                         <div className="flex flex-col py-2 px-2 md:px-4 justify-center relative">
-                          {match.round_name && (
-                            <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80">
-                              {match.round_name}
+                          {(match.round_name || showGoldStyle) && (
+                            <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80 flex items-center justify-center gap-2">
+                              {match.round_name && <span>{match.round_name}</span>}
+                              {showGoldStyle && (
+                                <span className="bg-amber-500/25 text-amber-400 border border-amber-500/35 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest animate-pulse">
+                                  💥 X2 PUNTOS
+                                </span>
+                              )}
                             </div>
                           )}
                           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 md:gap-4">
