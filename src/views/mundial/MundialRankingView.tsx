@@ -652,8 +652,8 @@ export default function MundialRankingView() {
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-left">Distribución</span>
             </div>
           ) : (
-            <div className="grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">#</span>
+            <div className="grid grid-cols-[56px_1fr_42px_42px_40px] md:grid-cols-[64px_1fr_80px_80px_80px] items-center px-3 md:px-6 py-3 border-b border-white/5 bg-black/20">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 pl-1 md:pl-2 w-6 text-center">#</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Jugador</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Tends</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 text-center">Exacts</span>
@@ -856,9 +856,14 @@ export default function MundialRankingView() {
                       setNavigatingUserId(entry.userId);
                       router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
                     }}
-                    className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
+                    className={`grid grid-cols-[56px_1fr_42px_42px_40px] md:grid-cols-[64px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                   >
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-start gap-1 md:gap-1.5 pl-1 md:pl-2">
+                      {medal ? (
+                        <span className={`${medalSize} inline-block w-6 text-center shrink-0`}>{medal}</span>
+                      ) : (
+                        <span className={`text-sm font-black w-6 text-center shrink-0 ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
+                      )}
                       {(() => {
                         const lastIdx = rankingHistory.length - 1;
                         let posChange = 0;
@@ -868,16 +873,11 @@ export default function MundialRankingView() {
                           if (prev !== undefined && cur !== undefined) posChange = prev - cur;
                         }
                         return posChange > 0
-                          ? <span className="inline-block w-6 text-center text-emerald-400 font-black text-[9px] leading-none">▲{posChange}</span>
+                          ? <span className="inline-block text-emerald-400 font-black text-[9px] leading-none shrink-0">▲{posChange}</span>
                           : posChange < 0
-                            ? <span className="inline-block w-6 text-center text-red-400 font-black text-[9px] leading-none">▼{Math.abs(posChange)}</span>
-                            : <span className="inline-block w-6 text-center text-slate-600 font-extrabold text-[9px] leading-none">•</span>;
+                            ? <span className="inline-block text-red-400 font-black text-[9px] leading-none shrink-0">▼{Math.abs(posChange)}</span>
+                            : <span className="inline-block text-slate-600 font-extrabold text-[9px] leading-none shrink-0">•</span>;
                       })()}
-                      {medal ? (
-                        <span className={medalSize}>{medal}</span>
-                      ) : (
-                        <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
-                      )}
                     </div>
 
                     <div className="flex items-center gap-3 min-w-0">
