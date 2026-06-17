@@ -860,7 +860,6 @@ export default function MundialRankingView() {
                   >
                     <div className="flex items-center justify-center gap-1">
                       {(() => {
-                        // Indicador de cambio de posición basado en el último partido
                         const lastIdx = rankingHistory.length - 1;
                         let posChange = 0;
                         if (lastIdx > 0) {
@@ -869,10 +868,10 @@ export default function MundialRankingView() {
                           if (prev !== undefined && cur !== undefined) posChange = prev - cur;
                         }
                         return posChange > 0
-                          ? <span className="text-emerald-400 font-black text-[9px] leading-none">▲{posChange}</span>
+                          ? <span className="inline-block w-6 text-center text-emerald-400 font-black text-[9px] leading-none">▲{posChange}</span>
                           : posChange < 0
-                            ? <span className="text-red-400 font-black text-[9px] leading-none">▼{Math.abs(posChange)}</span>
-                            : <span className="text-slate-600 font-extrabold text-[9px] leading-none">•</span>;
+                            ? <span className="inline-block w-6 text-center text-red-400 font-black text-[9px] leading-none">▼{Math.abs(posChange)}</span>
+                            : <span className="inline-block w-6 text-center text-slate-600 font-extrabold text-[9px] leading-none">•</span>;
                       })()}
                       {medal ? (
                         <span className={medalSize}>{medal}</span>
