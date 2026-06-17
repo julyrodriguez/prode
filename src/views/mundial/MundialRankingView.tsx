@@ -530,7 +530,23 @@ export default function MundialRankingView() {
       )}
 
       {/* ── Podio de Ganadores Showcase ── */}
-      {!loading && !error && rankingTab === 'prode' && activeRanking.length >= 2 && (
+      {!loading && !error && rankingTab === 'prode' && activeRanking.length >= 2 && (() => {
+        // Calcula cambio de posición basado en el último partido del historial
+        const lastIdx = rankingHistory.length - 1;
+        const getPosChange = (userId: string): number => {
+          if (lastIdx <= 0) return 0;
+          const prev = rankingHistory[lastIdx - 1].positionsMap[userId];
+          const cur  = rankingHistory[lastIdx].positionsMap[userId];
+          if (prev === undefined || cur === undefined) return 0;
+          return prev - cur; // positivo = subió
+        };
+        const PosIndicator = ({ userId }: { userId: string }) => {
+          const change = getPosChange(userId);
+          if (change > 0) return <span className="text-emerald-400 font-black text-[10px] leading-none">▲{change}</span>;
+          if (change < 0) return <span className="text-red-400 font-black text-[10px] leading-none">▼{Math.abs(change)}</span>;
+          return <span className="text-slate-500 font-extrabold text-[10px] leading-none">•</span>;
+        };
+        return (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
           
           {/* 1ER PUESTO (GOLD) */}
@@ -543,8 +559,9 @@ export default function MundialRankingView() {
               className="relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border border-amber-500/40 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(245,158,11,0.12)] hover:scale-[1.02] hover:border-amber-500/60 transition-all duration-300 group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
-              <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+              <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-15">
                 <span>👑</span> <span>1º PUESTO</span>
+                <PosIndicator userId={activeRanking[0].userId} />
               </div>
               
               <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-2">
@@ -587,8 +604,9 @@ export default function MundialRankingView() {
               className="relative overflow-hidden bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border border-slate-400/30 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(148,163,184,0.08)] hover:scale-[1.02] hover:border-slate-400/50 transition-all duration-300 group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
-              <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+              <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-15">
                 <span>🥈</span> <span>2º PUESTO</span>
+                <PosIndicator userId={activeRanking[1].userId} />
               </div>
               
               <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-2">
@@ -622,7 +640,8 @@ export default function MundialRankingView() {
           )}
 
         </div>
-      )}
+        );
+      })())}
 
 
 
@@ -846,7 +865,22 @@ export default function MundialRankingView() {
                     }}
                     className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                   >
-                    <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center gap-1">
+                      {(() => {
+                        // Indicador de cambio de posición basado en el último partido
+                        const lastIdx = rankingHistory.length - 1;
+                        let posChange = 0;
+                        if (lastIdx > 0) {
+                          const prev = rankingHistory[lastIdx - 1].positionsMap[entry.userId];
+                          const cur  = rankingHistory[lastIdx].positionsMap[entry.userId];
+                          if (prev !== undefined && cur !== undefined) posChange = prev - cur;
+                        }
+                        return posChange > 0
+                          ? <span className="text-emerald-400 font-black text-[9px] leading-none">▲{posChange}</span>
+                          : posChange < 0
+                            ? <span className="text-red-400 font-black text-[9px] leading-none">▼{Math.abs(posChange)}</span>
+                            : <span className="text-slate-600 font-extrabold text-[9px] leading-none">•</span>;
+                      })()}
                       {medal ? (
                         <span className={medalSize}>{medal}</span>
                       ) : (
