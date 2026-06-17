@@ -52,6 +52,12 @@ function getPointsForPrediction(
 ): number {
   if (result === 'wrong') return 0;
 
+  // Multiplicador x2 para partidos de Argentina
+  const local = (pred.equipoLocal || match?.homeTeam?.name || match?.home_team?.name || '').toLowerCase();
+  const visita = (pred.equipoVisita || match?.awayTeam?.name || match?.away_team?.name || '').toLowerCase();
+  const esArgentina = local.includes('argentina') || visita.includes('argentina');
+  const multiplier = esArgentina ? 2 : 1;
+
   if (tournamentId === 16) {
     const stage = (match?.stage || match?.round_name || '').toLowerCase();
     const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
@@ -60,7 +66,7 @@ function getPointsForPrediction(
     const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
 
     if (isGroup) {
-      return result === 'exact' ? 4 : 2;
+      return (result === 'exact' ? 4 : 2) * multiplier;
     }
 
     // Knockout phases
@@ -74,23 +80,23 @@ function getPointsForPrediction(
       stage.includes('cuart');
 
     if (is16avosTo4tos) {
-      return result === 'exact' ? 8 : 4;
+      return (result === 'exact' ? 8 : 4) * multiplier;
     }
 
     const isSemi = stage.includes('semi');
     if (isSemi) {
-      return result === 'exact' ? 14 : 7;
+      return (result === 'exact' ? 14 : 7) * multiplier;
     }
 
     const isFinal = stage.includes('final');
     if (isFinal) {
-      return result === 'exact' ? 20 : 10;
+      return (result === 'exact' ? 20 : 10) * multiplier;
     }
 
-    return result === 'exact' ? 4 : 2;
+    return (result === 'exact' ? 4 : 2) * multiplier;
   }
 
-  return result === 'exact' ? 6 : 3;
+  return (result === 'exact' ? 6 : 3) * multiplier;
 }
 
 export default function LeagueRankingView() {
