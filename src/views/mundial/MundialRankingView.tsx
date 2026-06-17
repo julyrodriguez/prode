@@ -263,6 +263,16 @@ export default function MundialRankingView() {
     return steps;
   }, [ranking, predictionsData, matches, tournamentId]);
 
+  // Helper: cambio de posición vs. último partido jugado (positivo = subió)
+  const getPosChangeFor = (userId: string): number => {
+    const lastIdx = rankingHistory.length - 1;
+    if (lastIdx <= 0) return 0;
+    const prev = rankingHistory[lastIdx - 1].positionsMap[userId];
+    const cur  = rankingHistory[lastIdx].positionsMap[userId];
+    if (prev === undefined || cur === undefined) return 0;
+    return prev - cur;
+  };
+
   useEffect(() => {
     if (activeLeague.id !== 'mundial') return;
     
@@ -530,23 +540,7 @@ export default function MundialRankingView() {
       )}
 
       {/* ── Podio de Ganadores Showcase ── */}
-      {!loading && !error && rankingTab === 'prode' && activeRanking.length >= 2 && (() => {
-        // Calcula cambio de posición basado en el último partido del historial
-        const lastIdx = rankingHistory.length - 1;
-        const getPosChange = (userId: string): number => {
-          if (lastIdx <= 0) return 0;
-          const prev = rankingHistory[lastIdx - 1].positionsMap[userId];
-          const cur  = rankingHistory[lastIdx].positionsMap[userId];
-          if (prev === undefined || cur === undefined) return 0;
-          return prev - cur; // positivo = subió
-        };
-        const PosIndicator = ({ userId }: { userId: string }) => {
-          const change = getPosChange(userId);
-          if (change > 0) return <span className="text-emerald-400 font-black text-[10px] leading-none">▲{change}</span>;
-          if (change < 0) return <span className="text-red-400 font-black text-[10px] leading-none">▼{Math.abs(change)}</span>;
-          return <span className="text-slate-500 font-extrabold text-[10px] leading-none">•</span>;
-        };
-        return (
+      {!loading && !error && rankingTab === 'prode' && activeRanking.length >= 2 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
           
           {/* 1ER PUESTO (GOLD) */}
@@ -561,7 +555,7 @@ export default function MundialRankingView() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
               <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-15">
                 <span>👑</span> <span>1º PUESTO</span>
-                <PosIndicator userId={activeRanking[0].userId} />
+                {(() => { const c = getPosChangeFor(activeRanking[0].userId); return c > 0 ? <span className="text-black font-black text-[10px]">▲{c}</span> : c < 0 ? <span className="text-black font-black text-[10px]">▼{Math.abs(c)}</span> : <span className="text-black/50 font-extrabold text-[10px]">•</span>; })()}
               </div>
               
               <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-2">
@@ -606,7 +600,7 @@ export default function MundialRankingView() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
               <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-15">
                 <span>🥈</span> <span>2º PUESTO</span>
-                <PosIndicator userId={activeRanking[1].userId} />
+                {(() => { const c = getPosChangeFor(activeRanking[1].userId); return c > 0 ? <span className="text-emerald-300 font-black text-[10px]">▲{c}</span> : c < 0 ? <span className="text-red-300 font-black text-[10px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[10px]">•</span>; })()}
               </div>
               
               <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-2">
@@ -640,8 +634,7 @@ export default function MundialRankingView() {
           )}
 
         </div>
-        );
-      })())}
+      )}
 
 
 
