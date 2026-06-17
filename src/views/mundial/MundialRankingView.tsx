@@ -334,7 +334,7 @@ export default function MundialRankingView() {
   }, [tournamentId]);
 
   useEffect(() => {
-    if ((rankingTab !== 'stats' && rankingTab !== 'evolution') || matches.length > 0) return;
+    if (matches.length > 0) return;
     
     const fetchMatches = async () => {
       try {
@@ -348,10 +348,10 @@ export default function MundialRankingView() {
       }
     };
     fetchMatches();
-  }, [rankingTab, matches.length]);
+  }, [matches.length]);
 
   useEffect(() => {
-    if ((rankingTab !== 'stats' && rankingTab !== 'evolution') || !tournamentId || ranking.length === 0) return;
+    if (!tournamentId || ranking.length === 0) return;
     
     const prodeEntries = ranking.filter(entry => PRODE_USER_IDS.has(entry.userId));
     if (prodeEntries.length === 0) return;
@@ -424,7 +424,7 @@ export default function MundialRankingView() {
     return () => {
       isMounted = false;
     };
-  }, [rankingTab, tournamentId, ranking]);
+  }, [tournamentId, ranking]);
 
   const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
 
