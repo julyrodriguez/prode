@@ -44,6 +44,74 @@ function getResult(pred: any): 'exact' | 'tendency' | 'wrong' {
   return predSign === realSign ? 'tendency' : 'wrong';
 }
 
+const parseMatchStatus = (match: any) => {
+  if (!match || !match.status) return { isLive: false, hasStarted: false, label: 'Pendiente' };
+  if (match.status === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
+  if (typeof match.status === 'object' && match.status !== null) {
+    if (match.status.type === 'notstarted' && match.status.description === 'FRO') {
+      return { isLive: false, hasStarted: false, label: 'Pendiente' };
+    }
+    if (match.status.type === 'inprogress') return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
+    if (match.status.type === 'finished') {
+      const isPenalties = match.status.description === 'AP';
+      return { isLive: false, hasStarted: true, label: 'Finalizado', isPenalties };
+    }
+    if (match.status.type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
+  }
+  const statusDesc = typeof match.status === 'object' ? match.status?.description?.toLowerCase() : match.status?.toLowerCase();
+  if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return { isLive: true, hasStarted: true, label: 'ET' };
+  if (statusDesc?.includes('1st') || statusDesc?.includes('first')) return { isLive: true, hasStarted: true, label: '1T' };
+  if (statusDesc?.includes('2nd') || statusDesc?.includes('second')) return { isLive: true, hasStarted: true, label: '2T' };
+  if (statusDesc === 'aet' || statusDesc?.includes('extra')) return { isLive: true, hasStarted: true, label: 'TS' };
+  if (statusDesc === 'ap' || statusDesc?.includes('pen')) return { isLive: true, hasStarted: true, label: 'PEN' };
+  
+  return { isLive: false, hasStarted: true, label: 'Finalizado' };
+};
+
+const getScore = (match: any, team: 'home' | 'away') => {
+  if (!match) return null;
+  const scoreObj = team === 'home' ? match.homeScore : match.awayScore;
+  const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
+  const altTeamObj = team === 'home' ? match.home_team : match.away_team;
+  if (scoreObj?.current !== undefined) return scoreObj.current;
+  if (teamObj?.score !== undefined) return teamObj.score;
+  if (altTeamObj?.score !== undefined) return altTeamObj.score;
+  return null;
+};
+
+function getPredictionResult(pred: any, match: any): 'exact' | 'tendency' | 'wrong' | null {
+  const pl = pred.miPronosticoLocal;
+  const pv = pred.miPronosticoVisita;
+  
+  if (pl === undefined || pv === undefined || pl === null || pv === null) return null;
+  
+  let gl = pred.golesRealesLocal;
+  let gv = pred.golesRealesVisita;
+  
+  if (pred.estadoProde !== 'evaluated' && match) {
+    const status = parseMatchStatus(match);
+    if (status.hasStarted) {
+      const liveGl = getScore(match, 'home');
+      const liveGv = getScore(match, 'away');
+      if (liveGl !== null && liveGv !== null) {
+        gl = liveGl;
+        gv = liveGv;
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  }
+  
+  if (gl === null || gv === null || gl === undefined || gv === undefined) return null;
+  
+  if (pl === gl && pv === gv) return 'exact';
+  const predSign = pl > pv ? 1 : pl < pv ? -1 : 0;
+  const realSign = gl > gv ? 1 : gl < gv ? -1 : 0;
+  return predSign === realSign ? 'tendency' : 'wrong';
+}
+
 function getPointsForPrediction(
   pred: any,
   match: any | undefined,
@@ -137,6 +205,7 @@ export default function MundialRankingView() {
   const [predictionsData, setPredictionsData] = useState<Record<string, any[]>>({});
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(false);
+  const [showLivePoints, setShowLivePoints] = useState(false);
 
   const tournamentId = activeLeague.tournamentId;
 
@@ -149,7 +218,9 @@ export default function MundialRankingView() {
     const matchMap = new Map<number, { matchId: number; fechaUnix: number; equipoLocal: string; equipoVisita: string; stage?: string }>();
     
     Object.entries(predictionsData).forEach(([userId, preds]) => {
-      preds.forEach(p => {
+      // ONLY use evaluated predictions for the historical rank evolution chart
+      const evaluatedPreds = preds.filter(p => p.estadoProde === 'evaluated');
+      evaluatedPreds.forEach(p => {
         if (!matchMap.has(p.matchId)) {
           matchMap.set(p.matchId, {
             matchId: p.matchId,
@@ -180,7 +251,9 @@ export default function MundialRankingView() {
     const userPredsMap = new Map<string, Map<number, any>>();
     Object.entries(predictionsData).forEach(([userId, preds]) => {
       const pMap = new Map<number, any>();
-      preds.forEach(p => {
+      // Filter to only evaluated predictions for history
+      const evaluatedPreds = preds.filter(p => p.estadoProde === 'evaluated');
+      evaluatedPreds.forEach(p => {
         pMap.set(p.matchId, p);
       });
       userPredsMap.set(userId, pMap);
@@ -263,8 +336,13 @@ export default function MundialRankingView() {
     return steps;
   }, [ranking, predictionsData, matches, tournamentId]);
 
-  // Helper: cambio de posición vs. último partido jugado (positivo = subió)
-  const getPosChangeFor = (userId: string): number => {
+  // Helper: cambio de posición vs. último partido jugado (o vs. oficial en vivo)
+  const getPosChangeFor = (userId: string, currentPosIdx: number): number => {
+    if (showLivePoints) {
+      const officialIdx = activeRanking.findIndex(r => r.userId === userId);
+      if (officialIdx === -1) return 0;
+      return officialIdx - currentPosIdx;
+    }
     const lastIdx = rankingHistory.length - 1;
     if (lastIdx <= 0) return 0;
     const prev = rankingHistory[lastIdx - 1].positionsMap[userId];
@@ -399,7 +477,7 @@ export default function MundialRankingView() {
                   pointsPerMatch: totalPreds ? (entry.totalPoints / totalPreds) : 0,
                   hitRate: totalPreds ? Math.round(((exact + tendency) / totalPreds) * 100) : 0,
                 };
-                predictionsMap[entry.userId] = evaluated;
+                predictionsMap[entry.userId] = data;
               }
             } catch (err) {
               console.error(`Error fetching stats for user ${entry.userId}:`, err);
@@ -428,8 +506,117 @@ export default function MundialRankingView() {
 
   const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
 
-  const myEntry = user ? activeRanking.find((r) => r.userId === user.uid) : null;
-  const myPos = myEntry ? activeRanking.indexOf(myEntry) : -1;
+  const liveRanking = useMemo(() => {
+    if (!showLivePoints || ranking.length === 0 || Object.keys(predictionsData).length === 0 || matches.length === 0) {
+      return activeRanking;
+    }
+    
+    const allMatchesMap = new Map<number, any>();
+    matches.forEach(m => {
+      const mId = m.id !== undefined ? m.id : m._id;
+      if (mId !== undefined) {
+        allMatchesMap.set(mId, m);
+      }
+    });
+
+    const updatedEntries = activeRanking.map(entry => {
+      const preds = predictionsData[entry.userId] || [];
+      
+      let totalPoints = 0;
+      let exactResults = 0;
+      let correctTendencies = 0;
+
+      preds.forEach(pred => {
+        const match = allMatchesMap.get(pred.matchId);
+        const result = getPredictionResult(pred, match);
+        if (result && result !== 'wrong') {
+          const points = getPointsForPrediction(pred, match, tournamentId, result);
+          totalPoints += points;
+          if (result === 'exact') {
+            exactResults += 1;
+            correctTendencies += 1;
+          } else if (result === 'tendency') {
+            correctTendencies += 1;
+          }
+        }
+      });
+
+      return {
+        ...entry,
+        totalPoints,
+        exactResults,
+        correctTendencies,
+      };
+    });
+
+    return [...updatedEntries].sort((a, b) => {
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (b.exactResults !== a.exactResults) return b.exactResults - a.exactResults;
+      if (b.correctTendencies !== a.correctTendencies) return b.correctTendencies - a.correctTendencies;
+      return a.name.localeCompare(b.name);
+    });
+
+  }, [showLivePoints, ranking, predictionsData, matches, tournamentId, activeRanking]);
+
+  const liveStatsData = useMemo(() => {
+    if (!showLivePoints || Object.keys(predictionsData).length === 0 || matches.length === 0) {
+      return statsData;
+    }
+
+    const allMatchesMap = new Map<number, any>();
+    matches.forEach(m => {
+      const mId = m.id !== undefined ? m.id : m._id;
+      if (mId !== undefined) {
+        allMatchesMap.set(mId, m);
+      }
+    });
+
+    const calculatedStats: Record<string, any> = {};
+
+    Object.entries(predictionsData).forEach(([userId, preds]) => {
+      let exact = 0;
+      let tendency = 0;
+      let wrong = 0;
+      let totalPoints = 0;
+      let totalPreds = 0;
+
+      preds.forEach(pred => {
+        const match = allMatchesMap.get(pred.matchId);
+        const result = getPredictionResult(pred, match);
+        
+        if (result) {
+          totalPreds += 1;
+          const points = getPointsForPrediction(pred, match, tournamentId, result);
+          totalPoints += points;
+          
+          if (result === 'exact') {
+            exact += 1;
+          } else if (result === 'tendency') {
+            tendency += 1;
+          } else {
+            wrong += 1;
+          }
+        }
+      });
+
+      calculatedStats[userId] = {
+        exact,
+        tendency,
+        wrong,
+        totalPreds,
+        pointsPerMatch: totalPreds ? (totalPoints / totalPreds) : 0,
+        hitRate: totalPreds ? Math.round(((exact + tendency) / totalPreds) * 100) : 0,
+      };
+    });
+
+    return calculatedStats;
+  }, [showLivePoints, predictionsData, matches, statsData, tournamentId]);
+
+  const displayRanking = showLivePoints ? liveRanking : activeRanking;
+  const displayStatsData = showLivePoints ? liveStatsData : statsData;
+
+  const myEntry = user ? displayRanking.find((r) => r.userId === user.uid) : null;
+  const myPos = myEntry ? displayRanking.indexOf(myEntry) : -1;
 
   if (!tournamentId) {
     return (
@@ -454,7 +641,7 @@ export default function MundialRankingView() {
               🏆 Posiciones del Prode
             </h1>
             <p className="text-slate-400 font-medium mt-1">
-              {activeLeague.name} — {activeRanking.length} participantes
+              {activeLeague.name} — {displayRanking.length} participantes
             </p>
           </div>
 
@@ -539,31 +726,70 @@ export default function MundialRankingView() {
         </div>
       )}
 
+      {/* Tildar/Destildar simulación en vivo */}
+      {!loading && !error && ranking.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md mb-2">
+          <div className="flex items-center gap-3">
+            <div className="relative flex items-center justify-center">
+              <span className={`w-3.5 h-3.5 rounded-full ${showLivePoints ? 'bg-red-500 animate-pulse' : 'bg-slate-600'}`} />
+              {showLivePoints && (
+                <span className="absolute w-3.5 h-3.5 rounded-full bg-red-500 animate-ping opacity-75" />
+              )}
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-slate-200 flex items-center gap-1.5">
+                Simular Resultados En Vivo {showLivePoints && <span className="text-[9px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider animate-pulse">L I V E</span>}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold">
+                Suma los puntos de partidos en juego como si terminaran con el marcador actual
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowLivePoints(!showLivePoints)}
+            className={`px-5 py-2.5 rounded-2xl text-xs font-black transition-all duration-300 border flex items-center gap-2 cursor-pointer ${
+              showLivePoints
+                ? 'bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.15)] hover:bg-red-500/20'
+                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            {showLivePoints ? '🟢 ACTIVADO' : '⚪ DESACTIVADO'}
+          </button>
+        </div>
+      )}
+
+      {loadingStats && showLivePoints && (
+        <div className="w-full flex items-center justify-center gap-2 py-3.5 text-xs text-amber-400 font-black animate-pulse bg-amber-500/5 border border-amber-500/15 rounded-2xl mb-2">
+          <div className="animate-spin w-3 h-3 rounded-full border-t border-amber-400 border-r border-transparent" />
+          <span>Calculando posiciones en vivo con pronósticos en tiempo real...</span>
+        </div>
+      )}
+
       {/* ── Podio de Ganadores Showcase ── */}
-      {!loading && !error && rankingTab === 'prode' && activeRanking.length >= 2 && (
+      {!loading && !error && rankingTab === 'prode' && displayRanking.length >= 2 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
           
           {/* 1ER PUESTO (GOLD) */}
-          {activeRanking[0] && (
+          {displayRanking[0] && (
             <div 
               onClick={() => {
-                setNavigatingUserId(activeRanking[0].userId);
-                router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                setNavigatingUserId(displayRanking[0].userId);
+                router.push(`/predictions/${displayRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
               }}
               className="relative overflow-hidden bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border border-amber-500/40 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(245,158,11,0.12)] hover:scale-[1.02] hover:border-amber-500/60 transition-all duration-300 group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
               <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-15">
                 <span>👑</span> <span>1º PUESTO</span>
-                {(() => { const c = getPosChangeFor(activeRanking[0].userId); return c > 0 ? <span className="text-black font-black text-[10px]">▲{c}</span> : c < 0 ? <span className="text-black font-black text-[10px]">▼{Math.abs(c)}</span> : <span className="text-black/50 font-extrabold text-[10px]">•</span>; })()}
+                {(() => { const c = getPosChangeFor(displayRanking[0].userId, 0); return c > 0 ? <span className="text-black font-black text-[10px]">▲{c}</span> : c < 0 ? <span className="text-black font-black text-[10px]">▼{Math.abs(c)}</span> : <span className="text-black/50 font-extrabold text-[10px]">•</span>; })()}
               </div>
               
               <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-2">
                 <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden relative">
-                  <span className="absolute z-0 text-xl font-black text-slate-700">{activeRanking[0].name?.slice(0, 1).toUpperCase()}</span>
+                  <span className="absolute z-0 text-xl font-black text-slate-700">{displayRanking[0].name?.slice(0, 1).toUpperCase()}</span>
                   <img
-                    src={`https://apivacas.jariel.com.ar/users/${activeRanking[0].userId}.webp`}
-                    alt={activeRanking[0].name}
+                    src={`https://apivacas.jariel.com.ar/users/${displayRanking[0].userId}.webp`}
+                    alt={displayRanking[0].name}
                     className="w-full h-full object-cover relative z-10"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
@@ -573,12 +799,12 @@ export default function MundialRankingView() {
               <div className="flex-1 min-w-0 mt-2">
                 <h4 className="text-[10px] font-black text-amber-450 uppercase tracking-widest">Puntero del Prode</h4>
                 <span className="block font-black text-white text-base truncate group-hover:text-amber-300 transition-colors">
-                  {activeRanking[0].name}
+                  {displayRanking[0].name}
                 </span>
                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                  <span><b>{activeRanking[0].totalPoints}</b> PTS</span>
+                  <span><b>{displayRanking[0].totalPoints}</b> PTS</span>
                   <span className="text-slate-700">·</span>
-                  <span><b>{activeRanking[0].exactResults}</b> exactos</span>
+                  <span><b>{displayRanking[0].exactResults}</b> exactos</span>
                 </div>
               </div>
               
@@ -589,26 +815,26 @@ export default function MundialRankingView() {
           )}
 
           {/* 2DO PUESTO (SILVER) */}
-          {activeRanking[1] && (
+          {displayRanking[1] && (
             <div 
               onClick={() => {
-                setNavigatingUserId(activeRanking[1].userId);
-                router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                setNavigatingUserId(displayRanking[1].userId);
+                router.push(`/predictions/${displayRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
               }}
               className="relative overflow-hidden bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border border-slate-400/30 rounded-3xl p-5 flex items-center gap-4 cursor-pointer shadow-[0_10px_30px_rgba(148,163,184,0.08)] hover:scale-[1.02] hover:border-slate-400/50 transition-all duration-300 group"
             >
               <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
               <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-15">
                 <span>🥈</span> <span>2º PUESTO</span>
-                {(() => { const c = getPosChangeFor(activeRanking[1].userId); return c > 0 ? <span className="text-emerald-300 font-black text-[10px]">▲{c}</span> : c < 0 ? <span className="text-red-300 font-black text-[10px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[10px]">•</span>; })()}
+                {(() => { const c = getPosChangeFor(displayRanking[1].userId, 1); return c > 0 ? <span className="text-emerald-300 font-black text-[10px]">▲{c}</span> : c < 0 ? <span className="text-red-300 font-black text-[10px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[10px]">•</span>; })()}
               </div>
               
               <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-2">
                 <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center overflow-hidden relative">
-                  <span className="absolute z-0 text-xl font-black text-slate-700">{activeRanking[1].name?.slice(0, 1).toUpperCase()}</span>
+                  <span className="absolute z-0 text-xl font-black text-slate-700">{displayRanking[1].name?.slice(0, 1).toUpperCase()}</span>
                   <img
-                    src={`https://apivacas.jariel.com.ar/users/${activeRanking[1].userId}.webp`}
-                    alt={activeRanking[1].name}
+                    src={`https://apivacas.jariel.com.ar/users/${displayRanking[1].userId}.webp`}
+                    alt={displayRanking[1].name}
                     className="w-full h-full object-cover relative z-10"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
@@ -618,12 +844,12 @@ export default function MundialRankingView() {
               <div className="flex-1 min-w-0 mt-2">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Escolta</h4>
                 <span className="block font-black text-white text-base truncate group-hover:text-slate-300 transition-colors">
-                  {activeRanking[1].name}
+                  {displayRanking[1].name}
                 </span>
                 <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
-                  <span><b>{activeRanking[1].totalPoints}</b> PTS</span>
+                  <span><b>{displayRanking[1].totalPoints}</b> PTS</span>
                   <span className="text-slate-700">·</span>
-                  <span><b>{activeRanking[1].exactResults}</b> exactos</span>
+                  <span><b>{displayRanking[1].exactResults}</b> exactos</span>
                 </div>
               </div>
 
@@ -669,9 +895,9 @@ export default function MundialRankingView() {
                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Calculando estadísticas de los jugadores...</span>
               </div>
             ) : rankingTab === 'stats' ? (
-              activeRanking.map((entry, idx) => {
+              displayRanking.map((entry, idx) => {
                 const isMe = user && entry.userId === user.uid;
-                const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
+                const isLastTwo = displayRanking.length > 2 && idx >= displayRanking.length - 2;
                 const rowPadding = 'py-3.5';
                 const rowBg = isLastTwo
                   ? (isMe
@@ -691,7 +917,7 @@ export default function MundialRankingView() {
                   ? `font-bold text-sm text-red-400 ${isMe ? 'underline decoration-red-500/50' : ''}`
                   : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
-                const userStats = statsData[entry.userId];
+                const userStats = displayStatsData[entry.userId];
 
                 return (
                   <div
@@ -794,15 +1020,15 @@ export default function MundialRankingView() {
                   </div>
                 );
               })
-            ) : activeRanking.length <= 2 ? (
+            ) : displayRanking.length <= 2 ? (
               <div className="p-8 text-center text-slate-500 italic">No hay más participantes en esta tabla.</div>
             ) : (
-              activeRanking.slice(2).map((entry, sliceIdx) => {
+              displayRanking.slice(2).map((entry, sliceIdx) => {
                 const idx = sliceIdx + 2;
                 const isMe = user && entry.userId === user.uid;
                 const isMundial = activeLeague.id === 'mundial';
                 const isTop3 = idx < 3;
-                const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
+                const isLastTwo = displayRanking.length > 2 && idx >= displayRanking.length - 2;
                 const medal = isMundial
                   ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : undefined)
                   : MEDAL[idx];
@@ -889,13 +1115,7 @@ export default function MundialRankingView() {
                         <span className={`text-sm font-black w-6 text-center shrink-0 ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
                       )}
                       {(() => {
-                        const lastIdx = rankingHistory.length - 1;
-                        let posChange = 0;
-                        if (lastIdx > 0) {
-                          const prev = rankingHistory[lastIdx - 1].positionsMap[entry.userId];
-                          const cur  = rankingHistory[lastIdx].positionsMap[entry.userId];
-                          if (prev !== undefined && cur !== undefined) posChange = prev - cur;
-                        }
+                        const posChange = getPosChangeFor(entry.userId, idx);
                         return posChange > 0
                           ? <span className="inline-block text-emerald-400 font-black text-[9px] leading-none shrink-0">▲{posChange}</span>
                           : posChange < 0
@@ -1222,7 +1442,7 @@ export default function MundialRankingView() {
             <span className="absolute inset-0 flex items-center justify-center text-xl">🔮</span>
           </div>
           <p className="text-white font-black text-sm uppercase tracking-widest animate-pulse">
-            Cargando predicciones de {activeRanking.find(r => r.userId === navigatingUserId)?.name || 'usuario'}...
+            Cargando predicciones de {displayRanking.find(r => r.userId === navigatingUserId)?.name || 'usuario'}...
           </p>
         </div>,
         document.body
