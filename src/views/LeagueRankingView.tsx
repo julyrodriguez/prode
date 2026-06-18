@@ -660,16 +660,25 @@ export default function LeagueRankingView() {
             ) : rankingTab === 'stats' ? (
               activeRanking.map((entry, idx) => {
                 const isMe = user && entry.userId === user.uid;
+                const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
                 const rowPadding = 'py-3.5';
-                const rowBg = isMe
-                  ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
-                  : 'hover:bg-white/[0.04]';
+                const rowBg = isLastTwo
+                  ? (isMe
+                    ? 'bg-red-500/[0.08] border-l-2 border-red-500/50 hover:bg-red-500/[0.12]'
+                    : 'bg-red-500/[0.03] border-l-2 border-red-500/20 hover:bg-red-500/[0.06]')
+                  : isMe
+                    ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
+                    : 'hover:bg-white/[0.04]';
                 const avatarSize = 'w-8 h-8';
                 const initialsTextSize = 'text-xs';
                 const avatarBgClass = isMe
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                  : 'bg-white/5 border-white/10 text-slate-400';
-                const nameTextClass = `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
+                  ? (isLastTwo ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300')
+                  : isLastTwo
+                    ? 'bg-red-500/10 border-red-500/20 text-red-400/90'
+                    : 'bg-white/5 border-white/10 text-slate-400';
+                const nameTextClass = isLastTwo
+                  ? `font-bold text-sm text-red-400 ${isMe ? 'underline decoration-red-500/50' : ''}`
+                  : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
                 const userStats = statsData[entry.userId];
 
@@ -684,9 +693,13 @@ export default function LeagueRankingView() {
                   >
                     {/* Posición */}
                     <div className="flex items-center justify-center">
-                      <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>
-                        {idx + 1}
-                      </span>
+                      {isLastTwo ? (
+                        <span className="text-sm font-black filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">💀</span>
+                      ) : (
+                        <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>
+                          {idx + 1}
+                        </span>
+                      )}
                     </div>
 
                     {/* Nombre e Imagen */}
@@ -711,7 +724,7 @@ export default function LeagueRankingView() {
                     {/* Puntos / Partido */}
                     <div className="text-center">
                       {userStats ? (
-                        <span className="text-sm font-black text-white">
+                        <span className={`text-sm font-black ${isLastTwo ? 'text-red-400/80' : 'text-white'}`}>
                           {userStats.pointsPerMatch.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
                         </span>
                       ) : (
@@ -722,7 +735,7 @@ export default function LeagueRankingView() {
                     {/* Eficacia */}
                     <div className="text-center">
                       {userStats ? (
-                        <span className="text-sm font-black text-emerald-400">
+                        <span className={`text-sm font-black ${isLastTwo ? 'text-red-400' : 'text-emerald-400'}`}>
                           {userStats.hitRate}%
                         </span>
                       ) : (
@@ -778,6 +791,7 @@ export default function LeagueRankingView() {
                 const isMe = user && entry.userId === user.uid;
                 const isMundial = activeLeague.id === 'mundial';
                 const isTop3 = idx < 3;
+                const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
                 const medal = isMundial
                   ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : undefined)
                   : MEDAL[idx];
@@ -788,15 +802,19 @@ export default function LeagueRankingView() {
                     ? 'py-4 md:py-5'
                     : 'py-3.5';
 
-                const rowBg = idx === 0
+                const rowBg = isLastTwo
                   ? (isMe
-                    ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 border-l-4 border-amber-500 hover:from-amber-500/25 hover:to-amber-500/10'
-                    : 'bg-gradient-to-r from-amber-500/10 to-amber-500/[0.02] border-l-4 border-amber-500/50 hover:from-amber-500/15 hover:to-amber-500/[0.05]')
-                  : isMe
-                    ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
-                    : (isMundial && idx === 1)
-                      ? 'bg-slate-500/[0.02] border-l-2 border-slate-400/20 hover:bg-slate-500/[0.05]'
-                      : 'hover:bg-white/[0.04]';
+                    ? 'bg-red-500/[0.08] border-l-2 border-red-500/50 hover:bg-red-500/[0.12]'
+                    : 'bg-red-500/[0.03] border-l-2 border-red-500/20 hover:bg-red-500/[0.06]')
+                  : idx === 0
+                    ? (isMe
+                      ? 'bg-gradient-to-r from-amber-500/20 to-amber-500/5 border-l-4 border-amber-500 hover:from-amber-500/25 hover:to-amber-500/10'
+                      : 'bg-gradient-to-r from-amber-500/10 to-amber-500/[0.02] border-l-4 border-amber-500/50 hover:from-amber-500/15 hover:to-amber-500/[0.05]')
+                    : isMe
+                      ? 'bg-amber-500/[0.06] border-l-2 border-amber-500/50 hover:bg-amber-500/[0.10]'
+                      : (isMundial && idx === 1)
+                        ? 'bg-slate-500/[0.02] border-l-2 border-slate-400/20 hover:bg-slate-500/[0.05]'
+                        : 'hover:bg-white/[0.04]';
 
                 const medalSize = idx === 0
                   ? 'text-3xl md:text-4xl'
@@ -817,20 +835,24 @@ export default function LeagueRankingView() {
                     : 'text-xs';
 
                 const avatarBgClass = isMe
-                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
+                  ? (isLastTwo ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300')
                   : (isMundial && idx === 0)
                     ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
                     : (isMundial && idx === 1)
                       ? 'bg-slate-500/20 border-slate-500/30 text-slate-300'
-                      : isTop3 && !isMundial
-                        ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
-                        : 'bg-white/5 border-white/10 text-slate-400';
+                      : isLastTwo
+                        ? 'bg-red-500/10 border-red-500/20 text-red-400/90'
+                        : isTop3 && !isMundial
+                          ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
+                          : 'bg-white/5 border-white/10 text-slate-400';
 
                 const nameTextClass = idx === 0
                   ? 'text-base md:text-2xl font-black text-amber-300'
                   : (isMundial && idx === 1)
                     ? 'text-sm md:text-base font-extrabold text-slate-200'
-                    : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
+                    : isLastTwo
+                      ? `font-bold text-sm text-red-400 ${isMe ? 'underline decoration-red-500/50' : ''}`
+                      : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
                 const pointsClass = idx === 0
                   ? 'text-xl md:text-3xl font-black text-amber-400'
@@ -848,7 +870,9 @@ export default function LeagueRankingView() {
                     className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                   >
                     <div className="flex items-center justify-center">
-                      {medal ? (
+                      {isLastTwo ? (
+                        <span className="text-sm md:text-base inline-block text-center filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">💀</span>
+                      ) : medal ? (
                         <span className={medalSize}>{medal}</span>
                       ) : (
                         <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
@@ -872,19 +896,19 @@ export default function LeagueRankingView() {
                     </div>
 
                     <div className="text-center">
-                      <span className="text-sm font-bold text-slate-300">
+                      <span className={`text-sm font-bold ${isLastTwo ? 'text-red-400/70' : 'text-slate-300'}`}>
                         {Math.max(0, entry.correctTendencies - entry.exactResults)}
                       </span>
                     </div>
 
                     <div className="text-center">
-                      <span className={`text-sm font-bold ${entry.exactResults > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      <span className={`text-sm font-bold ${isLastTwo ? 'text-red-400/60' : entry.exactResults > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
                         {entry.exactResults}
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <span className={pointsClass}>
+                      <span className={isLastTwo ? 'text-base font-black text-red-500' : pointsClass}>
                         {entry.totalPoints}
                       </span>
                     </div>
