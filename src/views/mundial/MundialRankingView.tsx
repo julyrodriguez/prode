@@ -120,51 +120,54 @@ function getPointsForPrediction(
 ): number {
   if (result === 'wrong') return 0;
 
-  // Multiplicador x2 para partidos de Argentina
   const local = (pred.equipoLocal || match?.homeTeam?.name || match?.home_team?.name || '').toLowerCase();
   const visita = (pred.equipoVisita || match?.awayTeam?.name || match?.away_team?.name || '').toLowerCase();
   const esArgentina = local.includes('argentina') || visita.includes('argentina');
-  const multiplier = esArgentina ? 2 : 1;
+  let multiplier = esArgentina ? 2 : 1;
 
   if (tournamentId === 16) {
-    const stage = (match?.stage || match?.round_name || '').toLowerCase();
-    const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
+    const roundName = (
+      match?.roundInfo?.name || 
+      match?.roundInfo?.slug || 
+      match?.round_name || 
+      match?.stage || 
+      ""
+    ).toLowerCase();
 
-    // Group stage detection
-    const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
-
-    if (isGroup) {
-      return (result === 'exact' ? 4 : 2) * multiplier;
-    }
-
-    // Knockout phases
-    const is16avosTo4tos = 
-      stage.includes('32') || 
-      stage.includes('16') || 
-      stage.includes('octav') || 
-      stage.includes('dieciseis') || 
-      stage.includes('16av') || 
-      stage.includes('quarter') || 
-      stage.includes('cuart');
-
-    if (is16avosTo4tos) {
-      return (result === 'exact' ? 8 : 4) * multiplier;
-    }
-
-    const isSemi = stage.includes('semi');
-    if (isSemi) {
-      return (result === 'exact' ? 14 : 7) * multiplier;
-    }
-
-    const isFinal = stage.includes('final');
-    if (isFinal) {
+    // 1. FINAL
+    if (roundName.includes('final') && !roundName.includes('semi') && !roundName.includes('quarter') && !roundName.includes('eighth') && !roundName.includes('16')) {
       return (result === 'exact' ? 20 : 10) * multiplier;
     }
-
-    return (result === 'exact' ? 4 : 2) * multiplier;
+    // 2. SEMIFINAL
+    else if (roundName.includes('semi')) {
+      return (result === 'exact' ? 14 : 7) * multiplier;
+    }
+    // 3. Octavos a Cuartos (16avos, Round of 16, Quarter finals, Eighth finals)
+    else if (roundName.includes('16') || roundName.includes('eighth') || roundName.includes('quarter') || roundName.includes('round of 16') || roundName.includes('octav') || roundName.includes('cuart') || roundName.includes('dieciseis')) {
+      return (result === 'exact' ? 8 : 4) * multiplier;
+    }
+    // 4. FASE DE GRUPOS (4 puntos exacto, 2 puntos tendencia)
+    else {
+      return (result === 'exact' ? 4 : 2) * multiplier;
+    }
   }
 
-  return (result === 'exact' ? 6 : 3) * multiplier;
+  // Lógica para otros torneos
+  let puntosBase = result === 'exact' ? 6 : 3;
+  let mult = 1;
+  const matchTorneoName = (match?.tournament_name || match?.tournament?.name || '').toLowerCase();
+  if (matchTorneoName === "liga profesional de fútbol, apertura playoffs") {
+    const roundName = (
+      match?.roundInfo?.name || 
+      match?.roundInfo?.slug || 
+      match?.round_name || 
+      match?.stage || 
+      ""
+    ).toLowerCase();
+    if (roundName.includes('final')) mult = 3;
+  }
+
+  return puntosBase * mult * multiplier;
 }
 
 export default function MundialRankingView() {
@@ -507,45 +510,57 @@ export default function MundialRankingView() {
   const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
 
   const liveRanking = useMemo(() => {
-    if (!showLivePoints || ranking.length === 0 || Object.keys(predictionsData).length === 0 || matches.length === 0) {
+    if (!showLivePoints || ranking.length === 0 || matches.length === 0) {
       return activeRanking;
     }
     
-    const allMatchesMap = new Map<number, any>();
-    matches.forEach(m => {
+    // Find all matches that are currently live (inprogress)
+    const liveMatches = matches.filter(m => {
+      const status = parseMatchStatus(m);
+      return status.isLive;
+    });
+
+    if (liveMatches.length === 0) {
+      return activeRanking;
+    }
+
+    const liveMatchesMap = new Map<number, any>();
+    liveMatches.forEach(m => {
       const mId = m.id !== undefined ? m.id : m._id;
       if (mId !== undefined) {
-        allMatchesMap.set(mId, m);
+        liveMatchesMap.set(mId, m);
       }
     });
 
     const updatedEntries = activeRanking.map(entry => {
       const preds = predictionsData[entry.userId] || [];
       
-      let totalPoints = 0;
-      let exactResults = 0;
-      let correctTendencies = 0;
+      let extraPoints = 0;
+      let extraExacts = 0;
+      let extraTendencies = 0;
 
       preds.forEach(pred => {
-        const match = allMatchesMap.get(pred.matchId);
-        const result = getPredictionResult(pred, match);
-        if (result && result !== 'wrong') {
-          const points = getPointsForPrediction(pred, match, tournamentId, result);
-          totalPoints += points;
-          if (result === 'exact') {
-            exactResults += 1;
-            correctTendencies += 1;
-          } else if (result === 'tendency') {
-            correctTendencies += 1;
+        const match = liveMatchesMap.get(pred.matchId);
+        if (match) {
+          const result = getPredictionResult(pred, match);
+          if (result && result !== 'wrong') {
+            const points = getPointsForPrediction(pred, match, tournamentId, result);
+            extraPoints += points;
+            if (result === 'exact') {
+              extraExacts += 1;
+              extraTendencies += 1;
+            } else if (result === 'tendency') {
+              extraTendencies += 1;
+            }
           }
         }
       });
 
       return {
         ...entry,
-        totalPoints,
-        exactResults,
-        correctTendencies,
+        totalPoints: entry.totalPoints + extraPoints,
+        exactResults: entry.exactResults + extraExacts,
+        correctTendencies: entry.correctTendencies + extraTendencies,
       };
     });
 
@@ -563,54 +578,75 @@ export default function MundialRankingView() {
       return statsData;
     }
 
-    const allMatchesMap = new Map<number, any>();
-    matches.forEach(m => {
+    const liveMatches = matches.filter(m => {
+      const status = parseMatchStatus(m);
+      return status.isLive;
+    });
+
+    if (liveMatches.length === 0) {
+      return statsData;
+    }
+
+    const liveMatchesMap = new Map<number, any>();
+    liveMatches.forEach(m => {
       const mId = m.id !== undefined ? m.id : m._id;
       if (mId !== undefined) {
-        allMatchesMap.set(mId, m);
+        liveMatchesMap.set(mId, m);
       }
     });
 
     const calculatedStats: Record<string, any> = {};
 
-    Object.entries(predictionsData).forEach(([userId, preds]) => {
-      let exact = 0;
-      let tendency = 0;
-      let wrong = 0;
-      let totalPoints = 0;
-      let totalPreds = 0;
+    Object.entries(statsData).forEach(([userId, officialStats]) => {
+      const preds = predictionsData[userId] || [];
+      
+      let extraExact = 0;
+      let extraTendency = 0;
+      let extraWrong = 0;
+      let extraPoints = 0;
+      let extraPreds = 0;
 
       preds.forEach(pred => {
-        const match = allMatchesMap.get(pred.matchId);
-        const result = getPredictionResult(pred, match);
-        
-        if (result) {
-          totalPreds += 1;
-          const points = getPointsForPrediction(pred, match, tournamentId, result);
-          totalPoints += points;
-          
-          if (result === 'exact') {
-            exact += 1;
-          } else if (result === 'tendency') {
-            tendency += 1;
-          } else {
-            wrong += 1;
+        const match = liveMatchesMap.get(pred.matchId);
+        if (match) {
+          const result = getPredictionResult(pred, match);
+          if (result) {
+            extraPreds += 1;
+            const points = getPointsForPrediction(pred, match, tournamentId, result);
+            extraPoints += points;
+            
+            if (result === 'exact') {
+              extraExact += 1;
+            } else if (result === 'tendency') {
+              extraTendency += 1;
+            } else {
+              extraWrong += 1;
+            }
           }
         }
       });
+
+      const totalPreds = officialStats.totalPreds + extraPreds;
+      const exact = officialStats.exact + extraExact;
+      const tendency = officialStats.tendency + extraTendency;
+      const wrong = officialStats.wrong + extraWrong;
+
+      const userRankingEntry = activeRanking.find(r => r.userId === userId);
+      const officialPoints = userRankingEntry ? userRankingEntry.totalPoints : 0;
+      const livePoints = officialPoints + extraPoints;
 
       calculatedStats[userId] = {
         exact,
         tendency,
         wrong,
         totalPreds,
-        pointsPerMatch: totalPreds ? (totalPoints / totalPreds) : 0,
+        pointsPerMatch: totalPreds ? (livePoints / totalPreds) : 0,
         hitRate: totalPreds ? Math.round(((exact + tendency) / totalPreds) * 100) : 0,
       };
     });
 
     return calculatedStats;
-  }, [showLivePoints, predictionsData, matches, statsData, tournamentId]);
+  }, [showLivePoints, predictionsData, matches, statsData, tournamentId, activeRanking]);
 
   const displayRanking = showLivePoints ? liveRanking : activeRanking;
   const displayStatsData = showLivePoints ? liveStatsData : statsData;
