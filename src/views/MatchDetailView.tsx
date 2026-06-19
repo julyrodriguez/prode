@@ -4,6 +4,8 @@ import { getMatch as getCachedMatch, setMatch as setCachedMatch, TTL_LIVE_MS } f
 import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
+import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
@@ -100,6 +102,7 @@ const formatTabName = (key: string) => {
 };
 
 export default function MatchDetailView() {
+  const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const outletContext = useContext(DashboardContext);
@@ -1055,6 +1058,19 @@ export default function MatchDetailView() {
         {/* COLUMNA DERECHA: Pronósticos */}
         <div className="xl:col-span-2 flex flex-col gap-3 md:gap-4">
           {(() => {
+            if (!user) {
+              return (
+                <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 text-center shadow-lg h-fit flex flex-col items-center gap-4">
+                  <span className="text-4xl">🔮</span>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">Pronósticos</h3>
+                  <p className="text-xs text-slate-400 font-medium max-w-[240px] mx-auto">Debes iniciar sesión para ver los pronósticos de los otros participantes.</p>
+                  <Link href="/login" className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition duration-150 shadow-md shadow-emerald-500/20 cursor-pointer text-center">
+                    Iniciar Sesión
+                  </Link>
+                </div>
+              );
+            }
+
             const nowSec = Math.floor(Date.now() / 1000);
             const start = match.startTimestamp ?? 0;
             const isFinished = typeof match.status === 'object'

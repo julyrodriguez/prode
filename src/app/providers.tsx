@@ -7,6 +7,36 @@ import { useRouter, usePathname } from 'next/navigation';
 
 
 
+function isProtectedRoute(pathname: string): boolean {
+  const path = pathname.toLowerCase();
+  
+  if (path === '/predicciones' || path.startsWith('/predicciones/')) {
+    return true;
+  }
+  
+  if (path.startsWith('/predictions/')) {
+    return true;
+  }
+
+  if (path === '/stats' || path.startsWith('/stats/') || path === '/ranking' || path.startsWith('/ranking/')) {
+    return true;
+  }
+
+  if (path === '/perfil' || path.startsWith('/perfil/')) {
+    return true;
+  }
+  
+  const parts = path.split('/');
+  if (parts[1] === 'liga' && parts[2]) {
+    const tab = parts[3];
+    if (tab && (tab.startsWith('predicciones') || tab.startsWith('posiciones') || tab.startsWith('simulacion'))) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 export function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -18,8 +48,8 @@ export function PrivateRoute({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Si ya montamos en cliente y la autenticación terminó, redirigimos si no hay usuario
-    if (mounted && !loading && !user && pathname !== '/login') {
+    // Si ya montamos en cliente y la autenticación terminó, redirigimos si no hay usuario y es ruta protegida
+    if (mounted && !loading && !user && pathname !== '/login' && isProtectedRoute(pathname)) {
       router.replace('/login');
     }
   }, [user, loading, pathname, router, mounted]);
@@ -33,8 +63,8 @@ export function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Evita parpadeos antes del redireccionamiento
-  if (!user && pathname !== '/login') {
+  // Evita parpadeos antes del redireccionamiento si la ruta está protegida
+  if (!user && pathname !== '/login' && isProtectedRoute(pathname)) {
     return null;
   }
 

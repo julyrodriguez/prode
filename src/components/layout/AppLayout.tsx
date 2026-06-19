@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { auth } from '../../lib/firebase';
@@ -227,9 +227,18 @@ export default function AppLayout() {
     if (isLigasActive) setLigasMenuOpen(true);
   }, [activeLeagueId, isArgActive, isCopasActive, isLigasActive]);
 
-  const currentLeagueTabs = activeLeagueId === 'mundial'
+  const rawLeagueTabs = activeLeagueId === 'mundial'
     ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
     : [...LEAGUE_TABS, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const];
+
+  const currentLeagueTabs = rawLeagueTabs.filter(tab => {
+    if (!user) {
+      if (tab.id === 'predicciones' || tab.id === 'posiciones' || tab.id === 'simulacion') {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const activeLeague = LEAGUES.find(l => {
     if (isCS2) return l.id === 'cs2';
@@ -539,14 +548,17 @@ export default function AppLayout() {
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3 p-3">
-              <div className="w-9 h-9 rounded-full border border-red-500/30 flex items-center justify-center bg-black/40 text-red-400 font-bold flex-shrink-0">
-                ?
+            <Link
+              to="/login"
+              className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition duration-150 cursor-pointer text-emerald-400 hover:text-emerald-300 w-full"
+            >
+              <div className="w-9 h-9 rounded-full border border-emerald-500/30 flex items-center justify-center bg-black/40 text-emerald-400 font-bold flex-shrink-0">
+                🔑
               </div>
-              <span className="text-slate-400 text-sm font-medium md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150">
-                No autenticado
+              <span className="text-sm font-bold md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150">
+                Iniciar Sesión
               </span>
-            </div>
+            </Link>
           )}
         </div>
       </aside>
@@ -605,7 +617,12 @@ export default function AppLayout() {
             {/* General section: show old-school tab selector */}
             {isGeneralSection && (
               <div className="hidden md:flex items-center bg-black/40 p-1 rounded-xl border border-white/5 gap-0.5">
-                {GENERAL_TABS.map((tab) => {
+                {GENERAL_TABS.filter((tab) => {
+                  if (!user) {
+                    if (tab.id === 'predicciones' || tab.id === 'ranking' || tab.id === 'estadisticas') return false;
+                  }
+                  return true;
+                }).map((tab) => {
                   const isTabActive = generalTabActive === tab.id;
                   return (
                     <NavLink
@@ -648,9 +665,12 @@ export default function AppLayout() {
                     </div>
                   </div>
                 ) : (
-                  <div className="w-9 h-9 rounded-full border border-red-500/30 flex items-center justify-center bg-black/40 text-red-400 font-bold">
-                    ?
-                  </div>
+                  <Link
+                    to="/login"
+                    className="px-4 py-2 text-xs font-bold text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl transition duration-150 shadow-md shadow-emerald-500/20 cursor-pointer whitespace-nowrap"
+                  >
+                    Iniciar Sesión
+                  </Link>
                 )}
               </div>
             </div>
@@ -682,7 +702,7 @@ export default function AppLayout() {
                   ? (generalTabActive === 'partidos')
                   : (activeTabId === 'partidos' || !activeTabId);
 
-                const leftItems = isGeneralSection
+                const rawLeftItems = isGeneralSection
                   ? [
                       { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' },
                       { id: 'predicciones', label: 'Predicciones', icon: '🔮', path: '/predicciones' }
@@ -692,7 +712,12 @@ export default function AppLayout() {
                       { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
                     ];
 
-                const rightItems = isGeneralSection
+                const leftItems = rawLeftItems.filter(item => {
+                  if (!user && item.id === 'predicciones') return false;
+                  return true;
+                });
+
+                const rawRightItems = isGeneralSection
                   ? [
                       { id: 'ranking', label: 'Ranking', icon: '🏅', path: '/ranking' },
                       { id: 'estadisticas', label: 'Estadísticas', icon: '📊', path: '/stats' }
@@ -701,6 +726,11 @@ export default function AppLayout() {
                       { id: 'tabla', label: 'Tabla', icon: '📊' },
                       { id: 'posiciones', label: 'Posiciones', icon: '🏅' }
                     ];
+
+                const rightItems = rawRightItems.filter(item => {
+                  if (!user && ['posiciones', 'ranking', 'estadisticas'].includes(item.id)) return false;
+                  return true;
+                });
 
                 return (
                   <>

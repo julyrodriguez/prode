@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import { LEAGUES } from './components/layout/AppLayout';
 import MatchesView from './views/MatchesView';
@@ -20,8 +20,39 @@ import { ThemeProvider } from './context/ThemeContext';
 import CS2RankingView from './views/CS2RankingView';
 import CS2ProfileView from './views/CS2ProfileView';
 
+function isProtectedRoute(pathname: string): boolean {
+  const path = pathname.toLowerCase();
+  
+  if (path === '/predicciones' || path.startsWith('/predicciones/')) {
+    return true;
+  }
+  
+  if (path.startsWith('/predictions/')) {
+    return true;
+  }
+
+  if (path === '/stats' || path.startsWith('/stats/') || path === '/ranking' || path.startsWith('/ranking/')) {
+    return true;
+  }
+
+  if (path === '/perfil' || path.startsWith('/perfil/')) {
+    return true;
+  }
+  
+  const parts = path.split('/');
+  if (parts[1] === 'liga' && parts[2]) {
+    const tab = parts[3];
+    if (tab && (tab.startsWith('predicciones') || tab.startsWith('posiciones') || tab.startsWith('simulacion'))) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -31,7 +62,9 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user && isProtectedRoute(location.pathname)) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   return <>{children}</>;
 }
