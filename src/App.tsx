@@ -85,7 +85,7 @@ export default function App() {
             {/* ── General Section ── */}
             <Route index element={<Navigate to="/liga/mundial/partidos" replace />} />
             <Route path="general" element={<MatchesView />} />
-            <Route path="predicciones" element={<MatchesView isPredictionMode={true} />} />
+            <Route path="predicciones" element={<Navigate to="/general" replace />} />
             <Route path="ranking" element={<RankingView />} />
             <Route path="stats" element={<StatsView />} />
             <Route path="perfil" element={<ProfileView />} />

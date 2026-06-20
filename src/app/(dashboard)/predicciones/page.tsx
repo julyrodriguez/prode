@@ -1,7 +1,5 @@
-'use client';
-
-import MatchesView from '../../../views/MatchesView';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <MatchesView isPredictionMode={true} />;
+  redirect('/general');
 }

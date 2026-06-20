@@ -174,7 +174,6 @@ const LEAGUE_TABS = [
 // General tab items (old behavior)
 const GENERAL_TABS = [
   { id: 'partidos', label: 'Partidos', path: '/general', icon: '⚽' },
-  { id: 'predicciones', label: 'Predicciones', path: '/predicciones', icon: '🔮' },
   { id: 'minijuegos', label: 'Juegos', path: '/liga/mundial/minijuegos', icon: '🎮' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', icon: '🏅' },
   { id: 'estadisticas', label: 'Estadísticas', path: '/stats', icon: '📊' },
@@ -270,8 +269,7 @@ export default function AppLayout() {
   const generalTabActive = isGeneralSection
     ? (location.pathname === '/ranking' ? 'ranking'
       : location.pathname === '/stats' ? 'estadisticas'
-        : location.pathname === '/predicciones' ? 'predicciones'
-          : 'partidos')
+        : 'partidos')
     : null;
 
   return (
@@ -616,7 +614,7 @@ export default function AppLayout() {
               <div className="hidden md:flex items-center bg-black/40 p-1 rounded-xl border border-white/5 gap-0.5">
                 {GENERAL_TABS.filter((tab) => {
                   if (!user) {
-                    if (tab.id === 'predicciones' || tab.id === 'ranking' || tab.id === 'estadisticas') return false;
+                    if (tab.id === 'ranking' || tab.id === 'estadisticas') return false;
                   }
                   return true;
                 }).map((tab) => {
@@ -701,8 +699,7 @@ export default function AppLayout() {
 
                 const rawLeftItems = isGeneralSection
                   ? [
-                      { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' },
-                      { id: 'predicciones', label: 'Predicciones', icon: '🔮', path: '/predicciones' }
+                      { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' }
                     ]
                   : [
                       { id: 'minijuegos', label: 'Juegos', icon: '🎮' },
