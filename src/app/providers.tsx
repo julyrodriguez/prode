@@ -26,6 +26,10 @@ function isProtectedRoute(pathname: string): boolean {
     return true;
   }
 
+  if (path.startsWith('/cs2/player/')) {
+    return true;
+  }
+
   
   const parts = path.split('/');
   if (parts[1] === 'liga' && parts[2]) {

@@ -202,7 +202,7 @@ export default function AppLayout() {
   const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
   const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
 
-  const isMatchDetail = location.pathname.startsWith('/match/') || location.pathname.startsWith('/team/');
+  const isMatchDetail = location.pathname.startsWith('/match/') || location.pathname.startsWith('/team/') || location.pathname.startsWith('/cs2/player/');
   const isCS2 = false;
   const isGeneralSection = activeLeagueId === 'general' || !leagueMatch;
 

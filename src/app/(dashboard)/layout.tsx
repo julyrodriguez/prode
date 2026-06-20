@@ -215,7 +215,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
   const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
 
-  const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/');
+  const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/') || pathname.startsWith('/cs2/player/');
   const isCS2 = false;
   const isGeneralSection = activeLeagueId === 'general' || !leagueMatch;
 
