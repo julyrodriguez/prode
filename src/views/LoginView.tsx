@@ -94,16 +94,6 @@ export default function LoginView() {
             ) : isRegister ? 'Registrarse' : 'Ingresar'}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <button 
-            type="button" 
-            onClick={() => { setIsRegister(!isRegister); setError(''); }} 
-            className="text-slate-400 hover:text-white text-sm transition-colors font-medium"
-          >
-            {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
-          </button>
-        </div>
       </div>
     </div>
   );
