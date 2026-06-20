@@ -202,27 +202,7 @@ export default function MatchDetailView() {
         const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/detail/${id}`);
         if (!res.ok) throw new Error('Error al cargar datos del partido');
         const data = await res.json();
-        let matchData = data.events ? data.events[0] : data;
-        
-        // Interceptar partido de Villa Mitre
-        const homeName = matchData?.homeTeam?.name || matchData?.home_team?.name || '';
-        const awayName = matchData?.awayTeam?.name || matchData?.away_team?.name || '';
-        if (homeName.toLowerCase().includes('villa mitre') || awayName.toLowerCase().includes('villa mitre')) {
-          matchData = { ...matchData };
-          matchData.status = 'finished';
-          if (homeName.toLowerCase().includes('villa mitre')) {
-            matchData.homeScore = { current: 2 };
-            matchData.awayScore = { current: 0 };
-            if (matchData.home_team) matchData.home_team.score = 2;
-            if (matchData.away_team) matchData.away_team.score = 0;
-          } else {
-            matchData.homeScore = { current: 0 };
-            matchData.awayScore = { current: 2 };
-            if (matchData.home_team) matchData.home_team.score = 0;
-            if (matchData.away_team) matchData.away_team.score = 2;
-          }
-        }
-
+        const matchData = data.events ? data.events[0] : data;
         setCachedMatch(id, matchData);
         if (isMounted) {
           setMatch(matchData);

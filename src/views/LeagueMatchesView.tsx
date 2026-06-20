@@ -620,26 +620,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
           events.sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
         }
 
-        events = events.map((e: any) => {
-          let updated = { ...e, id: e.id || e._id };
-          const homeName = updated.homeTeam?.name || updated.home_team?.name || '';
-          const awayName = updated.awayTeam?.name || updated.away_team?.name || '';
-          if (homeName.toLowerCase().includes('villa mitre') || awayName.toLowerCase().includes('villa mitre')) {
-            updated.status = 'finished';
-            if (homeName.toLowerCase().includes('villa mitre')) {
-              updated.homeScore = { current: 2 };
-              updated.awayScore = { current: 0 };
-              if (updated.home_team) updated.home_team.score = 2;
-              if (updated.away_team) updated.away_team.score = 0;
-            } else {
-              updated.homeScore = { current: 0 };
-              updated.awayScore = { current: 2 };
-              if (updated.home_team) updated.home_team.score = 0;
-              if (updated.away_team) updated.away_team.score = 2;
-            }
-          }
-          return updated;
-        });
+        events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
 
         // Deduplicar partidos por ID
         const seenIds = new Set<number>();
