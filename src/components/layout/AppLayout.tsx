@@ -221,9 +221,9 @@ export default function AppLayout() {
   const [ligasMenuOpen, setLigasMenuOpen] = useState(isLigasActive);
 
   useEffect(() => {
-    if (isArgActive) setArgentinaMenuOpen(true);
-    if (isCopasActive) setCopasMenuOpen(true);
-    if (isLigasActive) setLigasMenuOpen(true);
+    setArgentinaMenuOpen(isArgActive);
+    setCopasMenuOpen(isCopasActive);
+    setLigasMenuOpen(isLigasActive);
   }, [activeLeagueId, isArgActive, isCopasActive, isLigasActive]);
 
   const rawLeagueTabs = activeLeagueId === 'mundial'
@@ -332,7 +332,7 @@ export default function AppLayout() {
 
             if (league.id === 'liga-arg') {
               return (
-                <div key="grouped-menus" className="flex flex-col w-full gap-1">
+                <div key="grouped-menus" className="flex flex-col w-full gap-1 shrink-0">
                   {/* Argentina Group */}
                   <div key="argentina-group" className="flex flex-col w-full">
                     <button
@@ -489,7 +489,7 @@ export default function AppLayout() {
                 key={league.id}
                 onClick={() => handleLeagueSelect(league.id)}
                 className={`
-                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left
+                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left shrink-0
                   ${league.id === 'mundial'
                     ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
                     : isActive && league.id === 'cs2'

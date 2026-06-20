@@ -234,9 +234,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [ligasMenuOpen, setLigasMenuOpen] = useState(isLigasActive);
 
   useEffect(() => {
-    if (isArgActive) setArgentinaMenuOpen(true);
-    if (isCopasActive) setCopasMenuOpen(true);
-    if (isLigasActive) setLigasMenuOpen(true);
+    setArgentinaMenuOpen(isArgActive);
+    setCopasMenuOpen(isCopasActive);
+    setLigasMenuOpen(isLigasActive);
   }, [activeLeagueId, isArgActive, isCopasActive, isLigasActive]);
 
   const rawLeagueTabs = activeLeagueId === 'mundial'
@@ -346,7 +346,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             if (league.id === 'liga-arg') {
               return (
-                <div key="grouped-menus" className="flex flex-col w-full gap-1">
+                <div key="grouped-menus" className="flex flex-col w-full gap-1 shrink-0">
                   {/* Argentina Group */}
                   <div key="argentina-group" className="flex flex-col w-full">
                     <button
@@ -513,7 +513,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 }
                 onClick={() => setMobileSidebarOpen(false)}
                 className={`
-                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
+                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer shrink-0
                   ${league.id === 'mundial'
                     ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
                     : isActive && league.id === 'cs2'
