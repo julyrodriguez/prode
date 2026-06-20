@@ -282,16 +282,9 @@ export default function AppLayout() {
     >
 
       {/* ── GLOW BACKGROUND ── */}
-      {activeLeagueId === 'mundial' && activeTabId !== 'minijuegos' ? (
-        <div className="mundial-smoke-container">
-          <div className={`mundial-smoke-bg-image ${activeTabId === 'posiciones' ? 'is-static' : ''}`} />
-        </div>
-      ) : (
-        <div className="fixed inset-0 z-0 pointer-events-none">
-          <div className="absolute top-[-10%] left-[-10%] w-[40vw] h-[40vh] bg-indigo-600/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vh] bg-emerald-600/10 rounded-full blur-[120px]" />
-        </div>
-      )}
+      <div className="mundial-smoke-container">
+        <div className={`mundial-smoke-bg-image ${activeTabId === 'posiciones' ? 'is-static' : ''}`} />
+      </div>
 
       {/* ── MOBILE SIDEBAR OVERLAY ── */}
       {mobileSidebarOpen && (

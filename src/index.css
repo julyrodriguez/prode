@@ -590,18 +590,18 @@ img, svg, canvas, video, iframe {
 /* ── MUNDIAL LEAGUE READABILITY CARD OVERRIDES (DARK MODE ONLY) ──
    Overwrites transparent variables and utility card classes to use a semi-solid, 
    darker backdrop when the colorful smoke background is active, ensuring text legibility. */
-:root:not([data-theme="light"]) [data-league="mundial"] {
+:root:not([data-theme="light"]) [data-league] {
   --bg-card:        rgba(11, 16, 21, 0.90);
   --bg-card-strong: rgba(11, 16, 21, 0.95);
   --bg-surface:     rgba(9, 9, 11, 0.90);
 }
 
-:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.01\],
-:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.02\],
-:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.03\],
-:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.04\],
-:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/\[0\.05\],
-:root:not([data-theme="light"]) [data-league="mundial"] .bg-white\/5 {
+:root:not([data-theme="light"]) [data-league] .bg-white\/\[0\.01\],
+:root:not([data-theme="light"]) [data-league] .bg-white\/\[0\.02\],
+:root:not([data-theme="light"]) [data-league] .bg-white\/\[0\.03\],
+:root:not([data-theme="light"]) [data-league] .bg-white\/\[0\.04\],
+:root:not([data-theme="light"]) [data-league] .bg-white\/\[0\.05\],
+:root:not([data-theme="light"]) [data-league] .bg-white\/5 {
   background-color: rgba(11, 16, 21, 0.90) !important;
   backdrop-filter: blur(20px) !important;
 }
