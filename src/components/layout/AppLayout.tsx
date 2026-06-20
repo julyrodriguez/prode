@@ -311,7 +311,7 @@ export default function AppLayout() {
         {/* League Navigation */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto overflow-x-hidden">
           {LEAGUES.map((league) => {
-            if (league.id === 'cs2' && !user) {
+            if ((league.id as string) === 'cs2' && !user) {
               return null;
             }
 
@@ -475,7 +475,7 @@ export default function AppLayout() {
               );
             }
 
-            const isActive = league.id === 'cs2'
+            const isActive = (league.id as string) === 'cs2'
               ? isCS2
               : (league.id === activeLeagueId || (league.id === 'general' && isGeneralSection && !isCS2));
             return (
@@ -486,7 +486,7 @@ export default function AppLayout() {
                   flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left shrink-0
                   ${league.id === 'mundial'
                     ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
-                    : isActive && league.id === 'cs2'
+                    : isActive && (league.id as string) === 'cs2'
                       ? 'bg-amber-500/15 text-amber-400 shadow-[inset_0_1px_1px_rgba(245,158,11,0.1)]'
                       : isActive
                         ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
@@ -499,7 +499,7 @@ export default function AppLayout() {
                   {league.name}
                 </span>
                 {isActive && (
-                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : league.id === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : (league.id as string) === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                 )}
               </button>
             );

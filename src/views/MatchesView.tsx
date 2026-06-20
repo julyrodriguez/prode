@@ -79,6 +79,21 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);;
   const [redirectingMatchId, setRedirectingMatchId] = useState<number | null>(null);
 
+  // Filtros de "En vivo" y collapsible de competencias
+  const [showOnlyLive, setShowOnlyLive] = useState(false);
+  const [collapsedTournaments, setCollapsedTournaments] = useState<Record<string, boolean>>({});
+
+  const toggleTournament = (tournamentName: string) => {
+    setCollapsedTournaments(prev => ({
+      ...prev,
+      [tournamentName]: !prev[tournamentName]
+    }));
+  };
+
+  useEffect(() => {
+    setCollapsedTournaments({});
+  }, [selectedDate]);
+
   useEffect(() => {
     const fetchMatchesAndPredictions = async (showLoading = false) => {
       if (showLoading) {
@@ -274,10 +289,37 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     setLoading(true); // Set loading synchronously to prevent flashing empty message
   };
 
-  const dailyMatches = allMatches; // El backend ya devuelve filtrado por fecha
+  const liveMatches = allMatches.filter(m => parseMatchStatus(m).isLive);
+  const liveMatchesCount = liveMatches.length;
 
-  const groupedMatches = dailyMatches.reduce((acc, match) => {
-    const tName = match.tournament?.name || match.tournament_name || 'Otros Torneos';
+  const matchesToDisplay = showOnlyLive ? liveMatches : allMatches;
+
+  const groupedMatches = matchesToDisplay.reduce((acc, match) => {
+    let tName = match.tournament?.name || match.tournament_name || 'Otros Torneos';
+    
+    // Agrupar todos los partidos del mundial en una única sección
+    const isWorldCup = match.tournament?.id === 16 ||
+                       tName.toLowerCase().includes('copa mundial') ||
+                       tName.toLowerCase().includes('world cup') ||
+                       (tName.toLowerCase().includes('mundial') && !tName.toLowerCase().includes('clubes'));
+                       
+    if (isWorldCup) {
+      // Extraer el grupo o fase si está presente, por ej. "Copa Mundial de la FIFA, Grupo A" -> "Grupo A"
+      let groupLabel = '';
+      const parts = tName.split(',');
+      if (parts.length > 1) {
+        groupLabel = parts[parts.length - 1].trim();
+      } else {
+        const matchGroup = tName.match(/(Grupo\s+[A-H]|Group\s+[A-H])/i);
+        if (matchGroup) {
+          groupLabel = matchGroup[0];
+        }
+      }
+      
+      (match as any).worldCupGroupLabel = groupLabel;
+      tName = 'Copa Mundial de la FIFA';
+    }
+    
     if (!acc[tName]) acc[tName] = [];
     acc[tName].push(match);
     return acc;
@@ -411,29 +453,101 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
 
       {!error && (
         <div className={`transition-opacity duration-150 flex flex-col gap-8 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+          
+          {/* Selector de Filtro (Todos / En Vivo) */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md shadow-lg">
+            <div className="flex items-center gap-2 bg-black/40 p-1 rounded-2xl border border-white/5 select-none shrink-0">
+              <button
+                onClick={() => setShowOnlyLive(false)}
+                className={`px-5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                  !showOnlyLive
+                    ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-emerald-500/30 text-white shadow-lg shadow-emerald-950/10'
+                    : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+                }`}
+              >
+                <span>🏟️</span> Todos
+                <span className="bg-white/10 text-slate-300 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  {allMatches.length}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setShowOnlyLive(true)}
+                className={`px-5 py-2 rounded-xl text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 relative cursor-pointer ${
+                  showOnlyLive
+                    ? 'bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 text-white shadow-lg shadow-red-950/10'
+                    : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+                }`}
+              >
+                {liveMatchesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                  </span>
+                )}
+                <span>🔴</span> En Vivo
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                  liveMatchesCount > 0 
+                    ? 'bg-red-500/25 text-red-400 border border-red-500/30' 
+                    : 'bg-white/10 text-slate-300'
+                }`}>
+                  {liveMatchesCount}
+                </span>
+              </button>
+            </div>
+            
+            <div className="text-[11px] md:text-xs text-slate-400 font-medium text-center sm:text-right hidden sm:block">
+              {showOnlyLive ? 'Mostrando sólo partidos en juego actualmente' : 'Mostrando todos los partidos de la fecha'}
+            </div>
+          </div>
+
           {loading && Object.keys(groupedMatches).length === 0 ? (
             <MatchSkeleton />
           ) : Object.keys(groupedMatches).length === 0 ? (
             <div className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col justify-center items-center text-center">
-              <div className="text-5xl mb-4 opacity-50">🏟️</div>
-              <span className="text-slate-400 text-lg font-medium">No hay actividad deportiva para la fecha seleccionada.</span>
+              <div className="text-5xl mb-4 opacity-50">{showOnlyLive ? '🔴' : '🏟️'}</div>
+              <span className="text-slate-400 text-lg font-medium">
+                {showOnlyLive 
+                  ? 'No hay partidos en vivo en este momento.' 
+                  : 'No hay actividad deportiva para la fecha seleccionada.'}
+              </span>
             </div>
           ) : (
-            Object.entries(groupedMatches).map(([tournamentName, tMatches]) => (
-              <section key={tournamentName} className="flex flex-col gap-4">
+            Object.entries(groupedMatches).map(([tournamentName, tMatches]) => {
+              const isCollapsed = !!collapsedTournaments[tournamentName];
+              return (
+                <section key={tournamentName} className="flex flex-col gap-4">
 
-                {/* Section Header */}
-                <div className="flex items-center gap-4 px-2">
-                  <h2 className="text-lg font-bold tracking-wide text-slate-100 flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-800 to-indigo-900 border border-white/10 flex items-center justify-center text-[10px]">⚽</span>
-                    {tournamentName}
-                  </h2>
-                  <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent"></div>
-                </div>
+                  {/* Section Header (Collapsible) */}
+                  <div 
+                    onClick={() => toggleTournament(tournamentName)}
+                    className="flex items-center justify-between gap-4 px-3 py-2 rounded-2xl bg-white/[0.01] hover:bg-white/[0.03] border border-white/0 hover:border-white/5 cursor-pointer transition-all duration-200 group/header select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-800 to-indigo-900 border border-white/10 flex items-center justify-center text-[10px] shadow-inner group-hover/header:from-indigo-950 group-hover/header:to-slate-800 transition-all duration-300">
+                        ⚽
+                      </span>
+                      <h2 className="text-sm md:text-base font-bold tracking-wide text-slate-100 group-hover/header:text-emerald-400 transition-colors">
+                        {tournamentName}
+                      </h2>
+                      <span className="text-[10px] md:text-xs bg-white/5 border border-white/5 text-slate-400 px-2 py-0.5 rounded-full font-bold">
+                        {tMatches.length} {tMatches.length === 1 ? 'partido' : 'partidos'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="hidden md:block h-px w-24 bg-gradient-to-r from-white/10 to-transparent"></div>
+                      <span className={`text-slate-400 group-hover/header:text-emerald-400 transition-transform duration-300 text-[10px] transform ${
+                        isCollapsed ? '-rotate-90' : 'rotate-0'
+                      }`}>
+                        {isCollapsed ? '▶' : '▼'}
+                      </span>
+                    </div>
+                  </div>
 
-                {/* Bento Grid para los Partidos - Más compacto */}
-                {/* Lista tipo tabla moderna */}
-                <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+                  {/* Bento Grid para los Partidos - Collapsible */}
+                  {!isCollapsed && (
+                    <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
                   {tMatches.map((match, idx) => {
                     const status = parseMatchStatus(match);
 
@@ -502,9 +616,10 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
 
                         {/* Columna Derecha: Equipos, Score y Prode */}
                         <div className="flex flex-col py-2 px-2 md:px-4 justify-center relative">
-                          {(match.round_name || (showGoldStyle && isPredictionMode)) && (
+                          {(match.round_name || (match as any).worldCupGroupLabel || (showGoldStyle && isPredictionMode)) && (
                             <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80 flex items-center justify-center gap-2">
                               {match.round_name && <span>{match.round_name}</span>}
+                              {(match as any).worldCupGroupLabel && <span>{(match as any).worldCupGroupLabel}</span>}
                               {showGoldStyle && isPredictionMode && (
                                 <span className="bg-amber-500/25 text-amber-400 border border-amber-500/35 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest animate-pulse">
                                   💥 X2 PUNTOS
@@ -635,12 +750,14 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                           <MatchGoalsCollapsible matchId={match.id} hasStarted={status.hasStarted} />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
-            )))}
-        </div>
+            );
+          }))}
+      </div>
       )}
 
       {/* ── CS2 Section ── */}

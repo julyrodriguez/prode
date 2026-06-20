@@ -474,6 +474,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [mounted, setMounted] = useState(false);
+  const [showOnlyLive, setShowOnlyLive] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -810,7 +811,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     setLoading(true); // Set loading synchronously to prevent flashing empty message
   };
 
-  const dailyMatches = allMatches; // El backend ya filtra por fecha ahora
+  const liveMatches = allMatches.filter(m => parseMatchStatus(m).isLive);
+  const liveMatchesCount = liveMatches.length;
+
+  const dailyMatches = showOnlyLive ? liveMatches : allMatches;
 
   const handleSavePredictions = async () => {
     if (!user) return;
@@ -1169,13 +1173,58 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
         <CopaBracket />
       )}
 
+      {/* Selector de Filtro (Todos / En Vivo) */}
+      <div className="flex items-center justify-center gap-3 bg-white/[0.02] border border-white/5 p-1 rounded-full w-fit mx-auto my-3 select-none">
+        <button
+          onClick={() => setShowOnlyLive(false)}
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-1.5 cursor-pointer ${
+            !showOnlyLive
+              ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-emerald-500/30 text-white shadow-lg'
+              : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+          }`}
+        >
+          <span>🏟️</span> Todos
+          <span className="bg-white/10 text-slate-300 text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+            {allMatches.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setShowOnlyLive(true)}
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-1.5 relative cursor-pointer ${
+            showOnlyLive
+              ? 'bg-gradient-to-r from-red-500/20 to-pink-500/25 border border-red-500/30 text-white shadow-lg'
+              : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+          }`}
+        >
+          {liveMatchesCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          )}
+          <span>🔴</span> En Vivo
+          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
+            liveMatchesCount > 0 
+              ? 'bg-red-500/20 text-red-400 border border-red-500/20' 
+              : 'bg-white/10 text-slate-300'
+          }`}>
+            {liveMatchesCount}
+          </span>
+        </button>
+      </div>
+
       <div className={`transition-opacity duration-150 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
         {loading && dailyMatches.length === 0 ? (
           <MatchSkeleton />
         ) : dailyMatches.length === 0 ? (
           <div className="w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col justify-center items-center text-center">
-            <div className="text-5xl mb-4 opacity-50">🏟️</div>
-            <span className="text-slate-400 text-lg font-medium">No hay partidos disponibles para {activeLeague.name} en esta fecha.</span>
+            <div className="text-5xl mb-4 opacity-50">{showOnlyLive ? '🔴' : '🏟️'}</div>
+            <span className="text-slate-400 text-lg font-medium">
+              {showOnlyLive 
+                ? 'No hay partidos en vivo en este momento.' 
+                : `No hay partidos disponibles para ${activeLeague.name} en esta fecha.`}
+            </span>
           </div>
         ) : (
           <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
