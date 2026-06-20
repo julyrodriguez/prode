@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { prefetchMatches } from '../lib/matchCache';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
-import CS2MatchesSection from '../components/CS2MatchesSection';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../components/MatchSkeleton';
@@ -643,8 +642,6 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
         </div>
       )}
 
-      {/* ── CS2 Section ── */}
-      {!isPredictionMode && <CS2MatchesSection />}
 
       {/* Spacer para que el cartel de guardar no tape el último partido */}
       {isPredictionMode && <div className="h-32 md:h-24"></div>}

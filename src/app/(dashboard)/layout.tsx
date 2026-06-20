@@ -158,7 +158,6 @@ function LiteToggleBtn({ compact = false }: { compact?: boolean }) {
 export const LEAGUES = [
   { id: 'mundial', name: 'Mundial', icon: '🌍', tournamentId: 16 },
   { id: 'general', name: 'General', icon: '🌐', tournamentId: null },
-  { id: 'cs2', name: 'CS2 Premier', icon: '🔫', tournamentId: null },
   { id: 'liga-arg', name: 'Liga Argentina', icon: '🇦🇷', tournamentId: 155 },
   { id: 'brasileirao', name: 'Brasileirao', icon: '🇧🇷', tournamentId: 325 },
   { id: 'champions', name: 'Champions League', icon: '⭐', tournamentId: 7 },
@@ -216,9 +215,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
   const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
 
-  const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/') || pathname.startsWith('/cs2/player/');
-  const isCS2 = pathname.startsWith('/cs2');
-  const isGeneralSection = isCS2 ? false : (activeLeagueId === 'general' || !leagueMatch);
+  const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/');
+  const isCS2 = false;
+  const isGeneralSection = activeLeagueId === 'general' || !leagueMatch;
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const argentineIds = ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'];
@@ -252,16 +251,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return true;
   });
 
-  const activeLeague = LEAGUES.find(l => {
-    if (isCS2) return l.id === 'cs2';
-    return l.id === activeLeagueId;
-  }) || LEAGUES.find(l => l.id === 'general') || LEAGUES[0];
+  const activeLeague = LEAGUES.find(l => l.id === activeLeagueId) || LEAGUES.find(l => l.id === 'general') || LEAGUES[0];
 
   const handleLeagueSelect = (leagueId: string) => {
     if (leagueId === 'general') {
       router.push('/general');
-    } else if (leagueId === 'cs2') {
-      router.push('/cs2');
     } else {
       router.push(`/liga/${leagueId}/partidos`);
     }

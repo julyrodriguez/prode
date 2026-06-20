@@ -17,8 +17,6 @@ import LeagueSimulationView from './views/LeagueSimulationView';
 import ProfileView from './views/ProfileView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
-import CS2RankingView from './views/CS2RankingView';
-import CS2ProfileView from './views/CS2ProfileView';
 
 function isProtectedRoute(pathname: string): boolean {
   const path = pathname.toLowerCase();
@@ -39,9 +37,6 @@ function isProtectedRoute(pathname: string): boolean {
     return true;
   }
 
-  if (path === '/cs2' || path.startsWith('/cs2/')) {
-    return true;
-  }
   
   const parts = path.split('/');
   if (parts[1] === 'liga' && parts[2]) {
@@ -89,8 +84,6 @@ export default function App() {
             <Route path="ranking" element={<RankingView />} />
             <Route path="stats" element={<StatsView />} />
             <Route path="perfil" element={<ProfileView />} />
-            <Route path="cs2" element={<CS2RankingView />} />
-            <Route path="cs2/player/:steam64Id" element={<CS2ProfileView />} />
 
             {/* ── Match / Team Detail ── */}
             <Route path="match/:id" element={<MatchDetailView />} />
