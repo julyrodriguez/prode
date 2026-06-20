@@ -340,6 +340,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* League Navigation */}
         <nav className="flex-1 flex flex-col gap-1 px-3 py-4 overflow-y-auto overflow-x-hidden">
           {LEAGUES.map((league) => {
+            if (league.id === 'cs2' && !user) {
+              return null;
+            }
+
             // Saltear ligas agrupadas del flujo principal
             if ([
               'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg',

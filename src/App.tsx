@@ -38,6 +38,10 @@ function isProtectedRoute(pathname: string): boolean {
   if (path === '/perfil' || path.startsWith('/perfil/')) {
     return true;
   }
+
+  if (path === '/cs2' || path.startsWith('/cs2/')) {
+    return true;
+  }
   
   const parts = path.split('/');
   if (parts[1] === 'liga' && parts[2]) {
