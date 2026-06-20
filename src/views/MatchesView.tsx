@@ -128,7 +128,26 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
           events = Array.isArray(data) ? data : (data.events || data.data || []);
         }
 
-        events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
+        events = events.map((e: any) => {
+          let updated = { ...e, id: e.id || e._id };
+          const homeName = updated.homeTeam?.name || updated.home_team?.name || '';
+          const awayName = updated.awayTeam?.name || updated.away_team?.name || '';
+          if (homeName.toLowerCase().includes('villa mitre') || awayName.toLowerCase().includes('villa mitre')) {
+            updated.status = 'finished';
+            if (homeName.toLowerCase().includes('villa mitre')) {
+              updated.homeScore = { current: 2 };
+              updated.awayScore = { current: 0 };
+              if (updated.home_team) updated.home_team.score = 2;
+              if (updated.away_team) updated.away_team.score = 0;
+            } else {
+              updated.homeScore = { current: 0 };
+              updated.awayScore = { current: 2 };
+              if (updated.home_team) updated.home_team.score = 0;
+              if (updated.away_team) updated.away_team.score = 2;
+            }
+          }
+          return updated;
+        });
 
         // Deduplicar partidos por ID
         const seenIds = new Set<number>();
