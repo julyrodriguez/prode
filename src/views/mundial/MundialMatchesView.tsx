@@ -140,27 +140,46 @@ const parseMatchStatus = (match: Match) => {
   const isPastTime = startMs > 0 && startMs < Date.now();
   const isOverTwoHours = startMs > 0 && (Date.now() - startMs) > 120 * 60 * 1000; // 2 horas
 
-  if (match.status === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
-
-  if (typeof match.status === 'object' && match.status !== null) {
-    if (match.status.type === 'notstarted' && match.status.description === 'FRO') {
-      if (isPastTime) {
-        if (isOverTwoHours) {
-          return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
-        }
-        return { isLive: false, hasStarted: true, label: 'En juego (Sin vivo)' };
-      }
-      return { isLive: false, hasStarted: false, label: 'Solo Result. Final' };
-    }
-
-    if (match.status.type === 'inprogress') return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
-    if (match.status.type === 'finished') {
-      const isPenalties = match.status.description === 'AP';
-      return { isLive: false, hasStarted: true, label: 'Finalizado', isPenalties };
-    }
-    if (match.status.type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
+  // 1. Si status es un string
+  if (typeof match.status === 'string') {
+    const statusStr = match.status.toLowerCase();
+    if (statusStr === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
+    if (statusStr === 'inprogress' || statusStr === 'live') return { isLive: true, hasStarted: true, label: 'EN VIVO' };
+    if (statusStr === 'finished' || statusStr === 'ended') return { isLive: false, hasStarted: true, label: 'Finalizado' };
+    if (statusStr === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
+    if (statusStr === 'postponed') return { isLive: false, hasStarted: false, label: 'Postergado' };
   }
 
+  // 2. Si status es un objeto
+  if (typeof match.status === 'object' && match.status !== null) {
+    const type = match.status.type?.toLowerCase();
+    const desc = match.status.description?.toLowerCase();
+
+    if (type === 'notstarted') {
+      if (desc === 'fro') {
+        if (isPastTime) {
+          if (isOverTwoHours) {
+            return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
+          }
+          return { isLive: false, hasStarted: true, label: 'En juego (Sin vivo)' };
+        }
+        return { isLive: false, hasStarted: false, label: 'Solo Result. Final' };
+      }
+      return { isLive: false, hasStarted: false, label: 'Pendiente' };
+    }
+
+    if (type === 'inprogress' || type === 'live') {
+      return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
+    }
+    if (type === 'finished' || type === 'ended') {
+      const isPenalties = desc === 'ap' || desc?.includes('pen');
+      return { isLive: false, hasStarted: true, label: 'Finalizado', isPenalties };
+    }
+    if (type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
+    if (type === 'postponed') return { isLive: false, hasStarted: false, label: 'Postergado' };
+  }
+
+  // 3. Fallback basado en tiempo
   if (isPastTime) {
     if (isOverTwoHours) {
       return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
@@ -178,7 +197,12 @@ const getMatchTime = (match: Match) => {
   if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
   if (statusDesc === 'ap' || statusDesc?.includes('pen')) return 'PENALES';
   const original = typeof match.status === 'object' ? match.status?.description : match.status;
-  return original ? String(original).toUpperCase() : 'EN VIVO';
+  if (!original) return 'EN VIVO';
+  const origStr = String(original).trim();
+  if (['inprogress', 'in_progress', 'live'].includes(origStr.toLowerCase())) {
+    return 'EN VIVO';
+  }
+  return origStr.toUpperCase();
 };
 
 const getScore = (match: Match, team: 'home' | 'away') => {
@@ -597,6 +621,17 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
         }
 
         events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
+
+        // Deduplicar partidos por ID
+        const seenIds = new Set<number>();
+        events = events.filter(e => {
+          if (!e.id) return true;
+          const numId = Number(e.id);
+          if (seenIds.has(numId)) return false;
+          seenIds.add(numId);
+          return true;
+        });
+
         setAllMatches(events);
 
         if (user) {
