@@ -394,16 +394,16 @@ const CSS = `
 /* divider */
 .cs2-divider{display:flex;align-items:center;gap:.75rem}
 .cs2-divider-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(234,88,12,.28),transparent)}
-.cs2-divider-badge{display:flex;align-items:center;gap:.45rem;padding:.28rem .85rem .28rem .45rem;background:rgba(234,88,12,.07);border:1px solid rgba(234,88,12,.2);border-radius:999px;font-size:.68rem;font-weight:800;color:rgba(251,146,60,.82);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.cs2-divider-badge{display:flex;align-items:center;gap:.45rem;padding:.28rem .85rem .28rem .45rem;background:rgba(15,23,42,0.65);border:1px solid rgba(234,88,12,.35);border-radius:999px;font-size:.68rem;font-weight:800;color:#f97316;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 20px rgba(0,0,0,0.3)}
 .cs2-divider-live{display:flex;align-items:center;gap:.3rem;padding:.12rem .5rem;background:rgba(239,68,68,.16);border:1px solid rgba(239,68,68,.32);border-radius:999px;font-size:.6rem;font-weight:900;color:#f87171;margin-left:.2rem}
 
 /* header */
-.cs2-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;padding:1.2rem 1.5rem;background:linear-gradient(135deg,rgba(234,88,12,.09) 0%,rgba(220,38,38,.05) 60%,transparent 100%);border:1px solid rgba(234,88,12,.18);border-radius:1.2rem;position:relative;overflow:hidden}
+.cs2-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;padding:1.2rem 1.5rem;background:rgba(15,23,42,0.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(234,88,12,.28);border-radius:1.2rem;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 1px 1px rgba(255,255,255,.05)}
 .cs2-header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 12px,rgba(234,88,12,.015) 12px,rgba(234,88,12,.015) 24px);pointer-events:none}
 .cs2-header-content{display:flex;align-items:center;gap:1rem}
 .cs2-title-block{display:flex;flex-direction:column}
 .cs2-title{font-size:1.4rem;font-weight:900;background:linear-gradient(90deg,#fb923c,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-.02em;margin:0}
-.cs2-subtitle{font-size:.68rem;color:rgba(148,163,184,.55);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin:.12rem 0 0}
+.cs2-subtitle{font-size:.68rem;color:rgba(203,213,225,.75);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin:.12rem 0 0}
 
 /* date nav */
 .cs2-date-nav{display:flex;align-items:center;gap:.6rem;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.08);border-radius:1.1rem;padding:.4rem .6rem;position:relative;z-index:1}

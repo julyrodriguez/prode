@@ -215,7 +215,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
   const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
 
-  const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/') || pathname.startsWith('/cs2/player/');
+  const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/');
   const isCS2 = false;
   const isGeneralSection = activeLeagueId === 'general' || !leagueMatch;
 
@@ -720,7 +720,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 const rawLeftItems = isGeneralSection
                   ? [
-                      { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' }
+                      { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' },
+                      { id: 'mundial', label: 'Mundial', icon: '🌍', path: '/liga/mundial/partidos' }
                     ]
                   : [
                       { id: 'minijuegos', label: 'Juegos', icon: '🎮' },
