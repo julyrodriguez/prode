@@ -265,6 +265,8 @@ img, svg, canvas, video, iframe {
 [data-theme="light"] .border-orange-500\/30 { border-color: rgba(249, 115, 22, 0.25) !important; }
 
 [data-theme="light"] .text-emerald-400 { color: #059669 !important; }
+[data-theme="light"] .text-emerald-300 { color: #047857 !important; }
+[data-theme="light"] .hover\:text-emerald-300:hover { color: #047857 !important; }
 [data-theme="light"] .bg-emerald-500\/10 { background-color: rgba(16, 185, 129, 0.08) !important; }
 [data-theme="light"] .bg-emerald-500\/15 { background-color: rgba(16, 185, 129, 0.12) !important; }
 [data-theme="light"] .border-emerald-500\/20 { border-color: rgba(16, 185, 129, 0.25) !important; }
@@ -273,9 +275,12 @@ img, svg, canvas, video, iframe {
 [data-theme="light"] .bg-rose-500\/10 { background-color: rgba(244, 63, 94, 0.08) !important; }
 [data-theme="light"] .border-rose-500\/20 { border-color: rgba(244, 63, 94, 0.25) !important; }
 
+[data-theme="light"] .bg-red-500\/10 { background-color: rgba(239, 68, 68, 0.08) !important; }
 [data-theme="light"] .bg-red-500\/20 { background-color: rgba(239, 68, 68, 0.12) !important; }
 [data-theme="light"] .border-red-500\/30 { border-color: rgba(239, 68, 68, 0.25) !important; }
 [data-theme="light"] .text-red-400 { color: #dc2626 !important; }
+[data-theme="light"] .text-red-300 { color: #b91c1c !important; }
+[data-theme="light"] .hover\:text-red-300:hover { color: #b91c1c !important; }
 
 /* --- CS2 Component Overrides --- */
 [data-theme="light"] .cs2-date-nav { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }

@@ -182,6 +182,7 @@ export default function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme } = useTheme();
   const handleLogout = () => signOut(auth);
 
   const [overriddenLeagueId, setOverriddenLeagueId] = useState<LeagueId | null>(null);
@@ -281,7 +282,8 @@ export default function AppLayout() {
       {/* ── MOBILE SIDEBAR OVERLAY ── */}
       {mobileSidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+          className="md:hidden fixed inset-0 backdrop-blur-sm z-40"
+          style={{ backgroundColor: 'var(--bg-overlay)' }}
           onClick={() => setMobileSidebarOpen(false)}
         />
       )}
@@ -529,7 +531,7 @@ export default function AppLayout() {
                 <span className="text-white text-sm font-bold truncate">{user.displayName || user.email?.split('@')[0]}</span>
                 <div className="flex items-center gap-2">
                   <NavLink to="/perfil" className="text-[10px] text-emerald-400 hover:text-emerald-300 text-left transition-colors duration-100" onClick={() => setMobileSidebarOpen(false)}>Editar Perfil</NavLink>
-                  <span className="text-white/20">|</span>
+                  <span className="opacity-30" style={{ color: 'var(--text-muted)' }}>|</span>
                   <button onClick={handleLogout} className="text-[10px] text-red-400 hover:text-red-300 text-left transition-colors duration-100">
                     Cerrar Sesión
                   </button>
@@ -675,7 +677,13 @@ export default function AppLayout() {
 
         {/* ── MOBILE BOTTOM NAV ── */}
         {!isMatchDetail && (
-          <div className="md:hidden fixed bottom-4 left-4 right-4 z-50 bg-[#121212]/65 backdrop-blur-xl border border-white/10 rounded-2xl h-16 flex items-center justify-between px-2 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+          <div
+            className="md:hidden fixed bottom-4 left-4 right-4 z-50 backdrop-blur-xl border rounded-2xl h-16 flex items-center justify-between px-2 shadow-lg"
+            style={{
+              backgroundColor: 'var(--bg-bottom-nav)',
+              borderColor: 'var(--border)'
+            }}
+          >
             {isCS2 ? (
               // CS2 Tab (only one for now, or just dummy to keep layout consistent)
               <button
@@ -765,12 +773,15 @@ export default function AppLayout() {
                           }
                         }}
                         className={`
-                          absolute -top-7 w-16 h-16 rounded-full flex items-center justify-center border-4 border-[#121212] shadow-lg transition-all duration-200 active:scale-90
+                          absolute -top-7 w-16 h-16 rounded-full flex items-center justify-center border-4 shadow-lg transition-all duration-200 active:scale-90
                           ${isPartidosActive
                             ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]'
-                            : 'bg-slate-800 text-slate-300 shadow-md hover:bg-slate-700'
+                            : theme === 'dark'
+                              ? 'bg-slate-800 text-slate-300 shadow-md hover:bg-slate-700'
+                              : 'bg-slate-200 text-slate-700 shadow-sm hover:bg-slate-300'
                           }
                         `}
+                        style={{ borderColor: 'var(--bg-bottom-nav)' }}
                       >
                         <span className="text-3xl">⚽</span>
                       </button>
