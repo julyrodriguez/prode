@@ -39,7 +39,6 @@ export default function MundialTablaView() {
   const [error, setError] = useState<string | null>(null);
   const [standingsData, setStandingsData] = useState<Record<string, any[]>>({});
   const [activeTab, setActiveTab] = useState<string | null>(null);
-  const [selectedGroupTab, setSelectedGroupTab] = useState<string>('all');
 
   // Sub-tabs navigation
   const [activeSubTab, setActiveSubTab] = useState<'grupos' | 'terceros' | 'bracket'>('grupos');
@@ -154,22 +153,7 @@ export default function MundialTablaView() {
     };
   }, []);
 
-  // Handle auto-focus of group tab on mobile layout
-  useEffect(() => {
-    if (availableTabs.length === 0) return;
-    
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSelectedGroupTab(prev => prev === 'all' ? availableTabs[0] : prev);
-      } else {
-        setSelectedGroupTab('all');
-      }
-    };
-    
-    handleResize(); // Run initially
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [standingsData]);
+
 
   const getBackgroundColorForPromotion = (promoDesc: string | null) => {
     if (!promoDesc) return '';
@@ -509,9 +493,7 @@ export default function MundialTablaView() {
   }
 
   const isGroupLeague = activeLeague.id === 'mundial' || activeLeague.id === 'libertadores';
-  const tabsToShow = isGroupLeague
-    ? (selectedGroupTab === 'all' ? availableTabs : [selectedGroupTab])
-    : (activeTab ? [activeTab] : []);
+  const tabsToShow = isGroupLeague ? availableTabs : (activeTab ? [activeTab] : []);
   const dataForLegend = (isGroupLeague ? availableTabs : tabsToShow).flatMap(tab => standingsData[tab] || []);
 
   return (
@@ -554,37 +536,8 @@ export default function MundialTablaView() {
 
       {activeSubTab === 'grupos' && (
         <>
-          {/* Group Selector Tabs for Mundial/Group Tournaments */}
-          {isGroupLeague && availableTabs.length > 1 && (
-            <div className="flex items-center gap-1 p-1 bg-slate-900/40 border border-white/5 rounded-xl overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-inner">
-              <button
-                onClick={() => setSelectedGroupTab('all')}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border border-transparent cursor-pointer whitespace-nowrap ${
-                  selectedGroupTab === 'all'
-                    ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                Ver Todos
-              </button>
-              {availableTabs.map(tabKey => (
-                <button
-                  key={tabKey}
-                  onClick={() => setSelectedGroupTab(tabKey)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border border-transparent cursor-pointer whitespace-nowrap ${
-                    selectedGroupTab === tabKey
-                      ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {formatTabName(tabKey)}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Table Containers */}
-          <div className={`flex-1 ${isGroupLeague && selectedGroupTab === 'all' ? 'grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6' : 'flex flex-col gap-6 md:gap-8'}`}>
+          <div className={`flex-1 ${isGroupLeague ? 'grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6' : 'flex flex-col gap-6 md:gap-8'}`}>
             {tabsToShow.map((tab) => {
               const currentData = standingsData[tab] || [];
               const isPromedios = tab === 'promedios';
