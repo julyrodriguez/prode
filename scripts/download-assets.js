@@ -115,6 +115,11 @@ const NAME_OVERRIDES = {
   'instituto de cordoba': 'instituto',
   'gimnasia de la plata': 'gimnasia lp',
   'gimnasia y esgrima la plata': 'gimnasia lp',
+  'gimnasia': 'gimnasia lp',
+  'gimnasia de jujuy': 'gimnasia j',
+  'gimnasia j': 'gimnasia j',
+  'gimnasia y tiro': 'gimnasia y tiro',
+  'gimnasia y tiro s': 'gimnasia y tiro',
   'san martin de tucuman': 'san martin t',
   'san martin de san juan': 'san martin sj',
   'atletico de rafaela': 'atletico rafaela',
@@ -205,6 +210,20 @@ function isMatch(name1, name2, shortName2) {
   
   if (norm1 === norm2 || norm1 === normShort2) return true;
   
+  // Lista de nombres genéricos que suelen causar colisiones en búsquedas parciales
+  const genericNames = [
+    'gimnasia', 'arsenal', 'sarmiento', 'martin', 'union', 'estudiantes', 
+    'defensores', 'juventud', 'talleres', 'colon', 'racing', 'huracan', 
+    'olimpo', 'sportivo', 'argentino', 'deportivo', 'atletico', 'villa', 
+    'independiente', 'alvarado', 'brown', 'mitre', 'central', 'everton'
+  ];
+  
+  const isGeneric = genericNames.some(g => norm1.includes(g) || norm2.includes(g) || normShort2.includes(g));
+  if (isGeneric) {
+    // Si contiene un nombre genérico, requerimos coincidencia exacta
+    return false;
+  }
+  
   if (norm1.length > 2 && norm2.length > 2) {
     if (norm1.includes(norm2) || norm2.includes(norm1)) return true;
   }
@@ -257,13 +276,23 @@ async function main() {
   const matches = await matchesRes.json();
 
   const tournamentIds = new Set(LEAGUES.map(l => l.tournamentId));
-  const projectTeamsMap = new Map(); // id -> name
+  const projectTeamsMap = new Map(); // id -> { name, tournamentIds: Set }
 
   for (const m of matches) {
     const tId = m.tournament_id;
     if (tournamentIds.has(tId)) {
-      if (m.home_team) projectTeamsMap.set(m.home_team.id, m.home_team.name);
-      if (m.away_team) projectTeamsMap.set(m.away_team.id, m.away_team.name);
+      if (m.home_team) {
+        if (!projectTeamsMap.has(m.home_team.id)) {
+          projectTeamsMap.set(m.home_team.id, { name: m.home_team.name, tournamentIds: new Set() });
+        }
+        projectTeamsMap.get(m.home_team.id).tournamentIds.add(tId);
+      }
+      if (m.away_team) {
+        if (!projectTeamsMap.has(m.away_team.id)) {
+          projectTeamsMap.set(m.away_team.id, { name: m.away_team.name, tournamentIds: new Set() });
+        }
+        projectTeamsMap.get(m.away_team.id).tournamentIds.add(tId);
+      }
     }
   }
 
@@ -279,7 +308,10 @@ async function main() {
         if (Array.isArray(value)) {
           for (const row of value) {
             if (row.equipoId) {
-              projectTeamsMap.set(row.equipoId, row.nombre);
+              if (!projectTeamsMap.has(row.equipoId)) {
+                projectTeamsMap.set(row.equipoId, { name: row.nombre, tournamentIds: new Set() });
+              }
+              projectTeamsMap.get(row.equipoId).tournamentIds.add(league.tournamentId);
             }
           }
         }
@@ -289,12 +321,12 @@ async function main() {
     }
   }
 
-  const projectTeams = Array.from(projectTeamsMap.entries()).map(([id, name]) => ({ id, name }));
+  const projectTeams = Array.from(projectTeamsMap.entries()).map(([id, data]) => ({ id, name: data.name, tournamentIds: data.tournamentIds }));
   console.log(`Identified ${projectTeams.length} unique project teams.`);
 
   // Load Promiedos competitors to build global pool
   console.log('\nFetching Promiedos league pages to extract global competitor pool...');
-  const globalPromiedosTeams = new Map(); // id -> team object
+  const globalPromiedosTeams = new Map(); // id -> team object (with tournamentIds)
   for (const league of LEAGUES) {
     console.log(`Fetching Promiedos: ${league.name}...`);
     try {
@@ -309,7 +341,10 @@ async function main() {
         if (!obj || typeof obj !== 'object') return;
         if (obj.id && obj.name && obj.url_name) {
           if (obj.id !== league.id) {
-            globalPromiedosTeams.set(obj.id, obj);
+            if (!globalPromiedosTeams.has(obj.id)) {
+              globalPromiedosTeams.set(obj.id, { ...obj, tournamentIds: new Set() });
+            }
+            globalPromiedosTeams.get(obj.id).tournamentIds.add(league.tournamentId);
           }
         }
         for (const key of Object.keys(obj)) {
@@ -347,10 +382,11 @@ async function main() {
       const infoPath = path.join(teamsDir, `${teamId}.json`);
       const matchesPath = path.join(teamsDir, `${teamId}-matches.json`);
 
-      // Match with Promiedos
+      // Match with Promiedos (restrict to matching tournament context)
       let pTeam = null;
       for (const pt of promiedosList) {
-        if (isMatch(teamName, pt.name, pt.short_name)) {
+        const hasCommonTournament = Array.from(team.tournamentIds).some(tId => pt.tournamentIds.has(tId));
+        if (hasCommonTournament && isMatch(teamName, pt.name, pt.short_name)) {
           pTeam = pt;
           break;
         }
