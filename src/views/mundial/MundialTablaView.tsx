@@ -62,6 +62,54 @@ export default function MundialTablaView() {
       .replace(/[^a-z0-9 ]/g, ""); // Remove non-alphanumeric except spaces
   };
 
+  // Translation map from Spanish normalized country name to English normalized country name
+  const spanishToEnglishMap: Record<string, string> = {
+    'alemania': 'germany',
+    'estados unidos': 'usa',
+    'ee uu': 'usa',
+    'eeuu': 'usa',
+    'suecia': 'sweden',
+    'suiza': 'switzerland',
+    'francia': 'france',
+    'marruecos': 'morocco',
+    'holanda': 'netherlands',
+    'paises bajos': 'netherlands',
+    'espana': 'spain',
+    'corea del sur': 'south korea',
+    'rep checa': 'czechia',
+    'republica checa': 'czechia',
+    'sudafrica': 'south africa',
+    'bosnia': 'bosnia & herzegovina',
+    'bosnia y herzegovina': 'bosnia & herzegovina',
+    'escocia': 'scotland',
+    'haiti': 'haiti',
+    'turquia': 'türkiye',
+    'costa de marfil': "cote d'ivoire",
+    'curazao': 'curacao',
+    'japon': 'japan',
+    'tunez': 'tunisia',
+    'iran': 'iran',
+    'belgica': 'belgium',
+    'nueva zelanda': 'new zealand',
+    'egipto': 'egypt',
+    'arabia saudita': 'saudi arabia',
+    'noruega': 'norway',
+    'irak': 'iraq',
+    'jordania': 'jordan',
+    'argelia': 'algeria',
+    'congo rd': 'dr congo',
+    'congo rd.': 'dr congo',
+    'r.d. congo': 'dr congo',
+    'rd congo': 'dr congo',
+    'uzbekistan': 'uzbekistan',
+    'inglaterra': 'england',
+    'panama': 'panama',
+    'croacia': 'croatia',
+    'mexico': 'mexico',
+    'brasil': 'brazil',
+    'canada': 'canada'
+  };
+
   // Build a lookup map of normalized team name -> local equipoId
   const teamNameToIdMap: Record<string, number> = {};
   Object.values(standingsData).forEach((groupRows: any) => {
@@ -74,6 +122,13 @@ export default function MundialTablaView() {
       });
     }
   });
+
+  const getTeamIdByName = (name: string): number | null => {
+    if (!name) return null;
+    const norm = normalizeTeamName(name);
+    const englishName = spanishToEnglishMap[norm] || norm;
+    return teamNameToIdMap[englishName] || null;
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -171,8 +226,7 @@ export default function MundialTablaView() {
   const mapPromiedosRow = (row: any) => {
     const getVal = (key: string) => row.values?.find((v: any) => v.key === key)?.value;
     const name = row.entity?.object?.name || '?';
-    const norm = normalizeTeamName(name);
-    const localId = teamNameToIdMap[norm] || null;
+    const localId = getTeamIdByName(name);
     
     const points = parseInt(getVal('Points') || '0', 10);
     const gp = parseInt(getVal('GamePlayed') || '0', 10);
@@ -392,8 +446,7 @@ export default function MundialTablaView() {
                         <div className="flex flex-col gap-1 md:gap-1.5">
                           {match.participants?.map((p: any, pIdx: number) => {
                             const pName = p.nombre || p.name;
-                            const normName = normalizeTeamName(pName);
-                            const localId = teamNameToIdMap[normName] || null;
+                            const localId = getTeamIdByName(pName);
                             const hasId = localId !== null;
 
                             const isWinner = match.winner === pIdx || (hasId && match.winner === localId);
@@ -526,8 +579,7 @@ export default function MundialTablaView() {
                   </thead>
                   <tbody className="divide-y divide-white/[0.04]">
                     {rows.map((row: any, idx: number) => {
-                      const normTeam = normalizeTeamName(row.teamName);
-                      const localId = teamNameToIdMap[normTeam] || null;
+                      const localId = getTeamIdByName(row.teamName);
 
                       return (
                         <tr 
