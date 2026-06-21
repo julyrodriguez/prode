@@ -60,6 +60,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 1000, height: 550 });
+  const [isGroupedBy5, setIsGroupedBy5] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') return;
@@ -86,6 +87,12 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
     );
   }
 
+  // Process history to map original indexes and group by 5 if active
+  const stepsWithOriginalIndex = history.map((step, idx) => ({ ...step, originalIdx: idx }));
+  const displayedHistory = isGroupedBy5
+    ? stepsWithOriginalIndex.filter((_, idx) => idx === 0 || idx % 5 === 0 || idx === stepsWithOriginalIndex.length - 1)
+    : stepsWithOriginalIndex;
+
   // Chart layout dimensions
   const width = dimensions.width;
   const height = dimensions.height;
@@ -96,7 +103,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
 
   const chartWidth = width - paddingLeft - paddingRight;
   const chartHeight = height - paddingTop - paddingBottom;
-  const totalSteps = history.length;
+  const totalSteps = displayedHistory.length;
   const totalUsers = users.length;
 
   // X coordinate mapper
@@ -177,8 +184,8 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   // Helper to calculate position changes
   const getPosChange = (userId: string, currentStepIdx: number) => {
     if (currentStepIdx === 0) return 0;
-    const prevStep = history[currentStepIdx - 1];
-    const curStep = history[currentStepIdx];
+    const prevStep = displayedHistory[currentStepIdx - 1];
+    const curStep = displayedHistory[currentStepIdx];
     const prevPos = prevStep.positionsMap[userId];
     const curPos = curStep.positionsMap[userId];
     if (prevPos === undefined || curPos === undefined) return 0;
@@ -187,7 +194,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
 
   // Get active step details
   const activeIdx = hoveredStepIndex !== null ? hoveredStepIndex : totalSteps - 1;
-  const activeStep = history[activeIdx];
+  const activeStep = displayedHistory[activeIdx];
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -238,6 +245,34 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
           </button>
         )}
       </div>
+
+      {/* ── Grouping Toggle (only for history > 5) ── */}
+      {history.length > 5 && (
+        <div className="flex justify-center -mb-2">
+          <div className="flex bg-slate-950/95 backdrop-blur-md border border-slate-800 p-1 rounded-2xl shadow-lg gap-1">
+            <button
+              onClick={() => setIsGroupedBy5(false)}
+              className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider transition-all cursor-pointer ${
+                !isGroupedBy5
+                  ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              TODAS LAS FECHAS
+            </button>
+            <button
+              onClick={() => setIsGroupedBy5(true)}
+              className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider transition-all cursor-pointer ${
+                isGroupedBy5
+                  ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              CADA 5 FECHAS
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Chart Container ── */}
       <div className="relative w-full bg-slate-950/90 border border-slate-800 rounded-[2.5rem] p-4 md:p-6 overflow-hidden shadow-2xl">
@@ -293,12 +328,12 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             })}
 
             {/* X Axis Labels (Matches indicators) */}
-            {history.map((step, idx) => {
+            {displayedHistory.map((step, idx) => {
               const xVal = getX(idx);
-              const showLabel = totalSteps < 15 || idx % Math.ceil(totalSteps / 10) === 0 || idx === totalSteps - 1 || idx === 0;
+              const showLabel = isGroupedBy5 || totalSteps < 15 || idx % Math.ceil(totalSteps / 10) === 0 || idx === totalSteps - 1 || idx === 0;
 
               return (
-                <g key={`x-axis-${idx}`}>
+                <g key={`x-axis-${step.originalIdx}`}>
                   {/* Vertical dotted grid line */}
                   <line
                     x1={xVal}
@@ -316,7 +351,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                       textAnchor="middle"
                       className="text-[11px] font-black fill-slate-300 uppercase tracking-wider"
                     >
-                      {idx === 0 ? 'Inicio' : `P${idx}`}
+                      {step.originalIdx === 0 ? 'Inicio' : `P${step.originalIdx}`}
                     </text>
                   )}
                 </g>
@@ -347,7 +382,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
               const isAnyHighlighted = hoveredUserId !== null || selectedUserId !== null;
 
               // Generate path points
-              const points = history.map((step, idx) => {
+              const points = displayedHistory.map((step, idx) => {
                 const pos = step.positionsMap[u.userId] || totalUsers;
                 return { x: getX(idx), y: getY(pos) };
               });
@@ -423,7 +458,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             <span className="text-2xl">🗓️</span>
             <div className="flex flex-col">
               <h4 className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                {activeIdx === 0 ? 'Estado Inicial' : `Fecha ${activeIdx} de ${totalSteps - 1}`}
+                {activeStep.originalIdx === 0 ? 'Estado Inicial' : `Fecha ${activeStep.originalIdx} de ${history.length - 1}`}
               </h4>
               <span className="text-base font-black text-white">
                 {activeStep.match ? (
