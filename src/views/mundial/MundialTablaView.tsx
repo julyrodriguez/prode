@@ -51,6 +51,30 @@ export default function MundialTablaView() {
 
   const availableTabs = Object.keys(standingsData);
 
+  // Normalize team names to match promiedos names with local API database names
+  const normalizeTeamName = (name: string): string => {
+    if (!name) return '';
+    return name
+      .toLowerCase()
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove accents
+      .replace(/[^a-z0-9 ]/g, ""); // Remove non-alphanumeric except spaces
+  };
+
+  // Build a lookup map of normalized team name -> local equipoId
+  const teamNameToIdMap: Record<string, number> = {};
+  Object.values(standingsData).forEach((groupRows: any) => {
+    if (Array.isArray(groupRows)) {
+      groupRows.forEach((row: any) => {
+        if (row.nombre && row.equipoId) {
+          const norm = normalizeTeamName(row.nombre);
+          teamNameToIdMap[norm] = row.equipoId;
+        }
+      });
+    }
+  });
+
   useEffect(() => {
     let isMounted = true;
     const fetchStandings = async () => {
@@ -150,16 +174,19 @@ export default function MundialTablaView() {
   const getBackgroundColorForPromotion = (promoDesc: string | null) => {
     if (!promoDesc) return '';
     const dl = promoDesc.toLowerCase();
-    if (dl.includes('libertadores') || dl.includes('champions')) return 'border-l-4 border-l-cyan-400';
-    if (dl.includes('sudamericana') || dl.includes('europa')) return 'border-l-4 border-l-amber-400';
-    if (dl.includes('playoff')) return 'border-l-4 border-l-indigo-400';
-    if (dl.includes('relegation') || dl.includes('descenso')) return 'border-l-4 border-l-red-500';
-    if (dl.includes('siguiente ronda')) return 'border-l-4 border-l-fuchsia-500';
-    return 'border-l-4 border-l-white/20'; // Default fallback
+    if (dl.includes('libertadores') || dl.includes('champions')) return 'border-l-[3px] border-l-cyan-400';
+    if (dl.includes('sudamericana') || dl.includes('europa')) return 'border-l-[3px] border-l-amber-400';
+    if (dl.includes('playoff')) return 'border-l-[3px] border-l-indigo-400';
+    if (dl.includes('relegation') || dl.includes('descenso')) return 'border-l-[3px] border-l-red-500';
+    if (dl.includes('siguiente ronda')) return 'border-l-[3px] border-l-fuchsia-500';
+    return 'border-l-[3px] border-l-white/20'; // Default fallback
   };
 
   const mapPromiedosRow = (row: any) => {
     const getVal = (key: string) => row.values?.find((v: any) => v.key === key)?.value;
+    const name = row.entity?.object?.name || '?';
+    const norm = normalizeTeamName(name);
+    const localId = teamNameToIdMap[norm] || null;
     
     const points = parseInt(getVal('Points') || '0', 10);
     const gp = parseInt(getVal('GamePlayed') || '0', 10);
@@ -173,8 +200,8 @@ export default function MundialTablaView() {
     
     return {
       posicion: row.num,
-      nombre: row.entity?.object?.name || '?',
-      equipoId: row.entity?.object?.id,
+      nombre: name,
+      equipoId: localId, // mapped correctly to local database ID
       puntos: points,
       partidosJugados: gp,
       ganados: gw,
@@ -188,13 +215,13 @@ export default function MundialTablaView() {
   };
 
   const Header = () => (
-    <div className="relative bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-3xl p-5 sm:p-6 overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.5)] mb-2">
+    <div className="relative bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-6 overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.5)] mb-1 md:mb-2">
       <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none translate-x-1/2 translate-y-1/2" />
-      <h1 className="relative z-10 text-2xl sm:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-250 to-emerald-400 tracking-tight drop-shadow-md">
+      <h1 className="relative z-10 text-xl md:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-250 to-emerald-400 tracking-tight drop-shadow-md">
         📊 Tabla de Posiciones
       </h1>
-      <p className="text-slate-400 text-xs font-semibold mt-1 relative z-10">
+      <p className="text-slate-400 text-[10px] md:text-xs font-semibold mt-0.5 md:mt-1 relative z-10">
         Estadísticas oficiales del Mundial de la FIFA
       </p>
     </div>
@@ -203,17 +230,17 @@ export default function MundialTablaView() {
   const renderThirdPlaceTable = () => {
     if (loadingBracket) {
       return (
-        <div className="flex-1 min-h-[300px] flex flex-col justify-center items-center bg-white/[0.02] border border-white/5 rounded-[2rem] gap-4">
-          <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
-          <span className="text-slate-400 font-medium">Cargando tabla de mejores terceros...</span>
+        <div className="flex-1 min-h-[200px] flex flex-col justify-center items-center bg-white/[0.01] border border-white/5 rounded-3xl gap-3">
+          <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
+          <span className="text-slate-400 text-xs font-medium">Cargando tabla de terceros...</span>
         </div>
       );
     }
 
     if (bracketError || !thirdPlaceTable) {
       return (
-        <div className="w-full bg-red-500/10 border border-red-500/30 rounded-[2rem] p-8 flex justify-center items-center mt-4">
-          <span className="text-red-400 font-bold text-lg">{bracketError || 'No se pudieron cargar los datos.'}</span>
+        <div className="w-full bg-red-500/10 border border-red-500/20 rounded-2xl p-6 flex justify-center items-center mt-2">
+          <span className="text-red-400 font-bold text-sm">{bracketError || 'No se pudieron cargar los datos.'}</span>
         </div>
       );
     }
@@ -223,30 +250,30 @@ export default function MundialTablaView() {
     return (
       <div className="flex flex-col gap-3 animate-fade-in">
         <div className="flex items-center pl-2">
-          <div className="w-1.5 h-6 bg-fuchsia-500 rounded-full mr-3 shadow-[0_0_10px_rgba(240,34,226,0.4)]" />
-          <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-400 to-pink-400">
+          <div className="w-1 h-4 bg-fuchsia-500 rounded-full mr-2 shadow-[0_0_8px_rgba(240,34,226,0.4)]" />
+          <h3 className="text-sm md:text-base font-extrabold uppercase tracking-wide text-slate-200">
             Tabla de Terceros Puestos
           </h3>
         </div>
         
-        <div className="overflow-hidden bg-[#0b1015]/60 rounded-[2rem] border border-white/5 relative shadow-2xl backdrop-blur-md">
-          <div className="w-full h-full overflow-auto custom-scrollbar max-h-[800px]">
-            <table className="w-full text-left border-collapse w-full md:min-w-[480px] text-sm">
-              <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-300 sticky top-0 z-10 text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
+        <div className="overflow-hidden bg-[#0b1015]/60 rounded-2xl border border-white/5 relative shadow-xl backdrop-blur-md">
+          <div className="w-full h-full overflow-auto custom-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[340px] text-[11px] md:text-sm">
+              <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-350 sticky top-0 z-10 text-[10px] md:text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
                 <tr>
-                  <th className="py-3.5 px-3 w-10 text-center">#</th>
-                  <th className="py-3.5 px-2 text-left">Equipo</th>
-                  <th className="py-3.5 px-2 text-center text-amber-400">Pts</th>
-                  <th className="py-3.5 px-2 text-center">PJ</th>
-                  <th className="py-3.5 px-2 text-center">G</th>
-                  <th className="py-3.5 px-2 text-center">E</th>
-                  <th className="py-3.5 px-2 text-center">P</th>
-                  <th className="py-3.5 px-2 text-center opacity-70 hidden sm:table-cell">GF</th>
-                  <th className="py-3.5 px-2 text-center opacity-70 hidden sm:table-cell">GC</th>
-                  <th className="py-3.5 px-2 text-center">DIF</th>
+                  <th className="py-2.5 md:py-3.5 px-2 w-7 md:w-10 text-center">#</th>
+                  <th className="py-2.5 md:py-3.5 px-1.5 text-left">Equipo</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center text-amber-400">Pts</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center">PJ</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center">G</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center">E</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center">P</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center opacity-70 hidden sm:table-cell">GF</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center opacity-70 hidden sm:table-cell">GC</th>
+                  <th className="py-2.5 md:py-3.5 px-1 text-center">DIF</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.05]">
+              <tbody className="divide-y divide-white/[0.04]">
                 {rows.map((row: any, idx: number) => {
                   const borderClass = getBackgroundColorForPromotion(row.promocion);
                   const isQualifying = row.promocion === 'Siguiente Ronda';
@@ -254,40 +281,40 @@ export default function MundialTablaView() {
                     <tr
                       key={row.equipoId || idx}
                       onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
-                      className="hover:bg-amber-500/[0.04] transition-colors group cursor-pointer"
+                      className="hover:bg-amber-500/[0.03] transition-colors group cursor-pointer"
                     >
-                      <td className={`py-2.5 px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
+                      <td className={`py-1.5 md:py-2.5 px-2 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
                         {idx + 1}
                       </td>
-                      <td className="py-2.5 px-2">
+                      <td className="py-1.5 md:py-2.5 px-1.5">
                         <TeamHoverCard teamId={row.equipoId} teamName={row.nombre} className="w-full flex items-center">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 p-0.5 flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5.5 h-5.5 md:w-7 md:h-7 p-0.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 group-hover:border-white/10 transition-colors">
                               <TeamLogo
                                 logoUrl={row.equipoId ? `/escudos/${row.equipoId}.png` : null}
                                 teamName={row.nombre}
                                 className="w-full h-full"
                               />
                             </div>
-                            <span className="font-bold text-slate-100 group-hover:text-white truncate max-w-[120px] xs:max-w-[140px] sm:max-w-xs transition-colors text-xs sm:text-sm">
+                            <span className="font-bold text-slate-200 group-hover:text-white truncate max-w-[90px] xs:max-w-[125px] sm:max-w-xs transition-colors">
                               {row.nombre}
                             </span>
                             {isQualifying && (
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 rounded-md shrink-0">
-                                Clasificado
+                              <span className="inline-flex items-center px-1 py-0.5 text-[8px] font-extrabold uppercase tracking-widest bg-fuchsia-500/10 text-fuchsia-400 border border-fuchsia-500/20 rounded-md shrink-0">
+                                OK
                               </span>
                             )}
                           </div>
                         </TeamHoverCard>
                       </td>
-                      <td className="py-2.5 px-2 text-center font-black text-amber-400 bg-amber-500/5">{row.puntos ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center text-slate-450 font-medium">{row.partidosJugados ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center text-slate-350 font-medium">{row.ganados ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center text-slate-450">{row.empatados ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center text-slate-455">{row.perdidos ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.golesAFavor ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.golesEnContra ?? '-'}</td>
-                      <td className="py-2.5 px-2 text-center font-bold text-slate-350">{row.diferenciaGoles ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center font-black text-amber-400 bg-amber-500/5">{row.puntos ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center text-slate-450 font-medium">{row.partidosJugados ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center text-slate-350 font-medium">{row.ganados ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center text-slate-450">{row.empatados ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center text-slate-455">{row.perdidos ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center text-slate-550 hidden sm:table-cell">{row.golesAFavor ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center text-slate-550 hidden sm:table-cell">{row.golesEnContra ?? '-'}</td>
+                      <td className="py-1.5 md:py-2.5 px-1 text-center font-bold text-slate-350">{row.diferenciaGoles ?? '-'}</td>
                     </tr>
                   );
                 })}
@@ -296,8 +323,8 @@ export default function MundialTablaView() {
           </div>
         </div>
         
-        <div className="mt-2 flex items-center gap-2 px-4 text-[10px] sm:text-[11px] font-black tracking-wider text-slate-400">
-          <div className="w-2.5 h-2.5 bg-fuchsia-500 rounded-sm shadow-[0_0_8px_rgba(240,34,226,0.5)]"></div>
+        <div className="mt-1 flex items-center gap-1.5 px-3 text-[9px] md:text-[10px] font-black tracking-wider text-slate-400">
+          <div className="w-2 h-2 bg-fuchsia-500 rounded-sm shadow-[0_0_6px_rgba(240,34,226,0.5)]"></div>
           Los mejores 8 terceros puestos clasifican a los 16avos de final.
         </div>
       </div>
@@ -307,17 +334,17 @@ export default function MundialTablaView() {
   const renderBracket = () => {
     if (loadingBracket) {
       return (
-        <div className="flex-1 min-h-[300px] flex flex-col justify-center items-center bg-white/[0.02] border border-white/5 rounded-[2rem] gap-4">
-          <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
-          <span className="text-slate-400 font-medium">Cargando cuadro del mundial...</span>
+        <div className="flex-1 min-h-[200px] flex flex-col justify-center items-center bg-white/[0.01] border border-white/5 rounded-3xl gap-3">
+          <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
+          <span className="text-slate-400 text-xs font-medium">Cargando cuadro del mundial...</span>
         </div>
       );
     }
 
     if (bracketError || !bracketData || !bracketData.stages) {
       return (
-        <div className="w-full bg-red-500/10 border border-red-500/30 rounded-[2rem] p-8 flex justify-center items-center mt-4">
-          <span className="text-red-400 font-bold text-lg">{bracketError || 'No se pudieron cargar los datos del cuadro.'}</span>
+        <div className="w-full bg-red-500/10 border border-red-500/30 rounded-2xl p-6 flex justify-center items-center mt-2">
+          <span className="text-red-400 font-bold text-sm">{bracketError || 'No se pudieron cargar los datos del cuadro.'}</span>
         </div>
       );
     }
@@ -325,17 +352,17 @@ export default function MundialTablaView() {
     const stages = bracketData.stages;
 
     return (
-      <div className="flex flex-col gap-4 animate-fade-in w-full">
+      <div className="flex flex-col gap-3 animate-fade-in w-full">
         {/* Mobile Stage Selector */}
-        <div className="flex md:hidden items-center gap-1.5 p-1.5 bg-slate-900/40 border border-white/5 rounded-2xl overflow-x-auto no-scrollbar shadow-inner mb-2">
+        <div className="flex md:hidden items-center gap-1 p-1 bg-slate-900/40 border border-white/5 rounded-xl overflow-x-auto no-scrollbar shadow-inner">
           {stages.map((stage: any, idx: number) => (
             <button
               key={idx}
               onClick={() => setMobileStageIndex(idx)}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider whitespace-nowrap transition-all duration-300 border border-transparent cursor-pointer ${
+              className={`flex-1 px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all duration-200 border border-transparent cursor-pointer ${
                 mobileStageIndex === idx
-                  ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.15)]'
+                  : 'text-slate-455 hover:text-slate-200'
               }`}
             >
               {stage.name.replace(' de final', '').replace(' de Final', '')}
@@ -344,31 +371,32 @@ export default function MundialTablaView() {
         </div>
 
         {/* Bracket Scroll Container */}
-        <div className="w-full overflow-x-auto pb-6 pt-2 select-none no-scrollbar scroll-smooth">
-          <div className="flex gap-6 items-stretch min-w-max px-2">
+        <div className="w-full overflow-x-auto pb-4 pt-1 select-none no-scrollbar scroll-smooth">
+          <div className="flex gap-4 md:gap-6 items-stretch min-w-max px-1">
             {stages.map((stage: any, stageIdx: number) => {
               const isMobileVisible = mobileStageIndex === stageIdx;
               
               return (
                 <div 
                   key={stageIdx} 
-                  className={`${isMobileVisible ? 'flex' : 'hidden'} md:flex flex-col w-72 shrink-0`}
+                  className={`${isMobileVisible ? 'flex' : 'hidden'} md:flex flex-col w-[240px] xs:w-[260px] md:w-72 shrink-0`}
                 >
-                  <div className="flex items-center pl-2 mb-3">
-                    <div className="w-1 h-4 bg-amber-500 rounded-full mr-2 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
-                    <h4 className="text-sm font-black uppercase text-slate-350 tracking-wider">
+                  <div className="flex items-center pl-2 mb-2">
+                    <div className="w-1 h-3 bg-amber-500 rounded-full mr-1.5 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+                    <h4 className="text-[11px] md:text-xs font-black uppercase text-slate-350 tracking-wider">
                       {stage.name}
                     </h4>
                   </div>
                   
-                  <div className="flex flex-col justify-around flex-grow min-h-[850px] relative gap-4 p-3 bg-slate-900/10 border border-white/[0.03] rounded-[2rem] shadow-inner">
+                  {/* min-h-0 on mobile keeps semifinal/final compact, while md:min-h-[850px] spaces stages vertically for horizontal alignment */}
+                  <div className="flex flex-col justify-around flex-grow min-h-0 md:min-h-[850px] relative gap-2.5 md:gap-4 p-2.5 md:p-3 bg-slate-900/10 border border-white/[0.02] rounded-2xl md:rounded-[2rem] shadow-inner">
                     {stage.groups?.map((match: any, idx: number) => (
                       <div 
                         key={idx}
-                        className="bg-[#0b1015]/80 border border-white/5 hover:border-amber-500/20 transition-all duration-300 rounded-2xl p-3.5 flex flex-col gap-2.5 shadow-lg w-full relative group"
+                        className="bg-[#0b1015]/85 border border-white/5 hover:border-amber-500/20 transition-all duration-300 rounded-xl md:rounded-2xl p-2.5 md:p-3.5 flex flex-col gap-2 shadow-md w-full relative group"
                       >
                         {match.games && match.games[0]?.start_time && (
-                          <div className="text-[9px] font-black text-slate-500 tracking-wider uppercase flex justify-between items-center px-0.5 border-b border-white/5 pb-1.5">
+                          <div className="text-[8px] md:text-[9px] font-black text-slate-500 tracking-wider uppercase flex justify-between items-center px-0.5 border-b border-white/5 pb-1">
                             <span>
                               {stageIdx === 4 
                                 ? (idx === 0 ? '🏆 Gran Final' : '🥉 Tercer Puesto') 
@@ -379,42 +407,46 @@ export default function MundialTablaView() {
                           </div>
                         )}
 
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1 md:gap-1.5">
                           {match.participants?.map((p: any, pIdx: number) => {
-                            const isWinner = match.winner === pIdx || (p.id && p.id !== -1 && match.winner === p.id);
+                            const pName = p.nombre || p.name;
+                            const normName = normalizeTeamName(pName);
+                            const localId = teamNameToIdMap[normName] || null;
+                            const hasId = localId !== null;
+
+                            const isWinner = match.winner === pIdx || (hasId && match.winner === localId);
                             const isLoser = match.winner !== -1 && !isWinner;
                             const score = match.score && match.score.length > pIdx ? match.score[pIdx] : null;
-                            const hasId = p.id && p.id !== -1;
 
                             return (
                               <div 
                                 key={pIdx} 
-                                onClick={() => hasId && router.push(`/team/${p.id}`)}
-                                className={`flex items-center justify-between p-1.5 rounded-xl transition-all ${
+                                onClick={() => hasId && router.push(`/team/${localId}`)}
+                                className={`flex items-center justify-between p-1 md:p-1.5 rounded-lg transition-all ${
                                   hasId ? 'cursor-pointer hover:bg-white/5' : ''
                                 } ${
                                   isWinner ? 'bg-amber-500/10 text-white font-bold' : 'text-slate-350'
-                                } ${isLoser ? 'opacity-45' : ''}`}
+                                } ${isLoser ? 'opacity-40' : ''}`}
                               >
-                                <div className="flex items-center gap-2 truncate pr-2">
-                                  <div className="w-5.5 h-5.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
+                                <div className="flex items-center gap-1.5 md:gap-2 truncate pr-1">
+                                  <div className="w-5 h-5 md:w-5.5 md:h-5.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
                                     {hasId ? (
                                       <TeamLogo
-                                        logoUrl={`/escudos/${p.id}.png`}
-                                        teamName={p.nombre || p.name}
+                                        logoUrl={`/escudos/${localId}.png`}
+                                        teamName={pName}
                                         className="w-full h-full p-0.5"
                                       />
                                     ) : (
-                                      <div className="text-[9px] text-slate-600">🏳️</div>
+                                      <div className="text-[8px] text-slate-650">🏳️</div>
                                     )}
                                   </div>
-                                  <span className={`text-xs truncate ${isWinner ? 'text-amber-400 font-black' : 'font-medium'}`}>
-                                    {p.nombre || p.name}
+                                  <span className={`text-[10px] md:text-xs truncate ${isWinner ? 'text-amber-400 font-extrabold' : 'font-medium'}`}>
+                                    {pName}
                                   </span>
                                 </div>
                                 
                                 {score !== null && score !== undefined && (
-                                  <span className={`text-xs font-black px-2 py-0.5 rounded-lg ${isWinner ? 'bg-amber-500/25 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
+                                  <span className={`text-[10px] md:text-xs font-black px-1.5 py-0.5 rounded-md ${isWinner ? 'bg-amber-500/25 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
                                     {score}
                                   </span>
                                 )}
@@ -483,40 +515,40 @@ export default function MundialTablaView() {
   const dataForLegend = (isGroupLeague ? availableTabs : tabsToShow).flatMap(tab => standingsData[tab] || []);
 
   return (
-    <div className="w-full flex flex-col gap-6 pb-10 animate-fade-in">
+    <div className="w-full flex flex-col gap-4 md:gap-6 pb-8 md:pb-10 animate-fade-in">
       <Header />
 
       {/* Main Sub Tabs Selector */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-[#121820]/80 border border-white/10 rounded-2xl w-full sm:w-max shadow-lg mb-2">
+      <div className="flex items-center gap-1 p-1 bg-[#121820]/80 border border-white/10 rounded-2xl w-full sm:w-max shadow-lg mb-1 md:mb-2">
         <button
           onClick={() => setActiveSubTab('grupos')}
-          className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+          className={`flex-1 sm:flex-initial px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
             activeSubTab === 'grupos'
               ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
               : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          📊 Fase de Grupos
+          📊 Grupos
         </button>
         <button
           onClick={() => setActiveSubTab('terceros')}
-          className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+          className={`flex-1 sm:flex-initial px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
             activeSubTab === 'terceros'
               ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
               : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          🥉 Mejores Terceros
+          🥉 Terceros
         </button>
         <button
           onClick={() => setActiveSubTab('bracket')}
-          className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
+          className={`flex-1 sm:flex-initial px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
             activeSubTab === 'bracket'
               ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
               : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          🏆 Cuadro / Bracket
+          🏆 Cuadro
         </button>
       </div>
 
@@ -524,12 +556,12 @@ export default function MundialTablaView() {
         <>
           {/* Group Selector Tabs for Mundial/Group Tournaments */}
           {isGroupLeague && availableTabs.length > 1 && (
-            <div className="flex items-center gap-1.5 p-1.5 bg-slate-900/40 border border-white/5 rounded-2xl overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-inner">
+            <div className="flex items-center gap-1 p-1 bg-slate-900/40 border border-white/5 rounded-xl overflow-x-auto no-scrollbar scroll-smooth shrink-0 shadow-inner">
               <button
                 onClick={() => setSelectedGroupTab('all')}
-                className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border border-transparent cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border border-transparent cursor-pointer whitespace-nowrap ${
                   selectedGroupTab === 'all'
-                    ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                    ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
@@ -539,9 +571,9 @@ export default function MundialTablaView() {
                 <button
                   key={tabKey}
                   onClick={() => setSelectedGroupTab(tabKey)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 border border-transparent cursor-pointer whitespace-nowrap ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border border-transparent cursor-pointer whitespace-nowrap ${
                     selectedGroupTab === tabKey
-                      ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)]'
+                      ? 'bg-amber-550/15 border-amber-500/30 text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]'
                       : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
@@ -551,91 +583,73 @@ export default function MundialTablaView() {
             </div>
           )}
 
-          {/* Tabs for Standard Leagues */}
-          {!isGroupLeague && availableTabs.length > 1 && (
-            <div className="flex flex-wrap items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner">
-              {availableTabs.map(tabKey => (
-                <button
-                  key={tabKey}
-                  onClick={() => setActiveTab(tabKey)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all ${activeTab === tabKey
-                      ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  {formatTabName(tabKey)}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Table Containers */}
-          <div className={`flex-1 ${isGroupLeague && selectedGroupTab === 'all' ? 'grid grid-cols-1 xl:grid-cols-2 gap-6' : 'flex flex-col gap-8'}`}>
+          <div className={`flex-1 ${isGroupLeague && selectedGroupTab === 'all' ? 'grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6' : 'flex flex-col gap-6 md:gap-8'}`}>
             {tabsToShow.map((tab) => {
               const currentData = standingsData[tab] || [];
               const isPromedios = tab === 'promedios';
 
-              const headPY = isGroupLeague ? 'py-3.5' : 'py-5';
-              const bodyPY = isGroupLeague ? 'py-2.5' : 'py-3.5';
-              const iconSize = isGroupLeague ? 'w-7 h-7 p-0.5' : 'w-8 h-8 p-1';
-              const textSize = isGroupLeague ? 'text-xs sm:text-sm' : 'text-[15px]';
-              const minW = isGroupLeague ? 'w-full md:min-w-[480px]' : 'w-full md:min-w-[700px]';
+              const headPY = 'py-2 md:py-3.5';
+              const bodyPY = 'py-1.5 md:py-2.5';
+              const iconSize = 'w-6 h-6 p-0.5 md:w-7 md:h-7';
+              const textSize = 'text-[11px] xs:text-[12px] md:text-sm';
+              const minW = 'w-full min-w-[340px] xs:min-w-[420px] md:min-w-[480px]';
 
               return (
-                <div key={tab} className="flex flex-col gap-3">
+                <div key={tab} className="flex flex-col gap-2 md:gap-3">
                   {isGroupLeague && (
                     <div className="flex items-center pl-2 group-header-container">
-                      <div className="w-1.5 h-6 bg-amber-500 rounded-full mr-3 shadow-[0_0_10px_rgba(245,158,11,0.4)]" />
-                      <h3 className="text-xl font-bold group-header-gradient">
+                      <div className="w-1 h-4 bg-amber-500 rounded-full mr-2 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+                      <h3 className="text-base md:text-lg font-black uppercase text-slate-200">
                         {formatTabName(tab)}
                       </h3>
                     </div>
                   )}
-                  <div className="overflow-hidden bg-[#0b1015]/60 rounded-[2rem] border border-white/5 relative shadow-2xl backdrop-blur-md">
+                  <div className="overflow-hidden bg-[#0b1015]/60 rounded-2xl border border-white/5 relative shadow-xl backdrop-blur-md">
                     <div className="w-full h-full overflow-auto custom-scrollbar max-h-[800px]">
-                      <table className={`w-full text-left border-collapse ${minW} text-sm`}>
-                        <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-300 sticky top-0 z-10 text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
+                      <table className={`w-full text-left border-collapse ${minW} text-[11px] md:text-sm`}>
+                        <thead className="bg-gradient-to-b from-[#1a2330] to-[#121820] text-slate-350 sticky top-0 z-10 text-[10px] md:text-xs uppercase tracking-wider font-extrabold shadow-md border-b border-white/10">
                           <tr>
-                            <th className={`${headPY} px-2 sm:px-3 w-8 sm:w-10 text-center`}>#</th>
-                            <th className={`${headPY} px-2 text-left`}>Equipo</th>
+                            <th className={`${headPY} px-2 w-7 md:w-10 text-center`}>#</th>
+                            <th className={`${headPY} px-1.5 text-left`}>Equipo</th>
                             {isPromedios ? (
                               <>
-                                <th className={`${headPY} px-2 text-center text-amber-400`}>Prom</th>
-                                <th className={`${headPY} px-2 text-center`}>Pts</th>
-                                <th className={`${headPY} px-2 text-center`}>PJ</th>
-                                <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Act</th>
-                                <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Ant</th>
-                                <th className={`${headPY} px-2 text-center opacity-70 hidden sm:table-cell`}>Tras</th>
+                                <th className={`${headPY} px-1 text-center text-amber-400`}>Prom</th>
+                                <th className={`${headPY} px-1 text-center`}>Pts</th>
+                                <th className={`${headPY} px-1 text-center`}>PJ</th>
+                                <th className={`${headPY} px-1 text-center opacity-70 hidden sm:table-cell`}>Act</th>
+                                <th className={`${headPY} px-1 text-center opacity-70 hidden sm:table-cell`}>Ant</th>
+                                <th className={`${headPY} px-1 text-center opacity-70 hidden sm:table-cell`}>Tras</th>
                               </>
                             ) : (
                               <>
-                                <th className={`${headPY} px-1 sm:px-2 text-center text-amber-400`}>Pts</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center`}>PJ</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center`}>G</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center`}>E</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center`}>P</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center opacity-70 hidden sm:table-cell`}>GF</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center opacity-70 hidden sm:table-cell`}>GC</th>
-                                <th className={`${headPY} px-1 sm:px-2 text-center`}>DIF</th>
+                                <th className={`${headPY} px-1 text-center text-amber-400`}>Pts</th>
+                                <th className={`${headPY} px-1 text-center`}>PJ</th>
+                                <th className={`${headPY} px-1 text-center`}>G</th>
+                                <th className={`${headPY} px-1 text-center`}>E</th>
+                                <th className={`${headPY} px-1 text-center`}>P</th>
+                                <th className={`${headPY} px-1 text-center opacity-70 hidden sm:table-cell`}>GF</th>
+                                <th className={`${headPY} px-1 text-center opacity-70 hidden sm:table-cell`}>GC</th>
+                                <th className={`${headPY} px-1 text-center`}>DIF</th>
                               </>
                             )}
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-white/[0.05]">
+                        <tbody className="divide-y divide-white/[0.04]">
                           {currentData.map((row, idx) => {
                             const borderClass = getBackgroundColorForPromotion(row.promocion);
                             return (
                               <tr
                                 key={row.equipoId || idx}
                                 onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
-                                className="hover:bg-amber-500/[0.04] transition-colors group cursor-pointer"
+                                className="hover:bg-amber-500/[0.03] transition-colors group cursor-pointer"
                               >
-                                <td className={`${bodyPY} px-2 sm:px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
+                                <td className={`${bodyPY} px-2 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
                                   {row.posicion || idx + 1}
                                 </td>
-                                <td className={`${bodyPY} px-2`}>
+                                <td className={`${bodyPY} px-1.5`}>
                                   <TeamHoverCard teamId={row.equipoId} teamName={row.nombre} className="w-full flex items-center">
-                                    <div className="flex items-center gap-2.5">
+                                    <div className="flex items-center gap-2">
                                       <div className={`${iconSize} flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors`}>
                                         <TeamLogo
                                           logoUrl={`/escudos/${row.equipoId}.png`}
@@ -643,15 +657,11 @@ export default function MundialTablaView() {
                                           className="w-full h-full"
                                         />
                                       </div>
-                                      <span className={`font-bold text-slate-100 group-hover:text-white truncate max-w-[100px] xs:max-w-[140px] sm:max-w-xs transition-colors ${textSize}`}>
+                                      <span className={`font-bold text-slate-200 group-hover:text-white truncate max-w-[90px] xs:max-w-[125px] sm:max-w-xs transition-colors ${textSize}`}>
                                         {row.nombre}
                                       </span>
                                       {row.enVivo && (
-                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-widest bg-red-500/10 text-red-400 border border-red-500/20 rounded-md shrink-0 animate-pulse">
-                                          <span className="flex h-1.5 w-1.5 relative">
-                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-                                          </span>
+                                        <span className="inline-flex items-center gap-0.5 px-1 py-0.5 text-[8px] font-extrabold uppercase tracking-widest bg-red-500/10 text-red-400 border border-red-500/20 rounded-md shrink-0 animate-pulse">
                                           Vivo
                                         </span>
                                       )}
@@ -661,23 +671,23 @@ export default function MundialTablaView() {
 
                                 {isPromedios ? (
                                   <>
-                                    <td className={`${bodyPY} px-2 text-center font-black text-amber-400 bg-amber-500/5`}>{row.coeficiente?.toFixed(3)}</td>
-                                    <td className={`${bodyPY} px-2 text-center font-black text-white`}>{row.puntosTotales}</td>
-                                    <td className={`${bodyPY} px-2 text-center text-slate-400 font-medium`}>{row.partidosTotales}</td>
-                                    <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
-                                    <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
-                                    <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
+                                    <td className={`${bodyPY} px-1 text-center font-black text-amber-400 bg-amber-500/5`}>{row.coeficiente?.toFixed(3)}</td>
+                                    <td className={`${bodyPY} px-1 text-center font-black text-white`}>{row.puntosTotales}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-450 font-medium`}>{row.partidosTotales}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
                                   </>
                                 ) : (
                                   <>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center font-black text-amber-400 bg-amber-500/5`}>{row.puntos ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-450 font-medium`}>{row.partidosJugados ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-350 font-medium`}>{row.ganados ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.empatados ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.perdidos ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
-                                    <td className={`${bodyPY} px-1 sm:px-2 text-center font-bold text-slate-350`}>{row.diferenciaGoles ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center font-black text-amber-400 bg-amber-500/5`}>{row.puntos ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-450 font-medium`}>{row.partidosJugados ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-350 font-medium`}>{row.ganados ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-450`}>{row.empatados ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-455`}>{row.perdidos ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-550 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center text-slate-550 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
+                                    <td className={`${bodyPY} px-1 text-center font-bold text-slate-350`}>{row.diferenciaGoles ?? '-'}</td>
                                   </>
                                 )}
                               </tr>
@@ -693,18 +703,15 @@ export default function MundialTablaView() {
           </div>
 
           {/* Legend Area */}
-          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-3 px-4 text-[10px] sm:text-[11px] font-black tracking-wider justify-center lg:justify-start">
+          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-2 px-3 text-[9px] md:text-[10px] font-black tracking-wider justify-center lg:justify-start text-slate-400">
             {dataForLegend.some(row => row.promocion?.toLowerCase().includes('libertadores') || row.promocion?.toLowerCase().includes('champions')) && (
-              <div className="flex items-center gap-2 px-2"><div className="w-2.5 h-2.5 bg-cyan-400 rounded-sm shadow-[0_0_8px_rgba(34,211,238,0.5)]"></div> Libertadores / Champions</div>
+              <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-cyan-400 rounded-sm shadow-[0_0_6px_rgba(34,211,238,0.5)]"></div> 16avos de final</div>
             )}
             {dataForLegend.some(row => row.promocion?.toLowerCase().includes('sudamericana') || row.promocion?.toLowerCase().includes('europa')) && (
-              <div className="flex items-center gap-2 px-2"><div className="w-2.5 h-2.5 bg-amber-400 rounded-sm shadow-[0_0_8px_rgba(251,191,36,0.5)]"></div> Sudamericana </div>
-            )}
-            {dataForLegend.some(row => row.promocion?.toLowerCase().includes('playoff')) && (
-              <div className="flex items-center gap-2 px-2"><div className="w-2.5 h-2.5 bg-indigo-400 rounded-sm shadow-[0_0_8px_rgba(129,140,248,0.5)]"></div> Playoffs</div>
+              <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-amber-400 rounded-sm shadow-[0_0_6px_rgba(251,191,36,0.5)]"></div> Posible clasificado</div>
             )}
             {dataForLegend.some(row => row.promocion?.toLowerCase().includes('relegation') || row.promocion?.toLowerCase().includes('descenso')) && (
-              <div className="flex items-center gap-2 px-2"><div className="w-2.5 h-2.5 bg-red-500 rounded-sm shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div> Descenso</div>
+              <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-red-500 rounded-sm shadow-[0_0_6px_rgba(239,68,68,0.5)]"></div> Eliminado</div>
             )}
           </div>
         </>
