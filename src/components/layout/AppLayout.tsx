@@ -159,6 +159,7 @@ export const LEAGUES = [
   { id: 'laliga', name: 'La Liga', icon: '🇪🇸', tournamentId: 10008 },
   { id: 'serie-a', name: 'Serie A', icon: '🇮🇹', tournamentId: 10009 },
   { id: 'ligue-1', name: 'Ligue 1', icon: '🇫🇷', tournamentId: 10010 },
+  { id: 'bundesliga', name: 'Bundesliga', icon: '🇩🇪', tournamentId: 10011 },
 ] as const;
 
 export type LeagueId = typeof LEAGUES[number]['id'];
@@ -210,7 +211,7 @@ export default function AppLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const argentineIds = ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'];
   const copasIds = ['champions', 'libertadores'];
-  const ligasIds = ['brasileirao', 'mls', 'premier-league', 'laliga', 'serie-a', 'ligue-1'];
+  const ligasIds = ['brasileirao', 'mls', 'premier-league', 'laliga', 'serie-a', 'ligue-1', 'bundesliga'];
 
   const isArgActive = argentineIds.includes(activeLeagueId);
   const isCopasActive = copasIds.includes(activeLeagueId);
@@ -321,7 +322,7 @@ export default function AppLayout() {
             if ([
               'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg',
               'champions', 'libertadores',
-              'brasileirao', 'mls', 'premier-league', 'laliga', 'serie-a', 'ligue-1'
+              'brasileirao', 'mls', 'premier-league', 'laliga', 'serie-a', 'ligue-1', 'bundesliga'
             ].includes(league.id)) {
               return null;
             }

@@ -19,6 +19,7 @@ export async function generateStaticParams() {
     { leagueId: 'laliga' },
     { leagueId: 'serie-a' },
     { leagueId: 'ligue-1' },
+    { leagueId: 'bundesliga' },
   ];
 }
 
