@@ -85,11 +85,18 @@
 }
 
 /* ── VIEW TRANSITIONS (MODO CLARO / OSCURO) ──
-   Timing unificado y aceleración por GPU para navegadores modernos
+   Timing unificado y aceleración por GPU para navegadores modernos.
+   Usamos mix-blend-mode: normal para evitar parpadeos y asegurar que
+   la transición funcione igual de fluida en ambas direcciones (claro->oscuro y oscuro->claro).
 ── */
+::view-transition-group(root) {
+  animation-duration: 250ms;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 200ms;
+  mix-blend-mode: normal !important;
+  animation-duration: 250ms;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
