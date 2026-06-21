@@ -59,17 +59,6 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   const [hoveredStepIndex, setHoveredStepIndex] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-
-  // Auto-scroll to the end (latest date) on mobile when the chart loads
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
-      }
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [history]);
 
   if (!history || history.length === 0) {
     return (
@@ -104,22 +93,63 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
     return paddingTop + ((position - 1) / (totalUsers - 1)) * chartHeight;
   };
 
+  // Convert event coordinates to SVG viewBox X space (handling aspect-ratio meet scaling)
+  const getSvgX = (
+    e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>
+  ): number | null => {
+    if (!svgRef.current) return null;
+    const rect = svgRef.current.getBoundingClientRect();
+    
+    let clientX: number;
+    if ('touches' in e) {
+      if (e.touches.length === 0) return null;
+      clientX = e.touches[0].clientX;
+    } else {
+      clientX = e.clientX;
+    }
+
+    const x = clientX - rect.left;
+    
+    // Default aspect ratio scaling calculation (meet)
+    const viewBoxWidth = width;
+    const viewBoxHeight = height;
+    const s = Math.min(rect.width / viewBoxWidth, rect.height / viewBoxHeight);
+    if (s <= 0) return null;
+    const dx = (rect.width - viewBoxWidth * s) / 2;
+    
+    return (x - dx) / s;
+  };
+
   // Handle mouse interaction on SVG to detect hovered step
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (!svgRef.current) return;
-    const rect = svgRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    // Convert client X to SVG viewBox X coordinate space
-    const svgX = (x / rect.width) * width;
+    const svgX = getSvgX(e);
+    if (svgX === null) return;
     
-    // Find closest step index
-    let stepIdx = Math.round(((svgX - paddingLeft) / chartWidth) * (totalSteps - 1));
+    let stepIdx = 0;
+    if (totalSteps > 1) {
+      stepIdx = Math.round(((svgX - paddingLeft) / chartWidth) * (totalSteps - 1));
+    }
     stepIdx = Math.max(0, Math.min(totalSteps - 1, stepIdx));
 
     setHoveredStepIndex(stepIdx);
-    setTooltipPos({ x: (stepIdx / (totalSteps - 1)) * rect.width, y });
+    
+    if (svgRef.current) {
+      const rect = svgRef.current.getBoundingClientRect();
+      setTooltipPos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    }
+  };
+
+  const handleTouch = (e: React.TouchEvent<SVGSVGElement>) => {
+    const svgX = getSvgX(e);
+    if (svgX === null) return;
+
+    let stepIdx = 0;
+    if (totalSteps > 1) {
+      stepIdx = Math.round(((svgX - paddingLeft) / chartWidth) * (totalSteps - 1));
+    }
+    stepIdx = Math.max(0, Math.min(totalSteps - 1, stepIdx));
+
+    setHoveredStepIndex(stepIdx);
   };
 
   const handleMouseLeave = () => {
@@ -145,7 +175,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
     <div className="w-full flex flex-col gap-6">
       
       {/* ── Legend pills ── */}
-      <div className="flex flex-wrap gap-2 justify-center bg-slate-950/80 backdrop-blur-md p-4 border border-white/10 rounded-2xl shadow-xl">
+      <div className="flex flex-wrap gap-2 justify-center bg-slate-950/95 backdrop-blur-md p-4 border border-slate-800 rounded-2xl shadow-xl">
         {users.map((u) => {
           const color = getColorForUser(u.userId);
           const isHovered = hoveredUserId === u.userId;
@@ -176,7 +206,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             >
               <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
               <span>{u.name}</span>
-              {isMe && <span className="text-[9px] px-1 bg-white/10 rounded uppercase tracking-wider text-slate-350">Vos</span>}
+              {isMe && <span className="text-[9px] px-1 bg-white/10 rounded uppercase tracking-wider text-slate-300">Vos</span>}
               {isSelected && <span className="text-[9px] font-bold text-white bg-white/20 px-1 rounded ml-0.5">📌</span>}
             </button>
           );
@@ -192,10 +222,10 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       </div>
 
       {/* ── Chart Container ── */}
-      <div className="relative w-full bg-slate-950/40 border border-white/5 rounded-[2.5rem] p-4 md:p-6 overflow-hidden shadow-2xl">
+      <div className="relative w-full bg-slate-950/90 border border-slate-800 rounded-[2.5rem] p-4 md:p-6 overflow-hidden shadow-2xl">
         
         {/* SVG Wrapper */}
-        <div ref={scrollContainerRef} className="w-full overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
           <div 
             style={{ ['--chart-min-width' as any]: `${Math.max(320, totalSteps * 75)}px` }}
             className="min-w-[var(--chart-min-width)] lg:min-w-0 w-full h-[350px] md:h-[480px] relative"
@@ -206,6 +236,9 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             className="w-full h-full select-none overflow-visible"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouch}
+            onTouchMove={handleTouch}
+            onTouchEnd={handleMouseLeave}
           >
             {/* Definitions for glow filters */}
             <defs>
@@ -219,13 +252,13 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
               const pos = i + 1;
               const yVal = getY(pos);
               return (
-                <g key={`y-grid-${pos}`} className="opacity-40">
+                <g key={`y-grid-${pos}`} className="opacity-45">
                   <line
                     x1={paddingLeft}
                     y1={yVal}
                     x2={width - paddingRight}
                     y2={yVal}
-                    stroke="rgba(255, 255, 255, 0.06)"
+                    stroke="rgba(255, 255, 255, 0.12)"
                     strokeDasharray="4 4"
                     strokeWidth={1}
                   />
@@ -233,7 +266,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     x={paddingLeft - 7}
                     y={yVal + 4}
                     textAnchor="end"
-                    className="text-[11px] font-black fill-slate-400"
+                    className="text-xs font-black fill-slate-200"
                   >
                     {pos}º
                   </text>
@@ -254,7 +287,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     y1={paddingTop}
                     x2={xVal}
                     y2={height - paddingBottom}
-                    stroke="rgba(255, 255, 255, 0.04)"
+                    stroke="rgba(255, 255, 255, 0.08)"
                     strokeDasharray="2 4"
                     strokeWidth={1}
                   />
@@ -263,7 +296,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                       x={xVal}
                       y={height - paddingBottom + 22}
                       textAnchor="middle"
-                      className="text-[10px] font-black fill-slate-500 uppercase tracking-wider"
+                      className="text-[11px] font-black fill-slate-300 uppercase tracking-wider"
                     >
                       {idx === 0 ? 'Inicio' : `P${idx}`}
                     </text>
@@ -365,7 +398,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       </div>
 
       {/* ── Detalle de la Fecha (Info Panel) ── */}
-      <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col gap-4">
+      <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col gap-4">
         {/* Panel Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/5 pb-3">
           <div className="flex items-center gap-3">
@@ -408,7 +441,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     ? 'scale-[1.02]'
                     : isMe
                       ? 'bg-amber-500/10 border-amber-500/35 shadow-[0_0_15px_rgba(245,158,11,0.06)]'
-                      : 'bg-black/25 border-white/5 hover:border-white/10'
+                      : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60'
                 }`}
                 style={isSelected ? {
                   borderColor: color,
@@ -417,7 +450,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                 } : undefined}
               >
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className={`font-black text-xs w-5 ${isSelected ? 'text-white' : isMe ? 'text-amber-400' : 'text-slate-450'}`}>
+                  <span className={`font-black text-xs w-5 ${isSelected ? 'text-white' : isMe ? 'text-amber-400' : 'text-slate-300'}`}>
                     {r.position}º
                   </span>
                   <div className="w-2.5 h-2.5 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: color }} />
@@ -441,7 +474,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                   ) : (
                     <span className="text-slate-500 font-extrabold text-xs flex items-center justify-center">
                       •
-                    </span>
+                  </span>
                   )}
                 </div>
               </div>
