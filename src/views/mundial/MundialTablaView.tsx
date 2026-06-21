@@ -48,6 +48,7 @@ export default function MundialTablaView() {
   const [loadingBracket, setLoadingBracket] = useState(false);
   const [bracketError, setBracketError] = useState<string | null>(null);
   const [mobileStageIndex, setMobileStageIndex] = useState(0);
+  const [expandedCards, setExpandedCards] = useState<Record<number, boolean>>({});
 
   const availableTabs = Object.keys(standingsData);
 
@@ -524,7 +525,9 @@ export default function MundialTablaView() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 animate-fade-in w-full">
         {playerStats.map((statCategory: any, catIdx: number) => {
-          const rows = (statCategory.rows || []).slice(0, 20);
+          const allRows = (statCategory.rows || []).slice(0, 20);
+          const isExpanded = !!expandedCards[catIdx];
+          const rows = isExpanded ? allRows : allRows.slice(0, 4);
 
           let catIcon = "📈";
           let badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
@@ -541,7 +544,7 @@ export default function MundialTablaView() {
             badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
           } else if (catNameLower.includes("amarill")) {
             catIcon = "🟨";
-            badgeColor = "bg-yellow-500/10 text-yellow-450 border-yellow-550/20";
+            badgeColor = "bg-yellow-500/10 text-yellow-455 border-yellow-500/20";
           } else if (catNameLower.includes("roj")) {
             catIcon = "🟥";
             badgeColor = "bg-red-500/10 text-red-455 border-red-500/20";
@@ -561,12 +564,12 @@ export default function MundialTablaView() {
                   </h3>
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase border tracking-wider ${badgeColor}`}>
-                  Top {rows.length}
+                  Top {allRows.length}
                 </span>
               </div>
 
               {/* Card Body - Table */}
-              <div className="overflow-auto custom-scrollbar max-h-[380px] flex-grow">
+              <div className="overflow-auto custom-scrollbar flex-grow">
                 <table className="w-full text-left border-collapse text-[11px] md:text-xs">
                   <thead className="bg-[#121820]/30 text-slate-400 uppercase text-[9px] font-bold sticky top-0 border-b border-white/5 backdrop-blur-sm">
                     <tr>
@@ -625,6 +628,21 @@ export default function MundialTablaView() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Card Footer with Toggle Button */}
+              {allRows.length > 4 && (
+                <div className="bg-[#121820]/45 px-4 py-2 border-t border-white/5 flex justify-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedCards(prev => ({ ...prev, [catIdx]: !isExpanded }));
+                    }}
+                    className="text-[10px] font-black uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors py-1 px-3 rounded bg-white/5 hover:bg-white/10 cursor-pointer"
+                  >
+                    {isExpanded ? "▲ Ver Menos" : "▼ Ver Más"}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
