@@ -6,7 +6,7 @@ export async function GET() {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
-      next: { revalidate: 300 } // Cache for 5 minutes (300 seconds)
+      next: { revalidate: 300 } // Cache for 5 minutes
     });
     
     if (!res.ok) {
@@ -26,9 +26,22 @@ export async function GET() {
     
     const brackets = gameData.brackets || {};
     
+    // 1. Build a map of promiedosTeamId -> countryName
+    const promiedosTeamIdToName: Record<string, string> = {};
+    const tablesGroups = gameData.tables_groups || [];
+    for (const group of tablesGroups) {
+      for (const tableItem of (group.tables || [])) {
+        for (const row of (tableItem.table?.rows || [])) {
+          const teamObj = row.entity?.object || {};
+          if (teamObj.id && teamObj.name) {
+            promiedosTeamIdToName[teamObj.id] = teamObj.name;
+          }
+        }
+      }
+    }
+    
     // Find the 3er puesto table
     let thirdPlaceTable = null;
-    const tablesGroups = gameData.tables_groups || [];
     for (const group of tablesGroups) {
       for (const tableItem of (group.tables || [])) {
         if (tableItem.name === '3er puesto' || group.name === '3er puesto') {
@@ -39,9 +52,35 @@ export async function GET() {
       if (thirdPlaceTable) break;
     }
     
+    // 2. Parse the player statistics and map team IDs to names
+    const playersStatsRaw = gameData.players_statistics || {};
+    const statsTables = (playersStatsRaw.tables || []).map((table: any) => {
+      const rows = (table.rows || []).map((row: any) => {
+        const playerObj = row.entity?.object || {};
+        const teamId = playerObj.team_id;
+        const teamName = promiedosTeamIdToName[teamId] || '';
+        
+        return {
+          rank: row.num,
+          playerName: playerObj.name || playerObj.sname || '?',
+          teamName: teamName,
+          promiedosTeamId: teamId,
+          value: row.values?.[0]?.value || '0'
+        };
+      });
+      
+      return {
+        name: table.name,
+        key: table.columns?.[0]?.key,
+        title: table.columns?.[0]?.title || table.name,
+        rows: rows
+      };
+    });
+    
     return NextResponse.json({
       brackets,
-      thirdPlaceTable
+      thirdPlaceTable,
+      playerStatistics: statsTables
     });
   } catch (error: any) {
     console.error('Error fetching bracket:', error);

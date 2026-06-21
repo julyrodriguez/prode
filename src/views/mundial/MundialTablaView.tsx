@@ -41,9 +41,10 @@ export default function MundialTablaView() {
   const [activeTab, setActiveTab] = useState<string | null>(null);
 
   // Sub-tabs navigation
-  const [activeSubTab, setActiveSubTab] = useState<'grupos' | 'terceros' | 'bracket'>('grupos');
+  const [activeSubTab, setActiveSubTab] = useState<'grupos' | 'estadisticas' | 'bracket'>('grupos');
   const [bracketData, setBracketData] = useState<any>(null);
   const [thirdPlaceTable, setThirdPlaceTable] = useState<any>(null);
+  const [playerStats, setPlayerStats] = useState<any[]>([]);
   const [loadingBracket, setLoadingBracket] = useState(false);
   const [bracketError, setBracketError] = useState<string | null>(null);
   const [mobileStageIndex, setMobileStageIndex] = useState(0);
@@ -139,6 +140,7 @@ export default function MundialTablaView() {
         if (!isMounted) return;
         setBracketData(json.brackets || null);
         setThirdPlaceTable(json.thirdPlaceTable || null);
+        setPlayerStats(json.playerStatistics || []);
       } catch (err: any) {
         if (isMounted) setBracketError(err.message || 'Error al cargar el cuadro.');
       } finally {
@@ -221,12 +223,8 @@ export default function MundialTablaView() {
       );
     }
 
-    if (bracketError || !thirdPlaceTable) {
-      return (
-        <div className="w-full bg-red-500/10 border border-red-500/20 rounded-2xl p-6 flex justify-center items-center mt-2">
-          <span className="text-red-400 font-bold text-sm">{bracketError || 'No se pudieron cargar los datos.'}</span>
-        </div>
-      );
+    if (!thirdPlaceTable) {
+      return null;
     }
 
     const rows = thirdPlaceTable.table?.rows?.map(mapPromiedosRow) || [];
@@ -450,6 +448,138 @@ export default function MundialTablaView() {
     );
   };
 
+  const renderPlayerStatistics = () => {
+    if (loadingBracket) {
+      return (
+        <div className="flex-grow min-h-[300px] flex flex-col justify-center items-center bg-white/[0.02] border border-white/5 rounded-[2rem] gap-4">
+          <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-amber-400 border-r-2 border-transparent" />
+          <span className="text-slate-400 font-medium">Cargando estadísticas...</span>
+        </div>
+      );
+    }
+
+    if (bracketError || !playerStats || playerStats.length === 0) {
+      return (
+        <div className="w-full bg-red-500/10 border border-red-500/30 rounded-2xl p-6 flex justify-center items-center mt-2">
+          <span className="text-red-400 font-bold text-sm">
+            {bracketError || 'No se pudieron cargar las estadísticas.'}
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 animate-fade-in w-full">
+        {playerStats.map((statCategory: any, catIdx: number) => {
+          const rows = (statCategory.rows || []).slice(0, 20);
+
+          let catIcon = "📈";
+          let badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+          
+          const catNameLower = statCategory.name.toLowerCase();
+          if (catNameLower.includes("gol")) {
+            catIcon = "⚽";
+            badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+          } else if (catNameLower.includes("asist")) {
+            catIcon = "👟";
+            badgeColor = "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+          } else if (catNameLower.includes("barrid") || catNameLower.includes("foul") || catNameLower.includes("tackle")) {
+            catIcon = "🛡️";
+            badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+          } else if (catNameLower.includes("amarill")) {
+            catIcon = "🟨";
+            badgeColor = "bg-yellow-500/10 text-yellow-450 border-yellow-550/20";
+          } else if (catNameLower.includes("roj")) {
+            catIcon = "🟥";
+            badgeColor = "bg-red-500/10 text-red-455 border-red-500/20";
+          }
+
+          return (
+            <div 
+              key={catIdx} 
+              className="bg-[#0b1015]/60 border border-white/5 rounded-2xl flex flex-col overflow-hidden shadow-xl backdrop-blur-md transition-all duration-300 hover:border-white/10"
+            >
+              {/* Card Header */}
+              <div className="bg-gradient-to-r from-[#1a2330] to-[#121820] px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{catIcon}</span>
+                  <h3 className="text-xs md:text-sm font-black uppercase text-slate-200 tracking-wider">
+                    {statCategory.name}
+                  </h3>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase border tracking-wider ${badgeColor}`}>
+                  Top {rows.length}
+                </span>
+              </div>
+
+              {/* Card Body - Table */}
+              <div className="overflow-auto custom-scrollbar max-h-[380px] flex-grow">
+                <table className="w-full text-left border-collapse text-[11px] md:text-xs">
+                  <thead className="bg-[#121820]/30 text-slate-400 uppercase text-[9px] font-bold sticky top-0 border-b border-white/5 backdrop-blur-sm">
+                    <tr>
+                      <th className="py-2 px-3 text-center w-8">#</th>
+                      <th className="py-2 px-2 text-left">Jugador / País</th>
+                      <th className="py-2 px-3 text-center font-extrabold text-slate-350 w-16">
+                        {statCategory.title || "Cant."}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {rows.map((row: any, idx: number) => {
+                      const normTeam = normalizeTeamName(row.teamName);
+                      const localId = teamNameToIdMap[normTeam] || null;
+
+                      return (
+                        <tr 
+                          key={idx} 
+                          className="hover:bg-amber-500/[0.02] transition-colors group cursor-pointer"
+                          onClick={() => localId && router.push(`/team/${localId}`)}
+                        >
+                          {/* Rank */}
+                          <td className="py-1.5 px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors">
+                            {row.rank || idx + 1}
+                          </td>
+                          {/* Player Info */}
+                          <td className="py-1.5 px-2">
+                            <div className="flex flex-col">
+                              <span className="font-extrabold text-slate-250 group-hover:text-white truncate">
+                                {row.playerName}
+                              </span>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <div className="w-4 h-4 flex-shrink-0 bg-white/5 rounded-full border border-white/5 overflow-hidden flex items-center justify-center">
+                                  {localId ? (
+                                    <TeamLogo
+                                      logoUrl={`/escudos/${localId}.png`}
+                                      teamName={row.teamName}
+                                      className="w-full h-full p-0.5"
+                                    />
+                                  ) : (
+                                    <span className="text-[8px]">🏳️</span>
+                                  )}
+                                </div>
+                                <span className="text-[9px] text-slate-400 font-medium truncate group-hover:text-slate-350">
+                                  {row.teamName || "Desconocido"}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          {/* Value */}
+                          <td className="py-1.5 px-3 text-center font-black text-amber-400 bg-amber-500/5">
+                            {row.value}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="w-full flex flex-col gap-6 pb-10">
@@ -513,14 +643,14 @@ export default function MundialTablaView() {
           📊 Grupos
         </button>
         <button
-          onClick={() => setActiveSubTab('terceros')}
+          onClick={() => setActiveSubTab('estadisticas')}
           className={`flex-1 sm:flex-initial px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 cursor-pointer ${
-            activeSubTab === 'terceros'
+            activeSubTab === 'estadisticas'
               ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
               : 'text-slate-400 hover:text-white hover:bg-white/5'
           }`}
         >
-          🥉 Terceros
+          📈 Estadísticas
         </button>
         <button
           onClick={() => setActiveSubTab('bracket')}
@@ -667,10 +797,17 @@ export default function MundialTablaView() {
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 bg-red-500 rounded-sm shadow-[0_0_6px_rgba(239,68,68,0.5)]"></div> Eliminado</div>
             )}
           </div>
+
+          {/* Third Place Table at the bottom of groups */}
+          {thirdPlaceTable && (
+            <div className="mt-8 border-t border-white/5 pt-6">
+              {renderThirdPlaceTable()}
+            </div>
+          )}
         </>
       )}
 
-      {activeSubTab === 'terceros' && renderThirdPlaceTable()}
+      {activeSubTab === 'estadisticas' && renderPlayerStatistics()}
 
       {activeSubTab === 'bracket' && renderBracket()}
     </div>
