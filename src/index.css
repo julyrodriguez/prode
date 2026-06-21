@@ -84,6 +84,15 @@
   --scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
 }
 
+/* ── VIEW TRANSITIONS (MODO CLARO / OSCURO) ──
+   Timing unificado y aceleración por GPU para navegadores modernos
+── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* ── GLOBAL SMOOTH TRANSITION ──
    Timing unificado: 280ms ease para que TODOS los elementos
    cambien al mismo tiempo al alternar tema oscuro/claro.

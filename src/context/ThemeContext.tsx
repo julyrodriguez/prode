@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 type Theme = 'dark' | 'light';
 
@@ -25,7 +26,9 @@ function applyTheme(theme: Theme) {
   const currentTheme = root.getAttribute('data-theme');
   const isChanging = currentTheme && currentTheme !== theme;
 
-  if (isChanging) {
+  const hasViewTransition = 'startViewTransition' in document;
+
+  if (isChanging && !hasViewTransition) {
     root.classList.add('theme-transitioning');
     if ((window as any).__themeTransitionTimeout) {
       clearTimeout((window as any).__themeTransitionTimeout);
@@ -96,11 +99,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [isLite, mounted]);
 
   const toggleTheme = () => {
-    setTheme(prev => {
-      const next = prev === 'dark' ? 'light' : 'dark';
+    const next = theme === 'dark' ? 'light' : 'dark';
+    const supportsViewTransition = typeof document !== 'undefined' && 'startViewTransition' in document;
+    const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (supportsViewTransition && !prefersReducedMotion) {
+      (document as any).startViewTransition(() => {
+        flushSync(() => {
+          setTheme(next);
+          applyTheme(next);
+        });
+      });
+    } else {
+      setTheme(next);
       applyTheme(next);
-      return next;
-    });
+    }
   };
 
   const toggleLite = () => {
