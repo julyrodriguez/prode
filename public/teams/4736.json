@@ -1,0 +1,26 @@
+{
+  "_id": 4736,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "South Africa",
+  "profile": {
+    "slug": "south-africa",
+    "userCount": 140978,
+    "manager": "Hugo Broos",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#ffd800",
+      "secondary": "#008040",
+      "text": "#008040"
+    },
+    "foundationDate": 692150400
+  },
+  "logoUrl": "/escudos/4736.png"
+}

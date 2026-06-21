@@ -1,0 +1,26 @@
+{
+  "_id": 4767,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Iraq",
+  "profile": {
+    "slug": "iraq",
+    "userCount": 86752,
+    "manager": "Graham Arnold",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#108f5b",
+      "text": "#108f5b"
+    },
+    "foundationDate": -670032000
+  },
+  "logoUrl": "/escudos/4767.png"
+}

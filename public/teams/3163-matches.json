@@ -1,0 +1,131 @@
+[
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15253531,
+    "__v": 0,
+    "away_team": {
+      "id": 3163,
+      "name": "O'Higgins",
+      "score": 0
+    },
+    "createdAt": "2026-04-13T23:30:31.359Z",
+    "home_team": {
+      "id": 6111,
+      "name": "Deportes Tolima",
+      "score": 2
+    },
+    "startTimestamp": 1773275400,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 384,
+    "tournament_name": "Copa Libertadores",
+    "updatedAt": "2026-05-06T05:33:00.451Z",
+    "awayScore": {
+      "current": 0,
+      "display": 0,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0,
+      "aggregated": 1
+    },
+    "backfill_date": "2026-04-14T03:50:19.146Z",
+    "homeScore": {
+      "current": 2,
+      "display": 2,
+      "period1": 1,
+      "period2": 1,
+      "normaltime": 2,
+      "aggregated": 2
+    }
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15458729,
+    "__v": 0,
+    "away_team": {
+      "id": 6111,
+      "name": "Deportes Tolima",
+      "score": 0
+    },
+    "createdAt": "2026-04-13T23:30:31.359Z",
+    "home_team": {
+      "id": 3163,
+      "name": "O'Higgins",
+      "score": 1
+    },
+    "startTimestamp": 1772670600,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 384,
+    "tournament_name": "Copa Libertadores",
+    "updatedAt": "2026-05-06T05:33:00.451Z",
+    "awayScore": {
+      "current": 0,
+      "display": 0,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0
+    },
+    "backfill_date": "2026-04-14T03:44:17.146Z",
+    "homeScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 1,
+      "period2": 0,
+      "normaltime": 1
+    }
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15458726,
+    "__v": 0,
+    "away_team": {
+      "id": 3163,
+      "name": "O'Higgins",
+      "score": 5
+    },
+    "createdAt": "2026-04-13T23:30:31.359Z",
+    "home_team": {
+      "id": 1955,
+      "name": "Bahia",
+      "score": 5
+    },
+    "startTimestamp": 1772056800,
+    "status": {
+      "code": 120,
+      "description": "AP",
+      "type": "finished"
+    },
+    "tournament_id": 384,
+    "tournament_name": "Copa Libertadores",
+    "updatedAt": "2026-04-30T05:33:00.571Z",
+    "awayScore": {
+      "current": 5,
+      "display": 1,
+      "period1": 0,
+      "period2": 1,
+      "normaltime": 1,
+      "penalties": 4,
+      "aggregated": 2
+    },
+    "backfill_date": "2026-04-14T03:40:46.073Z",
+    "homeScore": {
+      "current": 5,
+      "display": 2,
+      "period1": 2,
+      "period2": 0,
+      "normaltime": 2,
+      "penalties": 3,
+      "aggregated": 2
+    }
+  }
+]

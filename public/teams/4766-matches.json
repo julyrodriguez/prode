@@ -1,0 +1,58 @@
+[
+  {
+    "_id": 15186832,
+    "home_team": {
+      "id": 4766,
+      "name": "Iran",
+      "score": 2
+    },
+    "away_team": {
+      "id": 4784,
+      "name": "New Zealand",
+      "score": 2
+    },
+    "tournament_id": 16,
+    "tournament_name": "FIFA World Cup, Group G",
+    "startTimestamp": 1781571600,
+    "status": {
+      "type": "finished",
+      "description": "Ended",
+      "minute": null
+    },
+    "stage": "Fecha 1",
+    "round_name": "Fecha 1",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:30:01.639Z",
+    "updatedAt": "2026-06-16T03:04:03.487Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 4784,
+      "name": "New Zealand",
+      "score": 2
+    },
+    "homeTeam": {
+      "id": 4766,
+      "name": "Iran",
+      "score": 2
+    },
+    "awayScore": {
+      "current": 2
+    },
+    "homeScore": {
+      "current": 2
+    },
+    "last_incidents_update": "2026-06-16T03:04:03.486Z",
+    "last_live_update": "2026-06-16T03:04:03.486Z",
+    "posiciones": {
+      "home": {
+        "posicion": 1,
+        "puntos": 1
+      },
+      "away": {
+        "posicion": 2,
+        "puntos": 1
+      }
+    }
+  }
+]

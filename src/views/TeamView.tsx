@@ -160,7 +160,7 @@ export default function TeamView() {
     const fetchTeam = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}`);
+        const res = await fetch(`/teams/${id}.json`);
         if (!res.ok) throw new Error('No se pudo cargar el equipo');
         const data = await res.json();
         setTeam(data);
@@ -170,7 +170,7 @@ export default function TeamView() {
 
         // Obtener historial de partidos
         try {
-          const mRes = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}/matches?limit=20`);
+          const mRes = await fetch(`/teams/${id}-matches.json`);
           if (mRes.ok) {
             const matchesData = await mRes.json();
             setRecentMatches(matchesData);
@@ -264,7 +264,7 @@ export default function TeamView() {
             }}
           >
             <img 
-              src={`https://apivacas.jariel.com.ar/escudos/${id}.png`}
+              src={`/escudos/${id}.png`}
               alt={team.name}
               className="w-full h-full object-contain p-2"
               onError={(e) => {

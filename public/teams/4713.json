@@ -1,0 +1,26 @@
+{
+  "_id": 4713,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "England",
+  "profile": {
+    "slug": "england",
+    "userCount": 991885,
+    "manager": "Thomas Tuchel",
+    "stadium": "Wembley Stadium",
+    "capacity": 90000,
+    "city": "London",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#cc0000",
+      "text": "#cc0000"
+    },
+    "foundationDate": -3350851200
+  },
+  "logoUrl": "/escudos/4713.png"
+}

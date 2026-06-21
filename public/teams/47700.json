@@ -1,0 +1,26 @@
+{
+  "_id": 47700,
+  "__v": 0,
+  "competitions": {
+    "384": {
+      "name": "Copa Libertadores",
+      "season_id": 87760
+    }
+  },
+  "name": "Nacional Potosí",
+  "profile": {
+    "slug": "nacional-potosi",
+    "userCount": 14564,
+    "manager": "José Alexis Marquez",
+    "stadium": "Estadio Victor Agustín Ugarte",
+    "capacity": 32115,
+    "city": "Potosi",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": -875232000
+  },
+  "logoUrl": "/escudos/47700.png"
+}

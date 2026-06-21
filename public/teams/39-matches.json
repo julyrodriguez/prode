@@ -1,0 +1,129 @@
+[
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15631368,
+    "__v": 0,
+    "away_team": {
+      "id": 39,
+      "name": "Newcastle United",
+      "score": 2
+    },
+    "createdAt": "2026-04-13T23:31:01.491Z",
+    "home_team": {
+      "id": 2817,
+      "name": "FC Barcelona",
+      "score": 7
+    },
+    "startTimestamp": 1773855900,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:08.047Z",
+    "awayScore": {
+      "current": 2,
+      "display": 2,
+      "period1": 2,
+      "period2": 0,
+      "normaltime": 2,
+      "aggregated": 3
+    },
+    "backfill_date": "2026-04-14T03:53:19.658Z",
+    "homeScore": {
+      "current": 7,
+      "display": 7,
+      "period1": 3,
+      "period2": 4,
+      "normaltime": 7,
+      "aggregated": 8
+    }
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15631347,
+    "__v": 0,
+    "away_team": {
+      "id": 2817,
+      "name": "FC Barcelona",
+      "score": 1
+    },
+    "createdAt": "2026-04-13T23:31:01.491Z",
+    "home_team": {
+      "id": 39,
+      "name": "Newcastle United",
+      "score": 1
+    },
+    "startTimestamp": 1773172800,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:08.047Z",
+    "awayScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 0,
+      "period2": 1,
+      "normaltime": 1
+    },
+    "backfill_date": "2026-04-14T03:46:47.548Z",
+    "homeScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 0,
+      "period2": 1,
+      "normaltime": 1
+    }
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15452758,
+    "__v": 0,
+    "away_team": {
+      "id": 5962,
+      "name": "Qarabağ FK",
+      "score": 2
+    },
+    "createdAt": "2026-04-13T23:31:01.490Z",
+    "home_team": {
+      "id": 39,
+      "name": "Newcastle United",
+      "score": 3
+    },
+    "startTimestamp": 1771963200,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:39.217Z",
+    "awayScore": {
+      "current": 2,
+      "display": 2,
+      "period1": 0,
+      "period2": 2,
+      "normaltime": 2,
+      "aggregated": 3
+    },
+    "backfill_date": "2026-04-14T03:36:44.103Z",
+    "homeScore": {
+      "current": 3,
+      "display": 3,
+      "period1": 2,
+      "period2": 1,
+      "normaltime": 3,
+      "aggregated": 9
+    }
+  }
+]

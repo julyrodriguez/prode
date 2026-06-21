@@ -1,0 +1,26 @@
+{
+  "_id": 4834,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Saudi Arabia",
+  "profile": {
+    "slug": "saudi-arabia",
+    "userCount": 143100,
+    "manager": "Hervé Renard",
+    "stadium": "Al-Shabab Club Stadium",
+    "capacity": 15000,
+    "city": "Riyadh",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#008000",
+      "text": "#008000"
+    },
+    "foundationDate": -441849600
+  },
+  "logoUrl": "/escudos/4834.png"
+}

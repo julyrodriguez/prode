@@ -1,0 +1,26 @@
+{
+  "_id": 4729,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Tunisia",
+  "profile": {
+    "slug": "tunisia",
+    "userCount": 184237,
+    "manager": "Sabri Lamouchi",
+    "stadium": "Stade Hammadi Agrebi",
+    "capacity": 65000,
+    "city": "Rades",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": -426384000
+  },
+  "logoUrl": "/escudos/4729.png"
+}

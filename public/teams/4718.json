@@ -1,0 +1,26 @@
+{
+  "_id": 4718,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Austria",
+  "profile": {
+    "slug": "austria",
+    "userCount": 105720,
+    "manager": "Ralf Rangnick",
+    "stadium": "Ernst Happel Stadion",
+    "capacity": 50865,
+    "city": "Vienna",
+    "colors": {
+      "primary": "#ff0000",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": -2076192000
+  },
+  "logoUrl": "/escudos/4718.png"
+}

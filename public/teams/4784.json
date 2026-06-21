@@ -1,0 +1,26 @@
+{
+  "_id": 4784,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "New Zealand",
+  "profile": {
+    "slug": "new-zealand",
+    "userCount": 13723,
+    "manager": "Darren Bazeley",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#000000",
+      "text": "#000000"
+    },
+    "foundationDate": -2492985600
+  },
+  "logoUrl": "/escudos/4784.png"
+}

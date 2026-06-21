@@ -1,0 +1,26 @@
+{
+  "_id": 4725,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Uruguay",
+  "profile": {
+    "slug": "uruguay",
+    "userCount": 237343,
+    "manager": "Marcelo Bielsa",
+    "stadium": "Estadio Centenario",
+    "capacity": 60235,
+    "city": "Montevideo",
+    "colors": {
+      "primary": "#7eacfe",
+      "secondary": "#000000",
+      "text": "#000000"
+    },
+    "foundationDate": -2201385600
+  },
+  "logoUrl": "/escudos/4725.png"
+}

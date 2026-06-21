@@ -1,0 +1,26 @@
+{
+  "_id": 4481,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "France",
+  "profile": {
+    "slug": "france",
+    "userCount": 1128345,
+    "manager": "Didier Deschamps",
+    "stadium": "Stade de France",
+    "capacity": 81338,
+    "city": "Paris",
+    "colors": {
+      "primary": "#01509e",
+      "secondary": "#e30613",
+      "text": "#e30613"
+    },
+    "foundationDate": -2072390400
+  },
+  "logoUrl": "/escudos/4481.png"
+}

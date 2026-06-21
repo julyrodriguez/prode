@@ -1,0 +1,26 @@
+{
+  "_id": 4770,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Japan",
+  "profile": {
+    "slug": "japan",
+    "userCount": 118277,
+    "manager": "Hajime Moriyasu",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#000080",
+      "secondary": "#ed1b24",
+      "text": "#ed1b24"
+    },
+    "foundationDate": -1524528000
+  },
+  "logoUrl": "/escudos/4770.png"
+}

@@ -1,0 +1,26 @@
+{
+  "_id": 4717,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Belgium",
+  "profile": {
+    "slug": "belgium",
+    "userCount": 381052,
+    "manager": "Rudi Garcia",
+    "stadium": "Stade Roi Baudouin",
+    "capacity": 50000,
+    "city": "Brussels",
+    "colors": {
+      "primary": "#ff0033",
+      "secondary": "#000000",
+      "text": "#000000"
+    },
+    "foundationDate": -2345760000
+  },
+  "logoUrl": "/escudos/4717.png"
+}

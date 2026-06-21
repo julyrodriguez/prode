@@ -29,7 +29,7 @@ function TeamRow({ name, teamId, hasBorder }: { name: string; teamId?: number; h
       title={clickable ? `Ver ${name}` : name}
     >
       {teamId ? (
-        <img src={`https://apivacas.jariel.com.ar/escudos/${teamId}.png`} alt="" className="w-4 h-4 object-contain shrink-0" />
+        <img src={`/escudos/${teamId}.png`} alt="" className="w-4 h-4 object-contain shrink-0" />
       ) : (
         <div className="w-4 h-4 rounded-full bg-white/10 shrink-0" />
       )}

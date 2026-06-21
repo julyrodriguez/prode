@@ -1,0 +1,191 @@
+[
+  {
+    "odds": {
+      "full_time": {
+        "home": 5.75,
+        "draw": 3.25,
+        "away": 1.68
+      },
+      "double_chance": {
+        "home_draw": 2.05,
+        "draw_away": 1.14,
+        "home_away": 1.33
+      },
+      "draw_no_bet": {
+        "home": 4,
+        "away": 1.22
+      },
+      "btts": {
+        "yes": 2.25,
+        "no": 1.57
+      },
+      "last_odds_update": "2026-05-02T21:16:30.529Z"
+    },
+    "_id": 15725888,
+    "home_team": {
+      "id": 65676,
+      "name": "Central Córdoba",
+      "score": 0
+    },
+    "away_team": {
+      "id": 3202,
+      "name": "Boca Juniors",
+      "score": 0
+    },
+    "tournament_id": 155,
+    "tournament_name": "Liga Profesional de Fútbol, Apertura",
+    "startTimestamp": 1777749300,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "stage": "Fecha 9",
+    "round_name": "Fecha 9",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:35:16.953Z",
+    "updatedAt": "2026-06-10T05:30:01.141Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 3202,
+      "name": "Boca Juniors",
+      "score": 0
+    },
+    "homeTeam": {
+      "id": 65676,
+      "name": "Central Córdoba",
+      "score": 0
+    },
+    "awayScore": {
+      "current": 2,
+      "display": 2,
+      "period1": 2,
+      "period2": 0,
+      "normaltime": 2
+    },
+    "homeScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 0,
+      "period2": 1,
+      "normaltime": 1
+    },
+    "last_incidents_update": "2026-05-02T20:44:50.570Z"
+  },
+  {
+    "odds": {
+      "full_time": {
+        "home": 3.7,
+        "draw": 2.85,
+        "away": 2.25
+      },
+      "double_chance": {
+        "home_draw": 1.57,
+        "draw_away": 1.29,
+        "home_away": 1.4
+      },
+      "draw_no_bet": {
+        "home": 2.38,
+        "away": 1.53
+      },
+      "btts": {
+        "yes": 2.5,
+        "no": 1.5
+      },
+      "last_odds_update": "2026-04-20T23:14:48.998Z"
+    },
+    "_id": 15269963,
+    "__v": 1,
+    "away_team": {
+      "id": 36837,
+      "name": "Platense",
+      "score": 0
+    },
+    "createdAt": "2026-04-13T23:18:48.883Z",
+    "home_team": {
+      "id": 65676,
+      "name": "Central Córdoba",
+      "score": 0
+    },
+    "startTimestamp": 1776716100,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 155,
+    "tournament_name": "Liga Profesional de Fútbol, Apertura",
+    "updatedAt": "2026-06-10T05:30:32.298Z",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "round_name": "Fecha 15",
+    "stage": "Fecha 15",
+    "awayTeam": {
+      "id": 36837,
+      "name": "Platense",
+      "score": 0
+    },
+    "homeTeam": {
+      "id": 65676,
+      "name": "Central Córdoba",
+      "score": 0
+    },
+    "awayScore": {
+      "current": 3,
+      "display": 3,
+      "period1": 1,
+      "period2": 2,
+      "normaltime": 3
+    },
+    "homeScore": {
+      "current": 4,
+      "display": 4,
+      "period1": 2,
+      "period2": 2,
+      "normaltime": 4
+    },
+    "last_incidents_update": "2026-04-20T23:21:31.199Z"
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15270051,
+    "__v": 0,
+    "away_team": {
+      "id": 3212,
+      "name": "Newell's Old Boys",
+      "score": 3
+    },
+    "createdAt": "2026-04-13T23:30:01.277Z",
+    "home_team": {
+      "id": 65676,
+      "name": "Central Córdoba",
+      "score": 1
+    },
+    "startTimestamp": 1775431800,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 155,
+    "tournament_name": "Liga Profesional Argentina",
+    "updatedAt": "2026-05-04T05:31:00.281Z",
+    "awayScore": {
+      "current": 3,
+      "display": 3,
+      "period1": 2,
+      "period2": 1,
+      "normaltime": 3
+    },
+    "backfill_date": "2026-04-14T04:11:22.636Z",
+    "homeScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 0,
+      "period2": 1,
+      "normaltime": 1
+    }
+  }
+]

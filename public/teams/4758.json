@@ -1,0 +1,26 @@
+{
+  "_id": 4758,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Egypt",
+  "profile": {
+    "slug": "egypt",
+    "userCount": 564131,
+    "manager": "Hossam Hassan",
+    "stadium": "Cairo International Stadium",
+    "capacity": 75000,
+    "city": "Cairo",
+    "colors": {
+      "primary": "#f00000",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": -1517270400
+  },
+  "logoUrl": "/escudos/4758.png"
+}

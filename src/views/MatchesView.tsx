@@ -300,7 +300,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     const teamObj = team === 'home' ? match.homeTeam : match.awayTeam;
     const altTeamObj = team === 'home' ? match.home_team : match.away_team;
     const teamId = teamObj?.id || altTeamObj?.id;
-    if (teamId) return `https://apivacas.jariel.com.ar/escudos/${teamId}.png`;
+    if (teamId) return `/escudos/${teamId}.png`;
     const logoUrl = teamObj?.logoUrl || altTeamObj?.logoUrl || null;
     return logoUrl?.startsWith('/') ? `https://apivacas.jariel.com.ar/api${logoUrl}` : logoUrl;
   };

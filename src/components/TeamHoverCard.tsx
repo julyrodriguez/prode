@@ -178,7 +178,7 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
       <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-3">
         <div className="w-6 h-6 flex-shrink-0">
           <img
-            src={`https://apivacas.jariel.com.ar/escudos/${teamId}.png`}
+            src={`/escudos/${teamId}.png`}
             alt={teamName}
             className="w-full h-full object-contain"
             onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}

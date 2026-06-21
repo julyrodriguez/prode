@@ -1,0 +1,26 @@
+{
+  "_id": 4753,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Cabo Verde",
+  "profile": {
+    "slug": "cape-verde",
+    "userCount": 36860,
+    "manager": "Desconocido",
+    "stadium": "Estádio Nacional de Cabo Verde",
+    "capacity": 15000,
+    "city": "Praia",
+    "colors": {
+      "primary": "#21418e",
+      "secondary": "#ff0000",
+      "text": "#ff0000"
+    },
+    "foundationDate": 401155200
+  },
+  "logoUrl": "/escudos/4753.png"
+}

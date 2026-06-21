@@ -1,0 +1,26 @@
+{
+  "_id": 4479,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Bosnia & Herzegovina",
+  "profile": {
+    "slug": "bosnia-and-herzegovina",
+    "userCount": 93672,
+    "manager": "Sergej Barbarez",
+    "stadium": "Bilino Polje",
+    "capacity": 15600,
+    "city": "Zenica",
+    "colors": {
+      "primary": "#2d4a99",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": 706060800
+  },
+  "logoUrl": "/escudos/4479.png"
+}

@@ -1,0 +1,26 @@
+{
+  "_id": 4714,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Czechia",
+  "profile": {
+    "slug": "czech-republic",
+    "userCount": 70224,
+    "manager": "Miroslav Koubek",
+    "stadium": "Fortuna Arena",
+    "capacity": 19370,
+    "city": "Prague",
+    "colors": {
+      "primary": "#cc0000",
+      "secondary": "#025095",
+      "text": "#025095"
+    },
+    "foundationDate": -2152310400
+  },
+  "logoUrl": "/escudos/4714.png"
+}

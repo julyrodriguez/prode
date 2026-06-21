@@ -217,12 +217,12 @@ export default function StatsView() {
                     <td className="py-3 px-2">
                        <div className="flex items-center gap-3">
                          <div className="w-7 h-7 flex-shrink-0 bg-white/5 rounded-full p-0.5 mt-0.5">
-                           <img 
-                            src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`} 
-                            alt={row.nombre} 
-                            className="w-full h-full object-contain drop-shadow-md"
-                            onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
-                           />
+                            <img 
+                             src={`/escudos/${row.equipoId}.png`} 
+                             alt={row.nombre} 
+                             className="w-full h-full object-contain drop-shadow-md"
+                             onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+                            />
                          </div>
                          <span className="font-bold text-slate-200 group-hover:text-white truncate max-w-[150px] sm:max-w-xs transition-colors">
                            {row.nombre}

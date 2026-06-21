@@ -1,0 +1,47 @@
+[
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15458724,
+    "__v": 0,
+    "away_team": {
+      "id": 5992,
+      "name": "CS 2 de Mayo",
+      "score": 4
+    },
+    "createdAt": "2026-04-13T23:30:31.359Z",
+    "home_team": {
+      "id": 2302,
+      "name": "Club Sporting Cristal",
+      "score": 5
+    },
+    "startTimestamp": 1771979400,
+    "status": {
+      "code": 120,
+      "description": "AP",
+      "type": "finished"
+    },
+    "tournament_id": 384,
+    "tournament_name": "Copa Libertadores",
+    "updatedAt": "2026-04-30T05:33:00.571Z",
+    "awayScore": {
+      "current": 4,
+      "display": 0,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0,
+      "penalties": 4,
+      "aggregated": 2
+    },
+    "backfill_date": "2026-04-14T03:38:15.612Z",
+    "homeScore": {
+      "current": 5,
+      "display": 0,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0,
+      "penalties": 5,
+      "aggregated": 2
+    }
+  }
+]

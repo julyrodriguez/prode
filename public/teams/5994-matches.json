@@ -1,0 +1,45 @@
+[
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15458727,
+    "__v": 0,
+    "away_team": {
+      "id": 3224,
+      "name": "Juventud de Las Piedras",
+      "score": 2
+    },
+    "createdAt": "2026-04-13T23:30:31.359Z",
+    "home_team": {
+      "id": 5994,
+      "name": "Guaraní",
+      "score": 1
+    },
+    "startTimestamp": 1772143200,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 384,
+    "tournament_name": "Copa Libertadores",
+    "updatedAt": "2026-05-04T05:33:00.566Z",
+    "awayScore": {
+      "current": 2,
+      "display": 2,
+      "period1": 0,
+      "period2": 2,
+      "normaltime": 2,
+      "aggregated": 2
+    },
+    "backfill_date": "2026-04-14T03:42:16.321Z",
+    "homeScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 0,
+      "period2": 1,
+      "normaltime": 1,
+      "aggregated": 1
+    }
+  }
+]

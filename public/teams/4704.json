@@ -1,0 +1,26 @@
+{
+  "_id": 4704,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Portugal",
+  "profile": {
+    "slug": "portugal",
+    "userCount": 1513601,
+    "manager": "Roberto Martínez",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#cc0000",
+      "secondary": "#66cc66",
+      "text": "#66cc66"
+    },
+    "foundationDate": -1759536000
+  },
+  "logoUrl": "/escudos/4704.png"
+}

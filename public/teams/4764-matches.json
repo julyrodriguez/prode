@@ -1,0 +1,58 @@
+[
+  {
+    "_id": 15186687,
+    "home_team": {
+      "id": 4764,
+      "name": "Ghana",
+      "score": 1
+    },
+    "away_team": {
+      "id": 5164,
+      "name": "Panama",
+      "score": 0
+    },
+    "tournament_id": 16,
+    "tournament_name": "FIFA World Cup, Group L",
+    "startTimestamp": 1781737200,
+    "status": {
+      "type": "finished",
+      "description": "Ended",
+      "minute": null
+    },
+    "stage": "Fecha 1",
+    "round_name": "Fecha 1",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:30:01.675Z",
+    "updatedAt": "2026-06-18T01:04:03.875Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 5164,
+      "name": "Panama",
+      "score": 0
+    },
+    "homeTeam": {
+      "id": 4764,
+      "name": "Ghana",
+      "score": 1
+    },
+    "awayScore": {
+      "current": 0
+    },
+    "homeScore": {
+      "current": 1
+    },
+    "last_incidents_update": "2026-06-18T01:04:03.874Z",
+    "last_live_update": "2026-06-18T01:04:03.874Z",
+    "posiciones": {
+      "home": {
+        "posicion": 2,
+        "puntos": 3
+      },
+      "away": {
+        "posicion": 3,
+        "puntos": 0
+      }
+    }
+  }
+]

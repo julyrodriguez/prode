@@ -1,0 +1,26 @@
+{
+  "_id": 4695,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Scotland",
+  "profile": {
+    "slug": "scotland",
+    "userCount": 94148,
+    "manager": "Steve Clarke",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#00005e",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": -3054844800
+  },
+  "logoUrl": "/escudos/4695.png"
+}

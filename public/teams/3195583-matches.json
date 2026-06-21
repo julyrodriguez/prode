@@ -1,0 +1,38 @@
+[
+  {
+    "_id": 1806249237,
+    "__v": 0,
+    "awayScore": {
+      "current": 2,
+      "display": 2
+    },
+    "away_team": {
+      "id": 3195583,
+      "name": "Estudiantes",
+      "shortName": "Estudiantes",
+      "score": 2
+    },
+    "createdAt": "2026-06-15T12:44:07.242Z",
+    "homeScore": {
+      "current": 1,
+      "display": 1
+    },
+    "home_team": {
+      "id": 98326114,
+      "name": "Ciudad De Bolivar",
+      "shortName": "Bolivar",
+      "score": 1
+    },
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "round_name": "Fecha 4",
+    "startTimestamp": 1781978400,
+    "status": {
+      "type": "finished",
+      "description": "Finalizado"
+    },
+    "tournament_id": 10001,
+    "tournament_name": "Primera Nacional",
+    "updatedAt": "2026-06-21T02:55:00.587Z"
+  }
+]

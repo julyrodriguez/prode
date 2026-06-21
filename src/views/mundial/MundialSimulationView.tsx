@@ -662,7 +662,7 @@ export default function MundialSimulationView() {
                           </td>
                           <td className="py-3 px-2 font-extrabold text-slate-100 flex items-center gap-2">
                             <img
-                              src={`https://apivacas.jariel.com.ar/escudos/${row.team.id}.png`}
+                              src={`/escudos/${row.team.id}.png`}
                               alt=""
                               className="w-5 h-5 object-contain"
                               onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }}
@@ -697,7 +697,7 @@ export default function MundialSimulationView() {
                               <span className="flex items-center gap-2 text-slate-100 flex-1 text-right justify-end">
                                 {m.homeTeam.name}
                                 <img
-                                  src={`https://apivacas.jariel.com.ar/escudos/${m.homeTeam.id}.png`}
+                                  src={`/escudos/${m.homeTeam.id}.png`}
                                   alt=""
                                   className="w-4 h-4 object-contain"
                                   onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }}
@@ -730,7 +730,7 @@ export default function MundialSimulationView() {
 
                               <span className="flex items-center gap-2 text-slate-100 flex-1 text-left">
                                 <img
-                                  src={`https://apivacas.jariel.com.ar/escudos/${m.awayTeam.id}.png`}
+                                  src={`/escudos/${m.awayTeam.id}.png`}
                                   alt=""
                                   className="w-4 h-4 object-contain"
                                   onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }}
@@ -776,7 +776,7 @@ export default function MundialSimulationView() {
                       <div className="flex items-center gap-2">
                         <span className="font-black text-slate-500">G{letter}</span>
                         <img
-                          src={`https://apivacas.jariel.com.ar/escudos/${row.team.id}.png`}
+                          src={`/escudos/${row.team.id}.png`}
                           alt=""
                           className="w-4 h-4 object-contain"
                           onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }}
@@ -833,7 +833,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.home)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
                       {m.winner?.id === m.home.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -842,7 +842,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.away)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
                       {m.winner?.id === m.away.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -863,7 +863,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.home)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
                       {m.winner?.id === m.home.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -871,7 +871,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.away)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
                       {m.winner?.id === m.away.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -892,7 +892,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.home)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
                       {m.winner?.id === m.home.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -900,7 +900,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.away)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
                       {m.winner?.id === m.away.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -921,7 +921,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.home)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
                       {m.winner?.id === m.home.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -929,7 +929,7 @@ export default function MundialSimulationView() {
                       onClick={() => selectWinner(m.key, m.away)}
                       className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                     >
-                      <img src={`https://apivacas.jariel.com.ar/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                      <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
                       {m.winner?.id === m.away.id && <span className="text-[10px]">🟢</span>}
                     </div>
@@ -950,7 +950,7 @@ export default function MundialSimulationView() {
                     onClick={() => selectWinner(finalMatchResolved.key, finalMatchResolved.home)}
                     className={`px-3 py-3 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${finalMatchResolved.winner?.id === finalMatchResolved.home.id ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-slate-300'}`}
                   >
-                    <img src={`https://apivacas.jariel.com.ar/escudos/${finalMatchResolved.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                    <img src={`/escudos/${finalMatchResolved.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{finalMatchResolved.home.name}</span>
                     {finalMatchResolved.winner?.id === finalMatchResolved.home.id && <span className="text-[10px]">🏆</span>}
                   </div>
@@ -958,7 +958,7 @@ export default function MundialSimulationView() {
                     onClick={() => selectWinner(finalMatchResolved.key, finalMatchResolved.away)}
                     className={`px-3 py-3 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${finalMatchResolved.winner?.id === finalMatchResolved.away.id ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-slate-300'}`}
                   >
-                    <img src={`https://apivacas.jariel.com.ar/escudos/${finalMatchResolved.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                    <img src={`/escudos/${finalMatchResolved.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{finalMatchResolved.away.name}</span>
                     {finalMatchResolved.winner?.id === finalMatchResolved.away.id && <span className="text-[10px]">🏆</span>}
                   </div>
@@ -975,14 +975,14 @@ export default function MundialSimulationView() {
                     onClick={() => selectWinner(thirdPlaceMatchResolved.key, thirdPlaceMatchResolved.home)}
                     className={`px-3 py-2 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${thirdPlaceMatchResolved.winner?.id === thirdPlaceMatchResolved.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                   >
-                    <img src={`https://apivacas.jariel.com.ar/escudos/${thirdPlaceMatchResolved.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                    <img src={`/escudos/${thirdPlaceMatchResolved.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{thirdPlaceMatchResolved.home.name}</span>
                   </div>
                   <div
                     onClick={() => selectWinner(thirdPlaceMatchResolved.key, thirdPlaceMatchResolved.away)}
                     className={`px-3 py-2 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${thirdPlaceMatchResolved.winner?.id === thirdPlaceMatchResolved.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
                   >
-                    <img src={`https://apivacas.jariel.com.ar/escudos/${thirdPlaceMatchResolved.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
+                    <img src={`/escudos/${thirdPlaceMatchResolved.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = 'https://img.icons8.com/color/48/000000/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{thirdPlaceMatchResolved.away.name}</span>
                   </div>
                 </div>

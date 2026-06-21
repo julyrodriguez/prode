@@ -1,0 +1,26 @@
+{
+  "_id": 4819,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Argentina",
+  "profile": {
+    "slug": "argentina",
+    "userCount": 1523521,
+    "manager": "Lionel Scaloni",
+    "stadium": "Estadio Mâs Monumental",
+    "capacity": 85018,
+    "city": "Buenos Aires",
+    "colors": {
+      "primary": "#66ccff",
+      "secondary": "#ffffff",
+      "text": "#ffffff"
+    },
+    "foundationDate": -2425420800
+  },
+  "logoUrl": "/escudos/4819.png"
+}

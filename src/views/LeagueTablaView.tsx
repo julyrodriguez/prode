@@ -312,7 +312,7 @@ export default function LeagueTablaView() {
                                 <div className="flex items-center gap-2.5">
                                   <div className={`${iconSize} flex-shrink-0 bg-white/5 rounded-full mt-0.5 border border-white/5 group-hover:border-white/10 transition-colors`}>
                                     <TeamLogo
-                                      logoUrl={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
+                                      logoUrl={`/escudos/${row.equipoId}.png`}
                                       teamName={row.nombre}
                                       className="w-full h-full"
                                     />

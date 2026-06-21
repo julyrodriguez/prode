@@ -1,0 +1,26 @@
+{
+  "_id": 4748,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Brazil",
+  "profile": {
+    "slug": "brazil",
+    "userCount": 2070718,
+    "manager": "Carlo Ancelotti",
+    "stadium": "Estádio do Maracanã",
+    "capacity": 78838,
+    "city": "Rio de Janeiro",
+    "colors": {
+      "primary": "#ffff00",
+      "secondary": "#009933",
+      "text": "#009933"
+    },
+    "foundationDate": -1747267200
+  },
+  "logoUrl": "/escudos/4748.png"
+}

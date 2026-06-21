@@ -1,0 +1,26 @@
+{
+  "_id": 4711,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Germany",
+  "profile": {
+    "slug": "germany",
+    "userCount": 765705,
+    "manager": "Julian Nagelsmann",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#000000",
+      "text": "#000000"
+    },
+    "foundationDate": -2206656000
+  },
+  "logoUrl": "/escudos/4711.png"
+}

@@ -1,0 +1,135 @@
+[
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15631369,
+    "__v": 0,
+    "away_team": {
+      "id": 3061,
+      "name": "Galatasaray",
+      "score": 0
+    },
+    "createdAt": "2026-04-13T23:31:01.491Z",
+    "home_team": {
+      "id": 44,
+      "name": "Liverpool",
+      "score": 4
+    },
+    "startTimestamp": 1773864000,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:08.047Z",
+    "awayScore": {
+      "current": 0,
+      "display": 0,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0,
+      "aggregated": 1
+    },
+    "backfill_date": "2026-04-14T03:54:49.903Z",
+    "homeScore": {
+      "current": 4,
+      "display": 4,
+      "period1": 1,
+      "period2": 3,
+      "normaltime": 4,
+      "aggregated": 4
+    }
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15631351,
+    "__v": 0,
+    "away_team": {
+      "id": 44,
+      "name": "Liverpool",
+      "score": 0
+    },
+    "createdAt": "2026-04-13T23:31:01.491Z",
+    "home_team": {
+      "id": 3061,
+      "name": "Galatasaray",
+      "score": 1
+    },
+    "startTimestamp": 1773164700,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:08.047Z",
+    "awayScore": {
+      "current": 0,
+      "display": 0,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0
+    },
+    "backfill_date": "2026-04-14T03:45:17.300Z",
+    "homeScore": {
+      "current": 1,
+      "display": 1,
+      "period1": 1,
+      "period2": 0,
+      "normaltime": 1
+    }
+  },
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15452770,
+    "__v": 0,
+    "away_team": {
+      "id": 3061,
+      "name": "Galatasaray",
+      "score": 2
+    },
+    "createdAt": "2026-04-13T23:31:01.490Z",
+    "home_team": {
+      "id": 2687,
+      "name": "Juventus",
+      "score": 3
+    },
+    "startTimestamp": 1772049600,
+    "status": {
+      "code": 110,
+      "description": "AET",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:39.217Z",
+    "awayScore": {
+      "current": 0,
+      "display": 2,
+      "period1": 0,
+      "period2": 0,
+      "normaltime": 0,
+      "extra1": 1,
+      "extra2": 1,
+      "overtime": 2,
+      "aggregated": 7
+    },
+    "backfill_date": "2026-04-14T03:39:15.812Z",
+    "homeScore": {
+      "current": 3,
+      "display": 3,
+      "period1": 1,
+      "period2": 2,
+      "normaltime": 3,
+      "extra1": 0,
+      "extra2": 0,
+      "overtime": 0,
+      "aggregated": 5
+    }
+  }
+]

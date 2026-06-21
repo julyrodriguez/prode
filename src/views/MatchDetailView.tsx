@@ -279,10 +279,10 @@ export default function MatchDetailView() {
   const hLogoBase = match.homeTeam?.logoUrl || match.home_team?.logoUrl;
   const aLogoBase = match.awayTeam?.logoUrl || match.away_team?.logoUrl;
 
-  const hLogo = hId ? `https://apivacas.jariel.com.ar/escudos/${hId}.png` :
+  const hLogo = hId ? `/escudos/${hId}.png` :
     (hLogoBase?.startsWith('/') ? `https://apivacas.jariel.com.ar${hLogoBase}` : hLogoBase);
 
-  const aLogo = aId ? `https://apivacas.jariel.com.ar/escudos/${aId}.png` :
+  const aLogo = aId ? `/escudos/${aId}.png` :
     (aLogoBase?.startsWith('/') ? `https://apivacas.jariel.com.ar${aLogoBase}` : aLogoBase);
 
   const hScore = match.homeScore?.current ?? match.homeTeam?.score ?? match.home_team?.score ?? '-';
@@ -929,7 +929,7 @@ export default function MatchDetailView() {
                                     <div className="flex items-center gap-1.5 min-w-0">
                                       <div className="w-5 h-5 flex-shrink-0 bg-white/5 rounded-full p-0.5 border border-white/5">
                                         <img
-                                          src={`https://apivacas.jariel.com.ar/escudos/${row.equipoId}.png`}
+                                          src={`/escudos/${row.equipoId}.png`}
                                           alt={row.nombre}
                                           className="w-full h-full object-contain"
                                           onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}

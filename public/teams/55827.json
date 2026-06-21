@@ -1,0 +1,26 @@
+{
+  "_id": 55827,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Curaçao",
+  "profile": {
+    "slug": "curacao",
+    "userCount": 12466,
+    "manager": "Fred Rutten",
+    "stadium": "Estadio Ergilio Hato",
+    "capacity": null,
+    "city": "Willemstad",
+    "colors": {
+      "primary": "#004990",
+      "secondary": "#000fff",
+      "text": "#000fff"
+    },
+    "foundationDate": -1546300800
+  },
+  "logoUrl": "/escudos/55827.png"
+}

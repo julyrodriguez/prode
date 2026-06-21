@@ -1,0 +1,26 @@
+{
+  "_id": 4781,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Mexico",
+  "profile": {
+    "slug": "mexico",
+    "userCount": 248370,
+    "manager": "Javier Aguirre",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#1a4d3e",
+      "secondary": "#960000",
+      "text": "#960000"
+    },
+    "foundationDate": -1336780800
+  },
+  "logoUrl": "/escudos/4781.png"
+}

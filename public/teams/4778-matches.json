@@ -1,0 +1,124 @@
+[
+  {
+    "_id": 15186859,
+    "home_team": {
+      "id": 4695,
+      "name": "Scotland",
+      "score": 0
+    },
+    "away_team": {
+      "id": 4778,
+      "name": "Morocco",
+      "score": 1
+    },
+    "tournament_id": 16,
+    "tournament_name": "FIFA World Cup, Group C",
+    "startTimestamp": 1781906400,
+    "status": {
+      "type": "finished",
+      "description": "Ended",
+      "minute": null
+    },
+    "stage": "Fecha 2",
+    "round_name": "Fecha 2",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:30:01.715Z",
+    "updatedAt": "2026-06-20T00:00:04.406Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 4778,
+      "name": "Morocco",
+      "score": 1
+    },
+    "homeTeam": {
+      "id": 4695,
+      "name": "Scotland",
+      "score": 0
+    },
+    "awayScore": {
+      "current": 1
+    },
+    "homeScore": {
+      "current": 0
+    },
+    "last_incidents_update": "2026-06-20T00:00:04.405Z",
+    "last_live_update": "2026-06-20T00:00:04.405Z",
+    "posiciones": {
+      "home": {
+        "posicion": 2,
+        "puntos": 0
+      },
+      "away": {
+        "posicion": 3,
+        "puntos": 0
+      }
+    }
+  },
+  {
+    "_id": 15186850,
+    "home_team": {
+      "id": 4748,
+      "name": "Brazil",
+      "score": 1
+    },
+    "away_team": {
+      "id": 4778,
+      "name": "Morocco",
+      "score": 1
+    },
+    "tournament_id": 16,
+    "tournament_name": "FIFA World Cup, Group C",
+    "startTimestamp": 1781388000,
+    "status": {
+      "type": "finished",
+      "description": "Ended",
+      "minute": null
+    },
+    "stage": "Fecha 1",
+    "round_name": "Fecha 1",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:30:01.571Z",
+    "updatedAt": "2026-06-14T00:06:04.179Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 4778,
+      "name": "Morocco",
+      "score": 1
+    },
+    "homeTeam": {
+      "id": 4748,
+      "name": "Brazil",
+      "score": 1
+    },
+    "awayScore": {
+      "current": 1
+    },
+    "historial": {
+      "total": 2,
+      "homeWins": 0,
+      "ganadosHome": 0,
+      "draws": 1,
+      "empataron": 1,
+      "awayWins": 1,
+      "ganadosAway": 1,
+      "diferencia": "Marruecos +1"
+    },
+    "homeScore": {
+      "current": 1
+    },
+    "last_incidents_update": "2026-06-14T00:06:04.177Z",
+    "last_live_update": "2026-06-14T00:06:04.177Z",
+    "posiciones": {
+      "home": {
+        "posicion": 1,
+        "puntos": 1
+      },
+      "away": {
+        "posicion": 2,
+        "puntos": 1
+      }
+    }
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "_id": 4766,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Iran",
+  "profile": {
+    "slug": "iran",
+    "userCount": 69718,
+    "manager": "Amir Ghalenoei",
+    "stadium": "Azadi Stadium",
+    "capacity": 78116,
+    "city": "Tehran",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#cc0000",
+      "text": "#cc0000"
+    },
+    "foundationDate": -1580688000
+  },
+  "logoUrl": "/escudos/4766.png"
+}

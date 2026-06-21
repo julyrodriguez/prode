@@ -1,0 +1,26 @@
+{
+  "_id": 4741,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Australia",
+  "profile": {
+    "slug": "australia",
+    "userCount": 50209,
+    "manager": "Tony Popovic",
+    "stadium": "Desconocido",
+    "capacity": null,
+    "city": "Desconocida",
+    "colors": {
+      "primary": "#ffcc00",
+      "secondary": "#2d324b",
+      "text": "#2d324b"
+    },
+    "foundationDate": -283996800
+  },
+  "logoUrl": "/escudos/4741.png"
+}

@@ -1,0 +1,58 @@
+[
+  {
+    "_id": 15186751,
+    "home_team": {
+      "id": 4718,
+      "name": "Austria",
+      "score": 3
+    },
+    "away_team": {
+      "id": 4771,
+      "name": "Jordan",
+      "score": 1
+    },
+    "tournament_id": 16,
+    "tournament_name": "FIFA World Cup, Group J",
+    "startTimestamp": 1781668800,
+    "status": {
+      "type": "finished",
+      "description": "Ended",
+      "minute": null
+    },
+    "stage": "Fecha 1",
+    "round_name": "Fecha 1",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:30:01.659Z",
+    "updatedAt": "2026-06-17T06:09:03.517Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 4771,
+      "name": "Jordan",
+      "score": 1
+    },
+    "homeTeam": {
+      "id": 4718,
+      "name": "Austria",
+      "score": 3
+    },
+    "awayScore": {
+      "current": 1
+    },
+    "homeScore": {
+      "current": 3
+    },
+    "last_incidents_update": "2026-06-17T06:09:03.515Z",
+    "last_live_update": "2026-06-17T06:09:03.515Z",
+    "posiciones": {
+      "home": {
+        "posicion": 2,
+        "puntos": 3
+      },
+      "away": {
+        "posicion": 3,
+        "puntos": 0
+      }
+    }
+  }
+]

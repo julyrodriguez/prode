@@ -1,0 +1,26 @@
+{
+  "_id": 3224,
+  "__v": 0,
+  "competitions": {
+    "384": {
+      "name": "Copa Libertadores",
+      "season_id": 87760
+    }
+  },
+  "name": "Juventud de Las Piedras",
+  "profile": {
+    "slug": "juventud-de-las-piedras",
+    "userCount": 6854,
+    "manager": "Sergio Blanco",
+    "stadium": "Estadio Parque Artigas",
+    "capacity": 12000,
+    "city": "Las Piedras",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#0000ff",
+      "text": "#0000ff"
+    },
+    "foundationDate": -1073692800
+  },
+  "logoUrl": "/escudos/3224.png"
+}

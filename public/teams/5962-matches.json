@@ -1,0 +1,45 @@
+[
+  {
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "_id": 15452758,
+    "__v": 0,
+    "away_team": {
+      "id": 5962,
+      "name": "Qarabağ FK",
+      "score": 2
+    },
+    "createdAt": "2026-04-13T23:31:01.490Z",
+    "home_team": {
+      "id": 39,
+      "name": "Newcastle United",
+      "score": 3
+    },
+    "startTimestamp": 1771963200,
+    "status": {
+      "code": 100,
+      "description": "Ended",
+      "type": "finished"
+    },
+    "tournament_id": 7,
+    "tournament_name": "Champions League",
+    "updatedAt": "2026-06-10T05:33:39.217Z",
+    "awayScore": {
+      "current": 2,
+      "display": 2,
+      "period1": 0,
+      "period2": 2,
+      "normaltime": 2,
+      "aggregated": 3
+    },
+    "backfill_date": "2026-04-14T03:36:44.103Z",
+    "homeScore": {
+      "current": 3,
+      "display": 3,
+      "period1": 2,
+      "period2": 1,
+      "normaltime": 3,
+      "aggregated": 9
+    }
+  }
+]

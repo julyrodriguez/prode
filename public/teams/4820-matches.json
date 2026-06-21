@@ -1,0 +1,58 @@
+[
+  {
+    "_id": 15186722,
+    "home_team": {
+      "id": 4723,
+      "name": "Uzbekistan",
+      "score": 1
+    },
+    "away_team": {
+      "id": 4820,
+      "name": "Colombia",
+      "score": 3
+    },
+    "tournament_id": 16,
+    "tournament_name": "FIFA World Cup, Group K",
+    "startTimestamp": 1781748000,
+    "status": {
+      "type": "finished",
+      "description": "Ended",
+      "minute": null
+    },
+    "stage": "Fecha 1",
+    "round_name": "Fecha 1",
+    "is_synthetic_slot": false,
+    "is_tbd": false,
+    "createdAt": "2026-04-16T10:30:01.681Z",
+    "updatedAt": "2026-06-18T04:02:03.914Z",
+    "__v": 0,
+    "awayTeam": {
+      "id": 4820,
+      "name": "Colombia",
+      "score": 3
+    },
+    "homeTeam": {
+      "id": 4723,
+      "name": "Uzbekistan",
+      "score": 1
+    },
+    "awayScore": {
+      "current": 3
+    },
+    "homeScore": {
+      "current": 1
+    },
+    "last_incidents_update": "2026-06-18T04:02:03.912Z",
+    "last_live_update": "2026-06-18T04:02:03.912Z",
+    "posiciones": {
+      "home": {
+        "posicion": 1,
+        "puntos": 3
+      },
+      "away": {
+        "posicion": 4,
+        "puntos": 0
+      }
+    }
+  }
+]

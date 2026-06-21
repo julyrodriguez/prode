@@ -1,0 +1,26 @@
+{
+  "_id": 4691,
+  "__v": 0,
+  "competitions": {
+    "16": {
+      "name": "Copa del mundo",
+      "season_id": 58210
+    }
+  },
+  "name": "Algeria",
+  "profile": {
+    "slug": "algeria",
+    "userCount": 303309,
+    "manager": "Vladimir Petković",
+    "stadium": "Stade 5 Juillet 1962",
+    "capacity": 85000,
+    "city": "Algiers",
+    "colors": {
+      "primary": "#ffffff",
+      "secondary": "#23bc55",
+      "text": "#23bc55"
+    },
+    "foundationDate": -228873600
+  },
+  "logoUrl": "/escudos/4691.png"
+}
