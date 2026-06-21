@@ -59,6 +59,24 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   const [hoveredStepIndex, setHoveredStepIndex] = useState<number | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 1000, height: 550 });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') return;
+    if (!svgRef.current) return;
+    
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDimensions({ width, height });
+        }
+      }
+    });
+    
+    resizeObserver.observe(svgRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
 
   if (!history || history.length === 0) {
     return (
@@ -69,8 +87,8 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
   }
 
   // Chart layout dimensions
-  const width = 1000;
-  const height = 550;
+  const width = dimensions.width;
+  const height = dimensions.height;
   const paddingLeft = 25;
   const paddingRight = 10;
   const paddingTop = 20;
