@@ -59,6 +59,9 @@ export default function PlayersView() {
   // Cache for total minutes of players: nameFull -> minutes
   const [playerMinutes, setPlayerMinutes] = useState<Record<string, number>>({});
 
+  // Player nationality/country state
+  const [playerCountry, setPlayerCountry] = useState<string | null>(null);
+
   // Set mounted state on client
   useEffect(() => {
     setMounted(true);
@@ -120,6 +123,7 @@ export default function PlayersView() {
   useEffect(() => {
     if (!selectedPlayerName) {
       setPlayerMatches([]);
+      setPlayerCountry(null);
       return;
     }
 
@@ -130,8 +134,11 @@ export default function PlayersView() {
         const res = await fetch(`https://apivacas.jariel.com.ar/api/mundial/players/detail?name=${encodedName}`);
         if (!res.ok) throw new Error('Error al obtener el detalle del jugador');
         const json = await res.json();
-        if (json.success) {
-          setPlayerMatches(json.data || []);
+        if (json.success && json.data) {
+          const matches = json.data || [];
+          setPlayerMatches(matches);
+          const country = await resolvePlayerCountry(matches, selectedPlayerName);
+          setPlayerCountry(country);
         }
       } catch (err) {
         console.error(err);
@@ -142,6 +149,51 @@ export default function PlayersView() {
 
     fetchPlayerDetail();
   }, [selectedPlayerName]);
+
+  // Helper to resolve player country from match history
+  const resolvePlayerCountry = async (matches: MatchDetailHistory[], name: string): Promise<string | null> => {
+    if (!matches || matches.length === 0) return null;
+
+    if (matches.length > 1) {
+      const counts: Record<string, number> = {};
+      matches.forEach(m => {
+        if (m.homeTeam?.name) counts[m.homeTeam.name] = (counts[m.homeTeam.name] || 0) + 1;
+        if (m.awayTeam?.name) counts[m.awayTeam.name] = (counts[m.awayTeam.name] || 0) + 1;
+      });
+      const common = Object.keys(counts).find(team => counts[team] === matches.length);
+      if (common) return common;
+    }
+
+    // Single match fallback lookup
+    const singleMatch = matches[0];
+    try {
+      const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/detail/${singleMatch.matchId}`);
+      if (res.ok) {
+        const matchDetail = await res.json();
+        const lineups = matchDetail.lineups;
+        if (lineups) {
+          const matchName = (p: any) => {
+            const pName = p.player?.name?.toLowerCase() || '';
+            const pShort = p.player?.shortName?.toLowerCase() || '';
+            const search = name.toLowerCase();
+            return pName.includes(search) || search.includes(pName) || pShort.includes(search) || search.includes(pShort);
+          };
+
+          const homePlayers = lineups.home?.players || [];
+          const inHome = homePlayers.some(matchName);
+          if (inHome) return singleMatch.homeTeam?.name || null;
+
+          const awayPlayers = lineups.away?.players || [];
+          const inAway = awayPlayers.some(matchName);
+          if (inAway) return singleMatch.awayTeam?.name || null;
+        }
+      }
+    } catch (e) {
+      console.error('Error resolving country', e);
+    }
+
+    return singleMatch.homeTeam?.name || null;
+  };
 
   // Helper to fetch minutes for multiple players
   const fetchMinutesForPlayers = async (names: string[]) => {
@@ -659,10 +711,13 @@ export default function PlayersView() {
                 </div>
                 <div>
                   <h2 className="text-sm font-black text-slate-100">{selectedPlayerName}</h2>
-                  <div className="flex items-center gap-1 mt-0.5">
+                  <div className="flex flex-wrap items-center gap-1 mt-0.5">
                     <span className={`text-[6px] uppercase font-black tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(selectedPlayerAggInfo?.position || '')}`}>
                       {selectedPlayerAggInfo?.position}
                     </span>
+                    {playerCountry && (
+                      <span className="text-[9px] text-emerald-400 font-bold">• {playerCountry}</span>
+                    )}
                     {selectedPlayerAggInfo?.age && (
                       <span className="text-[9px] text-slate-500">• {selectedPlayerAggInfo.age} años</span>
                     )}
