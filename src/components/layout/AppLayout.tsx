@@ -233,7 +233,7 @@ export default function AppLayout() {
 
   const currentLeagueTabs = rawLeagueTabs.filter(tab => {
     if (!user) {
-      if (tab.id === 'predicciones' || tab.id === 'posiciones' || tab.id === 'simulacion') {
+      if (tab.id === 'predicciones' || tab.id === 'posiciones' || tab.id === 'simulacion' || tab.id === 'minijuegos') {
         return false;
       }
     }
@@ -611,7 +611,7 @@ export default function AppLayout() {
               <div className="hidden md:flex items-center bg-black/40 p-1 rounded-xl border border-white/5 gap-0.5">
                 {GENERAL_TABS.filter((tab) => {
                   if (!user) {
-                    if (tab.id === 'ranking' || tab.id === 'estadisticas') return false;
+                    if (tab.id === 'ranking' || tab.id === 'estadisticas' || tab.id === 'minijuegos') return false;
                   }
                   return true;
                 }).map((tab) => {
@@ -711,7 +711,7 @@ export default function AppLayout() {
                     ];
 
                 const leftItems = rawLeftItems.filter(item => {
-                  if (!user && item.id === 'predicciones') return false;
+                  if (!user && (item.id === 'predicciones' || item.id === 'minijuegos')) return false;
                   return true;
                 });
 

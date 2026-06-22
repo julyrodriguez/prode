@@ -178,6 +178,7 @@ img, svg, canvas, video, iframe {
 [data-theme="light"] .bg-black\/20  { background-color: rgba(255,255,255,0.80) !important; }
 [data-theme="light"] .bg-black\/25  { background-color: rgba(0,0,0,0.04) !important; }
 [data-theme="light"] .bg-black\/30  { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .bg-black\/35  { background-color: rgba(0,0,0,0.05) !important; }
 [data-theme="light"] .bg-black\/40  { background-color: rgba(0,0,0,0.05) !important; }
 [data-theme="light"] .bg-black\/50  { background-color: rgba(0,0,0,0.06) !important; }
 [data-theme="light"] .bg-black\/60  { background-color: rgba(255,255,255,0.90) !important; }
@@ -247,6 +248,7 @@ img, svg, canvas, video, iframe {
 [data-theme="light"] .text-slate-600  { color: #475569 !important; }
 [data-theme="light"] .text-slate-655  { color: #64748b !important; }
 [data-theme="light"] .text-white      { color: #0f172a !important; }
+[data-theme="light"] .text-white\/90   { color: #0f172a !important; }
 
 /* --- Hover overrides --- */
 [data-theme="light"] .hover\:bg-white\/\[0\.03\]:hover { background-color: rgba(0,0,0,0.02) !important; }
