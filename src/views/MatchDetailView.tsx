@@ -142,6 +142,27 @@ export default function MatchDetailView() {
     };
   }, [selectedPlayer]);
 
+  // Manejar el gesto de "ir para atrás" para cerrar el modal de jugador sin salir de la página
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!selectedPlayer) return;
+
+    window.history.pushState({ modalOpen: 'playerStats' }, '');
+
+    const handlePopState = () => {
+      setSelectedPlayer(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.modalOpen === 'playerStats') {
+        window.history.back();
+      }
+    };
+  }, [selectedPlayer]);
+
 
   const [mundialStandings, setMundialStandings] = useState<Record<string, any[]> | null>(null);
   const [loadingMundialStandings, setLoadingMundialStandings] = useState(false);
