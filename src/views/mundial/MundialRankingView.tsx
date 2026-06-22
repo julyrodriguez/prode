@@ -800,11 +800,11 @@ export default function MundialRankingView() {
 
               {/* Header ribbon */}
               <div
-                className="w-full flex flex-col items-center py-2 px-3 relative z-10"
+                className="w-full flex flex-col items-center text-center py-2 px-3 relative z-10"
                 style={{ background: accent, color: '#000' }}
               >
-                <span className="text-[8px] font-black uppercase tracking-[0.35em] opacity-70">— Prode del Mundial —</span>
-                <span className="text-xl font-black uppercase tracking-[0.2em] leading-none">⚠ SE BUSCA ⚠</span>
+                <span className="block w-full text-center text-[8px] font-black uppercase tracking-[0.35em] opacity-70">— Prode del Mundial —</span>
+                <span className="block w-full text-center text-xl font-black uppercase tracking-[0.2em] leading-none">⚠ SE BUSCA ⚠</span>
               </div>
 
               {/* Photo */}
@@ -893,6 +893,7 @@ export default function MundialRankingView() {
               debt="$15.000"
               subtitle="Deudor del Prode"
               rewardText="Vivo o Muerto"
+              rewardPoints="🎯 15 Puntos"
               accent="#f59e0b"
             />
             <WantedCard
