@@ -1549,7 +1549,7 @@ export default function MatchDetailView() {
 
                     {/* ARQUERO */}
                     {selectedPlayer.position === "Arquero" && (
-                      <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5 col-span-2`}>
+                      <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5 col-span-1 md:col-span-2`}>
                         <h4 className={`text-[9px] font-black ${isLight ? 'text-amber-600' : 'text-amber-400'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Estadísticas de Portería</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
                           <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
