@@ -214,6 +214,7 @@ img, svg, canvas, video, iframe {
 [data-theme="light"] .bg-\[\#0b1015\]\/60  { background-color: rgba(255,255,255,0.85) !important; }
 [data-theme="light"] .bg-\[\#0b1015\]\/80  { background-color: rgba(255,255,255,0.92) !important; }
 [data-theme="light"] .bg-\[\#0b1015\]\/85  { background-color: rgba(255,255,255,0.92) !important; }
+[data-theme="light"] .bg-\[\#0b1015\]\/95  { background-color: rgba(255,255,255,0.95) !important; }
 [data-theme="light"] .bg-\[\#0f172a\]\/95  { background-color: rgba(241,245,249,0.97) !important; }
 [data-theme="light"] .bg-\[\#121820\]\/30  { background-color: rgba(232, 237, 245, 0.40) !important; }
 [data-theme="light"] .bg-\[\#121820\]\/45  { background-color: rgba(232, 237, 245, 0.60) !important; }
