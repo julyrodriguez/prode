@@ -908,9 +908,9 @@ export default function MatchDetailView() {
                             {p.jerseyNumber}
                           </span>
                           <div className="flex flex-col truncate overflow-hidden w-full">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
-                              {hasStats && <BarChart3 className="w-2.5 h-2.5 text-emerald-450/70 group-hover:text-emerald-400 transition-all shrink-0" />}
+                            <div className="flex items-center gap-1.5 w-full min-w-0">
+                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                              {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
                             </div>
                             <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
                           </div>
@@ -934,9 +934,9 @@ export default function MatchDetailView() {
                           className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
                         >
                           <div className="flex flex-col truncate overflow-hidden w-full items-end">
-                            <div className="flex items-center gap-1.5">
-                              {hasStats && <BarChart3 className="w-2.5 h-2.5 text-indigo-450/70 group-hover:text-indigo-400 transition-all shrink-0" />}
-                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
+                            <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
+                              {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
+                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
                             </div>
                             <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
                           </div>
@@ -970,9 +970,9 @@ export default function MatchDetailView() {
                                 {p.jerseyNumber}
                               </span>
                               <div className="flex flex-col truncate overflow-hidden w-full">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
-                                  {hasStats && <BarChart3 className="w-2.5 h-2.5 text-emerald-400/65 group-hover:text-emerald-400 transition-all shrink-0" />}
+                                <div className="flex items-center gap-1.5 w-full min-w-0">
+                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                  {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
                                 </div>
                                 <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
                               </div>
@@ -996,9 +996,9 @@ export default function MatchDetailView() {
                               className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
                             >
                               <div className="flex flex-col truncate overflow-hidden w-full items-end">
-                                <div className="flex items-center gap-1.5">
-                                  {hasStats && <BarChart3 className="w-2.5 h-2.5 text-indigo-400/65 group-hover:text-indigo-400 transition-all shrink-0" />}
-                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
+                                <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
+                                  {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
+                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
                                 </div>
                                 <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
                               </div>
