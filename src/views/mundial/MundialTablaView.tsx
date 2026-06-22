@@ -340,6 +340,81 @@ export default function MundialTablaView() {
     return filtered.sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
   };
 
+  const parseMatchNumber = (name: string): { type: 'winner' | 'loser', num: number } | null => {
+    const matchWin = name.match(/Ganador del partido\s+(\d+)/i) || name.match(/^G(\d+)$/i);
+    if (matchWin) {
+      return { type: 'winner', num: parseInt(matchWin[1], 10) };
+    }
+    const matchLose = name.match(/Perdedor del partido\s+(\d+)/i) || name.match(/^P(\d+)$/i);
+    if (matchLose) {
+      return { type: 'loser', num: parseInt(matchLose[1], 10) };
+    }
+    return null;
+  };
+
+  const getMatchByNumber = (stagesList: any[], num: number): any | null => {
+    if (!stagesList) return null;
+    if (num >= 73 && num <= 88) {
+      return stagesList[0]?.groups?.[num - 73] || null;
+    }
+    if (num >= 89 && num <= 96) {
+      return stagesList[1]?.groups?.[num - 89] || null;
+    }
+    if (num >= 97 && num <= 100) {
+      return stagesList[2]?.groups?.[num - 97] || null;
+    }
+    if (num >= 101 && num <= 102) {
+      return stagesList[3]?.groups?.[num - 101] || null;
+    }
+    return null;
+  };
+
+  const resolveParticipantName = (p: any, stagesList: any[]): { name: string; isReal: boolean } => {
+    const name = p.nombre || p.name || '';
+    const parsed = parseMatchNumber(name);
+    if (!parsed) {
+      return { name: translateTeamToSpanish(name), isReal: true }; // Real team name
+    }
+
+    const { type, num } = parsed;
+    const sourceMatch = getMatchByNumber(stagesList, num);
+    if (!sourceMatch) {
+      return { name: p.short_name || name, isReal: false };
+    }
+
+    const sWinnerIdx = sourceMatch.winner;
+    const hasWinner = sWinnerIdx === 0 || sWinnerIdx === 1;
+
+    if (hasWinner) {
+      const winnerPart = sourceMatch.participants?.[sWinnerIdx];
+      const loserPart = sourceMatch.participants?.[1 - sWinnerIdx];
+      
+      if (type === 'winner' && winnerPart) {
+        return resolveParticipantName(winnerPart, stagesList);
+      }
+      if (type === 'loser' && loserPart) {
+        return resolveParticipantName(loserPart, stagesList);
+      }
+    }
+
+    // Unresolved source match: let's get names of contestants
+    const p0 = sourceMatch.participants?.[0];
+    const p1 = sourceMatch.participants?.[1];
+
+    if (p0 && p1) {
+      const r0 = resolveParticipantName(p0, stagesList);
+      const r1 = resolveParticipantName(p1, stagesList);
+      
+      const name0 = r0.isReal ? r0.name : (p0.short_name || p0.name);
+      const name1 = r1.isReal ? r1.name : (p1.short_name || p1.name);
+      
+      const label = type === 'winner' ? 'Ganador entre' : 'Perdedor entre';
+      return { name: `${label} ${name0} y ${name1}`, isReal: false };
+    }
+
+    return { name: p.short_name || name, isReal: false };
+  };
+
   const getBackgroundColorForPromotion = (promoDesc: string | null) => {
     if (!promoDesc) return '';
     const dl = promoDesc.toLowerCase();
@@ -571,8 +646,9 @@ export default function MundialTablaView() {
 
                         <div className="flex flex-col gap-0.5 md:gap-1">
                           {match.participants?.map((p: any, pIdx: number) => {
-                            const pName = p.nombre || p.name;
-                            const localId = getTeamIdByName(pName);
+                            const resolved = resolveParticipantName(p, stages);
+                            const pName = resolved.name;
+                            const localId = resolved.isReal ? getTeamIdByName(pName) : null;
                             const hasId = localId !== null;
 
                             const isWinner = match.winner === pIdx || (hasId && match.winner === localId);
