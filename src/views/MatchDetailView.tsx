@@ -126,6 +126,10 @@ export default function MatchDetailView() {
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  const [sortField, setSortField] = useState<'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon' | 'tackles'>('shots');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showAllPlayerStats, setShowAllPlayerStats] = useState(false);
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -976,6 +980,162 @@ export default function MatchDetailView() {
           </div>
         </div>
       )}
+
+      {/* Tabla Compacta de Estadísticas de Jugadores */}
+      {(() => {
+        if (!elninePlayers || elninePlayers.length === 0) return null;
+
+        const normalizeString = (str: string) => {
+          return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+        };
+
+        // Filtrar jugadores con al menos alguna estadística mayor a 0
+        const playersWithStats = elninePlayers.filter((p: any) => {
+          if (!p.stats) return false;
+          const shots = p.stats.shots || 0;
+          const shotsOnTarget = p.stats.shotsOnTarget || 0;
+          const foulsCommitted = p.stats.foulsCommitted || 0;
+          const foulsWon = p.stats.foulsWon || 0;
+          const tackles = p.stats.tackles?.total || p.stats.tackles?.ok || 0;
+          return (shots + shotsOnTarget + foulsCommitted + foulsWon + tackles) > 0;
+        });
+
+        if (playersWithStats.length === 0) return null;
+
+        // Ordenar según el campo y dirección elegidos
+        const sortedPlayers = [...playersWithStats].sort((a: any, b: any) => {
+          let valA = 0;
+          let valB = 0;
+
+          if (sortField === 'shots') {
+            valA = a.stats.shots || 0;
+            valB = b.stats.shots || 0;
+          } else if (sortField === 'shotsOnTarget') {
+            valA = a.stats.shotsOnTarget || 0;
+            valB = b.stats.shotsOnTarget || 0;
+          } else if (sortField === 'foulsCommitted') {
+            valA = a.stats.foulsCommitted || 0;
+            valB = b.stats.foulsCommitted || 0;
+          } else if (sortField === 'foulsWon') {
+            valA = a.stats.foulsWon || 0;
+            valB = b.stats.foulsWon || 0;
+          } else if (sortField === 'tackles') {
+            valA = a.stats.tackles?.ok || 0;
+            valB = b.stats.tackles?.ok || 0;
+          }
+
+          if (valA === valB) {
+            return (a.nameFull || a.name || '').localeCompare(b.nameFull || b.name || '');
+          }
+
+          return sortDirection === 'desc' ? valB - valA : valA - valB;
+        });
+
+        const displayedPlayers = showAllPlayerStats ? sortedPlayers : sortedPlayers.slice(0, 5);
+
+        const handleSort = (field: 'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon' | 'tackles') => {
+          if (sortField === field) {
+            setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+          } else {
+            setSortField(field);
+            setSortDirection('desc');
+          }
+        };
+
+        const homeClean = normalizeString(match.home_team?.name || match.homeTeam?.name || '');
+        
+        return (
+          <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg h-fit">
+            <div className="flex flex-row items-center justify-between border-b border-white/5 pb-2">
+              <div className="flex items-center gap-1.5 md:gap-2">
+                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 text-[10px] md:text-xs">🏃</span>
+                <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas de Jugadores</h3>
+              </div>
+              <span className="text-[8px] md:text-[9px] text-slate-500 uppercase tracking-widest font-black">
+                Columna activa: {sortField === 'shots' ? 'Tiros' : sortField === 'shotsOnTarget' ? 'Tiros al arco' : sortField === 'foulsCommitted' ? 'Faltas cometidas' : sortField === 'foulsWon' ? 'Faltas recibidas' : 'Entradas'}
+              </span>
+            </div>
+
+            <div className="overflow-x-auto no-scrollbar">
+              <table className="w-full text-left border-collapse text-[10px] sm:text-xs">
+                <thead>
+                  <tr className="border-b border-white/5 text-slate-400 font-bold">
+                    <th className="py-1.5 pl-1 font-bold text-slate-400">Jugador</th>
+                    <th 
+                      onClick={() => handleSort('shots')}
+                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
+                    >
+                      Tiros {sortField === 'shots' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                    </th>
+                    <th 
+                      onClick={() => handleSort('shotsOnTarget')}
+                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
+                    >
+                      Al Arco {sortField === 'shotsOnTarget' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                    </th>
+                    <th 
+                      onClick={() => handleSort('foulsCommitted')}
+                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
+                    >
+                      Faltas {sortField === 'foulsCommitted' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                    </th>
+                    <th 
+                      onClick={() => handleSort('foulsWon')}
+                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'foulsWon' ? 'text-emerald-400 font-black' : ''}`}
+                    >
+                      Recibidas {sortField === 'foulsWon' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                    </th>
+                    <th 
+                      onClick={() => handleSort('tackles')}
+                      className={`py-1.5 pr-1 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'tackles' ? 'text-emerald-400 font-black' : ''}`}
+                    >
+                      Entradas {sortField === 'tackles' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.02]">
+                  {displayedPlayers.map((player: any, pIdx: number) => {
+                    const playerFlagClean = normalizeString(player.countryFlag || '');
+                    const isHomeTeam = homeClean.includes(playerFlagClean) || playerFlagClean.includes(homeClean);
+
+                    return (
+                      <tr 
+                        key={pIdx}
+                        onClick={() => setSelectedPlayer(player)}
+                        className="hover:bg-white/[0.02] cursor-pointer transition-colors group"
+                      >
+                        <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isHomeTeam ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+                          <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[120px] sm:max-w-xs">
+                            {player.nameFull || player.name}
+                          </span>
+                          <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
+                        </td>
+                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.shots || 0}</td>
+                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.shotsOnTarget || 0}</td>
+                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.foulsCommitted || 0}</td>
+                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.foulsWon || 0}</td>
+                        <td className="py-2 pr-1 text-center font-bold text-slate-300">
+                          {player.stats.tackles?.ok || 0}/{player.stats.tackles?.total || 0}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {sortedPlayers.length > 5 && (
+              <button
+                onClick={() => setShowAllPlayerStats(!showAllPlayerStats)}
+                className="w-full text-center py-1.5 text-[9px] md:text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-1"
+              >
+                {showAllPlayerStats ? 'Ver menos ↑' : `Ver más (${sortedPlayers.length - 5} jugadores con estadísticas) ↓`}
+              </button>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Data Section: Detalles, Alineaciones y Pronósticos */}
       <div className={`grid grid-cols-1 ${user ? 'xl:grid-cols-3' : 'xl:grid-cols-1'} gap-3 md:gap-4`}>
