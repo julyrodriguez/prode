@@ -1629,7 +1629,7 @@ export default function MundialRankingView() {
 
       {/* ── Glassmorphic Page Loading Overlay ── */}
       {navigatingUserId && typeof window !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 transition-all duration-300">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center gap-4 transition-all duration-300">
           <div className="relative">
             <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-indigo-500 animate-spin" />
             <span className="absolute inset-0 flex items-center justify-center text-xl">🔮</span>
