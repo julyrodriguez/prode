@@ -215,12 +215,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Detect if we're on a league sub-route
   const leagueMatch = pathname.match(/^\/liga\/([^/]+)\/?(.+)?$/);
-  const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
-  const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
+  const isJugadoresPage = pathname === '/jugadores';
+  const activeLeagueId = overriddenLeagueId || (isJugadoresPage ? 'mundial' : (leagueMatch ? leagueMatch[1] as LeagueId : 'general'));
+  const activeTabId = isJugadoresPage ? 'jugadores' : (leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null);
 
   const isMatchDetail = pathname.startsWith('/match/') || pathname.startsWith('/team/');
   const isCS2 = false;
-  const isGeneralSection = activeLeagueId === 'general' || !leagueMatch;
+  const isGeneralSection = activeLeagueId === 'general' || (!leagueMatch && !isJugadoresPage);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const argentineIds = ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'];
@@ -242,7 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [activeLeagueId, isArgActive, isCopasActive, isLigasActive]);
 
   const rawLeagueTabs = activeLeagueId === 'mundial'
-    ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
+    ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'jugadores', label: 'Jugadores', icon: '🏃' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
     : [...LEAGUE_TABS, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const];
 
   const currentLeagueTabs = rawLeagueTabs.filter(tab => {
@@ -614,7 +615,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   const isTabActive = activeTabId === tab.id;
                   const href = tab.id === 'minijuegos'
                     ? '/liga/mundial/minijuegos'
-                    : `/liga/${activeLeagueId}/${tab.id}`;
+                    : tab.id === 'jugadores'
+                      ? '/jugadores'
+                      : `/liga/${activeLeagueId}/${tab.id}`;
                   return (
                     <Link
                       key={tab.id}
@@ -772,7 +775,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           ? tab.path
                           : tab.id === 'minijuegos'
                             ? '/liga/mundial/minijuegos'
-                            : `/liga/${activeLeagueId}/${tab.id}`;
+                            : tab.id === 'jugadores'
+                              ? '/jugadores'
+                              : `/liga/${activeLeagueId}/${tab.id}`;
 
                         return (
                           <Link
@@ -820,7 +825,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           ? tab.path
                           : tab.id === 'minijuegos'
                             ? '/liga/mundial/minijuegos'
-                            : `/liga/${activeLeagueId}/${tab.id}`;
+                            : tab.id === 'jugadores'
+                              ? '/jugadores'
+                              : `/liga/${activeLeagueId}/${tab.id}`;
 
                         return (
                           <Link

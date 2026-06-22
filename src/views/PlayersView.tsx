@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Search, User, Trophy, Calendar, Sparkles, Activity } from 'lucide-react';
+import { Search, User, Trophy, Calendar, Sparkles, Activity, ShieldAlert, Target, Award } from 'lucide-react';
 
 interface PlayerAggregated {
   _id: string;
@@ -14,6 +14,9 @@ interface PlayerAggregated {
   totalMatches: number;
   goals: number;
   assists: number;
+  shots: number;
+  foulsCommitted: number;
+  saves: number;
 }
 
 interface MatchDetailHistory {
@@ -34,9 +37,8 @@ export default function PlayersView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Search & Filter State
+  // Search State
   const [searchQuery, setSearchQuery] = useState('');
-  const [positionFilter, setPositionFilter] = useState('Todos');
 
   // Selected Player Detail State
   const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(null);
@@ -90,12 +92,34 @@ export default function PlayersView() {
     fetchPlayerDetail();
   }, [selectedPlayerName]);
 
-  // Filter logic
-  const filteredPlayers = players.filter(p => {
-    const matchesSearch = (p.nameFull || p.name || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPosition = positionFilter === 'Todos' || p.position === positionFilter;
-    return matchesSearch && matchesPosition;
-  });
+  // Calculations for Top 5 (based on averages)
+  const getTop5 = (
+    key: 'goals' | 'assists' | 'shots' | 'foulsCommitted' | 'saves',
+    filterFn?: (p: PlayerAggregated) => boolean
+  ) => {
+    const list = filterFn ? players.filter(filterFn) : players;
+    return [...list]
+      .map(p => ({
+        ...p,
+        average: p.totalMatches > 0 ? p[key] / p.totalMatches : 0
+      }))
+      .filter(p => p[key] > 0) // only show if they have at least 1
+      .sort((a, b) => b.average - a.average || b[key] - a[key])
+      .slice(0, 5);
+  };
+
+  const topGoleadores = getTop5('goals');
+  const topAsistidores = getTop5('assists');
+  const topTiros = getTop5('shots');
+  const topFaltas = getTop5('foulsCommitted');
+  const topAtajadas = getTop5('saves', p => p.position === 'Arquero');
+
+  // Search filter
+  const searchResults = searchQuery.trim() === ''
+    ? []
+    : players.filter(p => 
+        (p.nameFull || p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
   const getPositionBadgeColor = (pos: string) => {
     switch (pos) {
@@ -116,39 +140,23 @@ export default function PlayersView() {
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-500 bg-clip-text text-transparent flex items-center gap-3">
             <Trophy className="w-8 h-8 text-emerald-400" />
-            Estadísticas de Jugadores (Mundial)
+            Estadísticas del Mundial
           </h1>
           <p className="text-slate-400 text-sm mt-2">
-            Detalle y seguimiento de todos los jugadores que han jugado en el Mundial 2026.
+            Consulta los líderes de estadísticas o busca un jugador específico.
           </p>
         </div>
 
-        {/* FILTERS */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input 
-              type="text"
-              placeholder="Buscar jugador..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="bg-slate-900/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-full sm:w-64 transition-all"
-            />
-          </div>
-
-          {/* Position Selector */}
-          <select
-            value={positionFilter}
-            onChange={e => setPositionFilter(e.target.value)}
-            className="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 transition-all cursor-pointer"
-          >
-            <option value="Todos">Todas las posiciones</option>
-            <option value="Arquero">Arqueros</option>
-            <option value="Defensa">Defensores</option>
-            <option value="Centrocampista">Mediocampistas</option>
-            <option value="Delantero">Delanteros</option>
-          </select>
+        {/* SEARCH BAR */}
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input 
+            type="text"
+            placeholder="Buscar un jugador exacto (ej: Messi, J. David)..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="bg-slate-900/60 border border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-full transition-all placeholder:text-slate-600"
+          />
         </div>
       </div>
 
@@ -159,62 +167,137 @@ export default function PlayersView() {
       )}
 
       {loading ? (
-        <div className="flex h-[40vh] items-center justify-center">
+        <div className="flex h-[50vh] items-center justify-center">
           <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
         </div>
-      ) : filteredPlayers.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-slate-900/20 border border-slate-900/60 rounded-3xl text-center text-slate-400">
-          <User className="w-12 h-12 mb-3 text-slate-600" />
-          <p className="font-semibold text-lg">No se encontraron jugadores</p>
-          <p className="text-sm mt-1">Prueba cambiando los términos de búsqueda o filtros.</p>
-        </div>
-      ) : (
-        /* PLAYERS GRID */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPlayers.map((player, idx) => (
-            <div 
-              key={idx}
-              onClick={() => setSelectedPlayerName(player.nameFull)}
-              className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 hover:bg-slate-900/80 hover:border-emerald-500/30 transition-all duration-300 cursor-pointer flex flex-col justify-between group active:scale-[0.99]"
-            >
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-center text-slate-400 font-bold text-sm">
-                      {player.number || '#'}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">
-                        {player.nameFull || player.name}
-                      </h3>
-                      <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full mt-1 ${getPositionBadgeColor(player.position)}`}>
-                        {player.position}
+      ) : searchQuery.trim() !== '' ? (
+        /* SEARCH RESULTS SCREEN */
+        <div>
+          <h2 className="text-lg font-bold text-slate-300 mb-4 flex items-center gap-2">
+            Resultados de búsqueda ({searchResults.length})
+          </h2>
+          {searchResults.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 bg-slate-900/20 border border-slate-900/60 rounded-3xl text-center text-slate-400">
+              <User className="w-12 h-12 mb-3 text-slate-600" />
+              <p className="font-semibold text-lg">No se encontraron jugadores para "{searchQuery}"</p>
+              <p className="text-sm mt-1">Prueba escribiendo otro nombre.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in">
+              {searchResults.map((player, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => setSelectedPlayerName(player.nameFull)}
+                  className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-5 hover:bg-slate-900/80 hover:border-emerald-500/30 transition-all duration-300 cursor-pointer flex flex-col justify-between group active:scale-[0.99]"
+                >
+                  <div>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-center text-slate-400 font-bold text-sm">
+                          {player.number || '#'}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors">
+                            {player.nameFull || player.name}
+                          </h3>
+                          <span className={`inline-block text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border rounded-full mt-1 ${getPositionBadgeColor(player.position)}`}>
+                            {player.position}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-slate-500 text-xs font-semibold">
+                        {player.totalMatches} {player.totalMatches === 1 ? 'partido' : 'partidos'}
                       </span>
                     </div>
-                  </div>
-                  <span className="text-slate-500 text-xs font-semibold">
-                    {player.totalMatches} {player.totalMatches === 1 ? 'partido' : 'partidos'}
-                  </span>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3 bg-slate-950/40 rounded-xl p-3 border border-slate-950/20">
-                  <div className="text-center border-r border-slate-800/50">
-                    <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Goles</span>
-                    <span className="text-xl font-black text-emerald-400">{player.goals}</span>
+                    <div className="grid grid-cols-3 gap-2 bg-slate-950/40 rounded-xl p-2.5 border border-slate-950/20 text-xs">
+                      <div className="text-center border-r border-slate-800/50">
+                        <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">Prom Goles</span>
+                        <span className="text-sm font-black text-emerald-400">{(player.goals / player.totalMatches).toFixed(1)}</span>
+                      </div>
+                      <div className="text-center border-r border-slate-800/50">
+                        <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">Prom Tiros</span>
+                        <span className="text-sm font-black text-teal-400">{(player.shots / player.totalMatches).toFixed(1)}</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="block text-[9px] text-slate-500 uppercase font-bold tracking-wider">Prom Faltas</span>
+                        <span className="text-sm font-black text-orange-400">{(player.foulsCommitted / player.totalMatches).toFixed(1)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <span className="block text-[10px] text-slate-500 uppercase font-bold tracking-wider">Asistencias</span>
-                    <span className="text-xl font-black text-indigo-400">{player.assists}</span>
+
+                  <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between items-center text-xs text-slate-500">
+                    <span>{player.age ? `${player.age} años` : ''}</span>
+                    <span>{player.height ? `${player.height}m` : ''}</span>
                   </div>
                 </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-800/50 flex justify-between items-center text-xs text-slate-500">
-                <span>{player.age ? `${player.age} años` : ''}</span>
-                <span>{player.height ? `${player.height}m` : ''}</span>
-              </div>
+              ))}
             </div>
-          ))}
+          )}
+        </div>
+      ) : (
+        /* LEADERBOARDS DASHBOARD SCREEN (TOP 5) */
+        <div className="space-y-8 animate-fade-in">
+          {/* Main Grid: Goals & Assists */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Top 5 Goleadores */}
+            <LeaderboardCard 
+              title="Promedio de Goles" 
+              icon={<Award className="w-5 h-5 text-emerald-400" />}
+              data={topGoleadores}
+              metricKey="goals"
+              metricLabel="goles"
+              onPlayerClick={setSelectedPlayerName}
+              getPositionBadgeColor={getPositionBadgeColor}
+            />
+
+            {/* Top 5 Asistidores */}
+            <LeaderboardCard 
+              title="Promedio de Asistencias" 
+              icon={<Sparkles className="w-5 h-5 text-indigo-400" />}
+              data={topAsistidores}
+              metricKey="assists"
+              metricLabel="asistencias"
+              onPlayerClick={setSelectedPlayerName}
+              getPositionBadgeColor={getPositionBadgeColor}
+            />
+          </div>
+
+          {/* Secondary Grid: Shots, Fouls & Saves */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Top 5 Tiros */}
+            <LeaderboardCard 
+              title="Promedio de Tiros" 
+              icon={<Target className="w-5 h-5 text-teal-400" />}
+              data={topTiros}
+              metricKey="shots"
+              metricLabel="tiros"
+              onPlayerClick={setSelectedPlayerName}
+              getPositionBadgeColor={getPositionBadgeColor}
+            />
+
+            {/* Top 5 Faltas Cometidas */}
+            <LeaderboardCard 
+              title="Promedio de Faltas Cometidas" 
+              icon={<ShieldAlert className="w-5 h-5 text-orange-400" />}
+              data={topFaltas}
+              metricKey="foulsCommitted"
+              metricLabel="faltas"
+              onPlayerClick={setSelectedPlayerName}
+              getPositionBadgeColor={getPositionBadgeColor}
+            />
+
+            {/* Top 5 Atajadas */}
+            <LeaderboardCard 
+              title="Promedio de Atajadas" 
+              icon={<Activity className="w-5 h-5 text-yellow-400" />}
+              data={topAtajadas}
+              metricKey="saves"
+              metricLabel="atajadas"
+              onPlayerClick={setSelectedPlayerName}
+              getPositionBadgeColor={getPositionBadgeColor}
+            />
+          </div>
         </div>
       )}
 
@@ -386,6 +469,89 @@ export default function PlayersView() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+interface LeaderboardCardProps {
+  title: string;
+  icon: React.ReactNode;
+  data: any[];
+  metricKey: string;
+  metricLabel: string;
+  onPlayerClick: (name: string) => void;
+  getPositionBadgeColor: (pos: string) => string;
+}
+
+function LeaderboardCard({
+  title,
+  icon,
+  data,
+  metricKey,
+  metricLabel,
+  onPlayerClick,
+  getPositionBadgeColor
+}: LeaderboardCardProps) {
+  return (
+    <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-3xl p-6 flex flex-col justify-between">
+      <div>
+        <div className="flex items-center gap-2.5 mb-5 pb-4 border-b border-slate-850">
+          {icon}
+          <h3 className="font-extrabold text-slate-200 text-sm tracking-wide uppercase">{title}</h3>
+        </div>
+
+        {data.length === 0 ? (
+          <p className="text-slate-600 text-xs py-4 text-center">Aún no hay datos registrados.</p>
+        ) : (
+          <div className="space-y-3">
+            {data.map((player, idx) => {
+              const rankStyles = [
+                'bg-amber-400/10 text-amber-400 border-amber-400/25',
+                'bg-slate-300/10 text-slate-300 border-slate-300/20',
+                'bg-amber-700/10 text-amber-600 border-amber-700/20',
+                'bg-slate-800 text-slate-500 border-slate-800',
+                'bg-slate-800 text-slate-500 border-slate-800',
+              ];
+
+              return (
+                <div 
+                  key={idx}
+                  onClick={() => onPlayerClick(player.nameFull)}
+                  className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-850/50 transition-all cursor-pointer group active:scale-[0.98] border border-transparent hover:border-slate-800"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center font-black text-xs border ${rankStyles[idx] || rankStyles[4]}`}>
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <span className="font-bold text-slate-300 group-hover:text-emerald-400 transition-colors text-sm">
+                        {player.nameFull || player.name}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[8px] uppercase font-bold tracking-wider px-1.5 py-0.5 border rounded-full ${getPositionBadgeColor(player.position)}`}>
+                          {player.position}
+                        </span>
+                        <span className="text-[10px] text-slate-500">
+                          {player.totalMatches} {player.totalMatches === 1 ? 'partido' : 'partidos'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="block text-sm font-black text-slate-200">
+                      {player.average.toFixed(2)}
+                    </span>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                      {metricLabel} / p
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
