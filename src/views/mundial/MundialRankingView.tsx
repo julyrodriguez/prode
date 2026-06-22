@@ -762,6 +762,143 @@ export default function MundialRankingView() {
         </div>
       )}
 
+      {/* ── Carteles SE BUSCA ── */}
+      {!loading && !error && ranking.length > 0 && (() => {
+        const wantedUser1 = activeRanking.find(r => r.userId === 'CPJ15xjLbaMJmiEc7fChoFUiDMw2');
+        const lastUser = activeRanking.length > 0 ? activeRanking[activeRanking.length - 1] : null;
+
+        const WantedCard = ({
+          entry,
+          debt,
+          subtitle,
+          rewardText,
+          accent,
+        }: {
+          entry: RankingEntry | undefined;
+          debt: string;
+          subtitle: string;
+          rewardText: string;
+          accent: string;
+        }) => {
+          if (!entry) return null;
+          return (
+            <div
+              className="relative flex flex-col items-center gap-0 overflow-hidden rounded-2xl border-4 cursor-pointer hover:scale-[1.02] transition-all duration-300"
+              style={{
+                background: 'linear-gradient(160deg,#2a1a00 0%,#1a1000 60%,#0d0800 100%)',
+                borderColor: accent,
+                boxShadow: `0 0 40px ${accent}55, 0 0 0 2px #000 inset`,
+                fontFamily: "'Georgia', serif",
+              }}
+            >
+              {/* Torn paper texture top */}
+              <div className="absolute inset-0 pointer-events-none" style={{
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.01) 2px, rgba(255,255,255,0.01) 4px)',
+              }} />
+
+              {/* Header ribbon */}
+              <div
+                className="w-full flex flex-col items-center py-2 px-3 relative z-10"
+                style={{ background: accent, color: '#000' }}
+              >
+                <span className="text-[8px] font-black uppercase tracking-[0.35em] opacity-70">— Prode del Mundial —</span>
+                <span className="text-xl font-black uppercase tracking-[0.2em] leading-none">⚠ SE BUSCA ⚠</span>
+              </div>
+
+              {/* Photo */}
+              <div className="relative z-10 mt-3 mb-2">
+                <div
+                  className="w-20 h-20 rounded-none overflow-hidden"
+                  style={{
+                    border: `3px solid ${accent}`,
+                    boxShadow: `0 0 20px ${accent}66`,
+                    imageRendering: 'pixelated',
+                    filter: 'sepia(30%) contrast(1.1)',
+                  }}
+                >
+                  <div className="w-full h-full bg-slate-900 flex items-center justify-center relative">
+                    <span className="absolute z-0 text-4xl font-black text-slate-700 select-none">
+                      {entry.name?.slice(0, 1).toUpperCase()}
+                    </span>
+                    <img
+                      src={`https://apivacas.jariel.com.ar/users/${entry.userId}.webp`}
+                      alt={entry.name}
+                      className="w-full h-full object-cover relative z-10"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Name */}
+              <div className="relative z-10 px-3 text-center">
+                <div className="text-[8px] uppercase tracking-widest mb-0.5" style={{ color: accent }}>
+                  {subtitle}
+                </div>
+                <div className="text-base font-black text-amber-100 uppercase tracking-wide leading-tight truncate max-w-[120px]">
+                  {entry.name}
+                </div>
+              </div>
+
+              {/* Separator */}
+              <div className="w-3/4 my-2 border-t border-dashed" style={{ borderColor: `${accent}66` }} />
+
+              {/* Debt */}
+              <div className="relative z-10 text-center px-3 pb-1">
+                <div className="text-[7px] uppercase tracking-widest text-amber-300/70 mb-0.5">Deuda pendiente</div>
+                <div
+                  className="text-2xl font-black leading-none"
+                  style={{ color: accent, textShadow: `0 0 15px ${accent}` }}
+                >
+                  {debt}
+                </div>
+                <div className="text-[7px] text-amber-300/60 mt-0.5">pesos argentinos</div>
+              </div>
+
+              {/* Separator */}
+              <div className="w-3/4 my-2 border-t border-dashed" style={{ borderColor: `${accent}66` }} />
+
+              {/* Reward */}
+              <div
+                className="relative z-10 w-full flex flex-col items-center py-2 px-3 text-center"
+                style={{ background: `${accent}22` }}
+              >
+                <div className="text-[7px] uppercase tracking-[0.25em] mb-0.5" style={{ color: accent }}>
+                  Recompensa
+                </div>
+                <div className="text-[11px] font-black text-amber-100 uppercase leading-tight">
+                  {rewardText}
+                </div>
+              </div>
+
+              {/* Bottom stars decoration */}
+              <div className="relative z-10 py-1.5 text-center" style={{ color: accent }}>
+                <span className="text-[10px] tracking-widest">★ ★ ★ ★ ★</span>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <WantedCard
+              entry={wantedUser1}
+              debt="$15.000"
+              subtitle="Deudor del Prode"
+              rewardText="Se busca vivo o muerto"
+              accent="#f59e0b"
+            />
+            <WantedCard
+              entry={lastUser}
+              debt="$10.000"
+              subtitle="Último del Ranking"
+              rewardText="Muertos o vivos · 10 puntos"
+              accent="#ef4444"
+            />
+          </div>
+        );
+      })()}
+
       {/* Tildar/Destildar simulación en vivo */}
       {!loading && !error && ranking.length > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md mb-2">
