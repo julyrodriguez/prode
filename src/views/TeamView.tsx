@@ -137,6 +137,7 @@ export default function TeamView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedComp, setSelectedComp] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'stats' | 'squad'>('stats');
 
   useEffect(() => {
     if (team && setOverriddenLeagueId) {
@@ -160,7 +161,7 @@ export default function TeamView() {
     const fetchTeam = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/teams/${id}.json`);
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}`);
         if (!res.ok) throw new Error('No se pudo cargar el equipo');
         const data = await res.json();
         setTeam(data);
@@ -283,6 +284,14 @@ export default function TeamView() {
             >
               {team.name}
             </h1>
+            {team.detailedProfile?.apodo && (
+              <p 
+                className="text-xs md:text-sm font-bold italic tracking-wide opacity-75 mt-0.5 leading-none"
+                style={{ color: getReadableColor(secondary) }}
+              >
+                "{team.detailedProfile.apodo}"
+              </p>
+            )}
 
             <div className="flex flex-wrap gap-3 justify-center md:justify-start mt-1">
               {profile.city && (
@@ -353,159 +362,340 @@ export default function TeamView() {
         </div>
       </div>
 
-      {/* ─── Selector de Competición ─── */}
-      {compKeys.length > 0 && (
-        <div className="flex gap-2 flex-wrap">
-          {compKeys.map((key) => {
-            const comp = competitions[key];
-            const isActive = selectedComp === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setSelectedComp(key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
-                  isActive
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                    : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <Trophy className="w-3.5 h-3.5" />
-                {comp.name}
-                <span className="text-[10px] font-semibold opacity-60 ml-0.5">
-                  {comp.partidos_jugados}PJ
-                </span>
-              </button>
-            );
-          })}
+      {/* ─── Tabs: Estadísticas vs Plantel ─── */}
+      {team.detailedProfile && (
+        <div className="flex gap-4 border-b border-white/5 pb-1 mb-4 select-none">
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`pb-2 px-1 text-sm font-bold transition-all relative ${
+              activeTab === 'stats'
+                ? 'text-emerald-400 border-b-2 border-emerald-400'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            📊 Estadísticas
+          </button>
+          <button
+            onClick={() => setActiveTab('squad')}
+            className={`pb-2 px-1 text-sm font-bold transition-all relative ${
+              activeTab === 'squad'
+                ? 'text-emerald-400 border-b-2 border-emerald-400'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            👥 Plantel y Club
+          </button>
         </div>
       )}
 
-      {/* ─── Estadísticas por Grupo ─── */}
-      {currentComp && (
-        <div className="flex flex-col gap-6">
-          {/* Resumen rápido */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Partidos', value: currentComp.partidos_jugados, icon: '🏆' },
-              { label: 'Goles', value: stats.goalsScored ?? '-', icon: '⚽' },
-              { label: 'Vallas Invictas', value: stats.cleanSheets ?? '-', icon: '🧤' },
-              { label: 'Rating Prom.', value: stats.avgRating ? stats.avgRating.toFixed(2) : '-', icon: '⭐' },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-1.5 shadow-sm"
-              >
-                <span className="text-2xl">{item.icon}</span>
-                <span className="text-2xl font-black text-white">{item.value}</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.label}</span>
+      {(activeTab === 'stats' || !team.detailedProfile) && (
+        <>
+          {/* ─── Selector de Competición ─── */}
+          {compKeys.length > 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {compKeys.map((key) => {
+                const comp = competitions[key];
+                const isActive = selectedComp === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedComp(key)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                      isActive
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                        : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <Trophy className="w-3.5 h-3.5" />
+                    {comp.name}
+                    <span className="text-[10px] font-semibold opacity-60 ml-0.5">
+                      {comp.partidos_jugados}PJ
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ─── Estadísticas por Grupo ─── */}
+          {currentComp && (
+            <div className="flex flex-col gap-6">
+              {/* Resumen rápido */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Partidos', value: currentComp.partidos_jugados, icon: '🏆' },
+                  { label: 'Goles', value: stats.goalsScored ?? '-', icon: '⚽' },
+                  { label: 'Vallas Invictas', value: stats.cleanSheets ?? '-', icon: '🧤' },
+                  { label: 'Rating Prom.', value: stats.avgRating ? stats.avgRating.toFixed(2) : '-', icon: '⭐' },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-1.5 shadow-sm"
+                  >
+                    <span className="text-2xl">{item.icon}</span>
+                    <span className="text-2xl font-black text-white">{item.value}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.label}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Grupos de stats */}
-          {statGroups.map((group) => {
-            const groupStats = group.keys
-              .filter((k) => stats[k] !== undefined && stats[k] !== null)
-              .map((k) => ({ key: k, label: statLabels[k] || k, value: stats[k] as number }));
+              {/* Grupos de stats */}
+              {statGroups.map((group) => {
+                const groupStats = group.keys
+                  .filter((k) => stats[k] !== undefined && stats[k] !== null)
+                  .map((k) => ({ key: k, label: statLabels[k] || k, value: stats[k] as number }));
 
-            if (groupStats.length === 0) return null;
+                if (groupStats.length === 0) return null;
 
-            return (
-              <div key={group.label} className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 flex flex-col gap-5">
+                return (
+                  <div key={group.label} className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 flex flex-col gap-5">
+                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                      <span className="text-xl">{group.icon}</span>
+                      <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">{group.label}</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {groupStats.map(({ key, label, value }) => (
+                        <div key={key} className="flex items-center justify-between gap-3 bg-black/20 rounded-xl px-4 py-2.5 border border-white/5">
+                          <span className="text-xs font-semibold text-slate-400 truncate flex-1">{label}</span>
+                          <span
+                            className="text-sm font-black shrink-0 ml-2"
+                            style={{ color: getReadableColor(secondary) || '#10b981' }}
+                          >
+                            {formatStatValue(key, value)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {compKeys.length === 0 && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col items-center gap-4 text-slate-400">
+              <div className="text-5xl opacity-30">📊</div>
+              <p className="text-sm font-medium">No hay estadísticas disponibles para este equipo.</p>
+            </div>
+          )}
+
+          {/* ─── Historial de Partidos ─── */}
+          {recentMatches.length > 0 && (
+            <div className="flex flex-col gap-6 w-full mt-4 bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
+              <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+                <span className="text-xl">📅</span>
+                <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Últimos {recentMatches.length} Partidos</h3>
+              </div>
+              <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+                {recentMatches.map((match, idx) => {
+                  const hScore = match.homeScore?.current ?? match.homeTeam?.score ?? match.home_team?.score;
+                  const aScore = match.awayScore?.current ?? match.awayTeam?.score ?? match.away_team?.score;
+                  const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
+                  const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
+                  const isHome = Number(match.homeTeam?.id || match.home_team?.id) === Number(id);
+                  const weScored = isHome ? hScore : aScore;
+                  const theyScored = isHome ? aScore : hScore;
+                  let resultColor = 'bg-slate-500/20 text-slate-300';
+                  let resultLetter = '-';
+                  
+                  if (weScored !== undefined && theyScored !== undefined) {
+                    if (Number(weScored) > Number(theyScored)) {
+                       resultColor = 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold';
+                       resultLetter = 'V';
+                    }
+                    else if (Number(weScored) < Number(theyScored)) {
+                       resultColor = 'bg-red-500/20 border border-red-500/30 text-red-500 font-bold';
+                       resultLetter = 'D';
+                    }
+                    else {
+                       resultColor = 'bg-amber-500/20 border border-amber-500/30 text-amber-500 font-bold';
+                       resultLetter = 'E';
+                    }
+                  }
+
+                  const startDate = match.startTimestamp ? new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+                  const startHour = match.startTimestamp ? new Date(match.startTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                  return (
+                    <div 
+                      key={match.id || match._id || idx} 
+                      onClick={() => router.push(`/match/${match.id || match._id}`)}
+                      className="grid grid-cols-[60px_1fr_auto_1fr_30px] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-3"
+                    >
+                      <div className="flex flex-col items-center justify-center border-r border-white/5 pr-2 md:pr-4 mr-1 md:mr-2">
+                        <span className="text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1 text-center">{startDate}</span>
+                        <span className="text-xs text-slate-300 font-semibold leading-none">{startHour}</span>
+                      </div>
+                      <div className={`text-right text-xs md:text-sm font-bold truncate flex-1 flex items-center justify-end gap-2 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                         {hName}
+                      </div>
+                      <div className="flex items-center gap-1.5 md:gap-3 px-3 mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-1">
+                        <span className={`text-sm md:text-base font-black ${isHome ? 'text-emerald-400' : 'text-white'}`}>{hScore ?? '-'}</span>
+                        <span className="text-xs text-slate-500">-</span>
+                        <span className={`text-sm md:text-base font-black ${!isHome ? 'text-emerald-400' : 'text-white'}`}>{aScore ?? '-'}</span>
+                      </div>
+                      <div className={`text-left text-xs md:text-sm font-bold truncate flex-1 flex items-center gap-2 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                         {aName}
+                      </div>
+                      <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[10px] md:text-xs tracking-wider shrink-0 ml-1 md:ml-3 ${resultColor}`}>
+                        {resultLetter}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'squad' && team.detailedProfile && (
+        <div className="flex flex-col gap-8 animate-fade-in">
+          {/* 🏟️ Sección de Información del Club e Instalaciones */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Tarjeta de Información General del Club */}
+            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-8 flex flex-col gap-5 shadow-sm">
+              <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                <span className="text-xl">🛡️</span>
+                <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Detalles del Club</h3>
+              </div>
+              <div className="flex flex-col gap-4">
+                {team.detailedProfile.apodo && (
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-semibold text-slate-400">Apodo</span>
+                    <span className="text-sm font-bold text-white italic">"{team.detailedProfile.apodo}"</span>
+                  </div>
+                )}
+                {team.detailedProfile.fundacion && (
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-semibold text-slate-400">Fundado en</span>
+                    <span className="text-sm font-bold text-white">{team.detailedProfile.fundacion}</span>
+                  </div>
+                )}
+                {team.profile.city && (
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-semibold text-slate-400">Ciudad de origen</span>
+                    <span className="text-sm font-bold text-white">{team.profile.city}</span>
+                  </div>
+                )}
+                {team.detailedProfile.manager && (
+                  <div className="flex items-center justify-between pb-2">
+                    <span className="text-xs font-semibold text-slate-400">Director Técnico</span>
+                    <span className="text-sm font-bold text-white">👔 {team.detailedProfile.manager}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Tarjeta del Estadio */}
+            {team.detailedProfile.stadium && (
+              <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-8 flex flex-col gap-5 shadow-sm">
                 <div className="flex items-center gap-3 pb-3 border-b border-white/5">
-                  <span className="text-xl">{group.icon}</span>
-                  <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">{group.label}</h3>
+                  <span className="text-xl">🏟️</span>
+                  <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Estadio Oficial</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupStats.map(({ key, label, value }) => (
-                    <div key={key} className="flex items-center justify-between gap-3 bg-black/20 rounded-xl px-4 py-2.5 border border-white/5">
-                      <span className="text-xs font-semibold text-slate-400 truncate flex-1">{label}</span>
-                      <span
-                        className="text-sm font-black shrink-0 ml-2"
-                        style={{ color: getReadableColor(secondary) || '#10b981' }}
-                      >
-                        {formatStatValue(key, value)}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-semibold text-slate-400">Nombre</span>
+                    <span className="text-sm font-bold text-white">{team.detailedProfile.stadium.name}</span>
+                  </div>
+                  {team.detailedProfile.stadium.capacity && (
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="text-xs font-semibold text-slate-400">Capacidad</span>
+                      <span className="text-sm font-bold text-white">
+                        {parseInt(team.detailedProfile.stadium.capacity.replace(/,/g, ''), 10).toLocaleString('es-ES')} espectadores
                       </span>
                     </div>
-                  ))}
+                  )}
+                  {team.detailedProfile.stadium.address && (
+                    <div className="flex flex-col gap-1 border-b border-white/5 pb-2">
+                      <span className="text-xs font-semibold text-slate-400">Ubicación / Dirección</span>
+                      <span className="text-xs font-bold text-slate-300 leading-relaxed">{team.detailedProfile.stadium.address}</span>
+                    </div>
+                  )}
+                  {team.detailedProfile.stadium.coordinates && (
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs font-semibold text-slate-400">Coordenadas</span>
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${team.detailedProfile.stadium.coordinates}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-black text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl transition-all"
+                      >
+                        📍 Ver en Google Maps
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {compKeys.length === 0 && (
-        <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col items-center gap-4 text-slate-400">
-          <div className="text-5xl opacity-30">📊</div>
-          <p className="text-sm font-medium">No hay estadísticas disponibles para este equipo.</p>
-        </div>
-      )}
-
-      {/* ─── Historial de Partidos ─── */}
-      {recentMatches.length > 0 && (
-        <div className="flex flex-col gap-6 w-full mt-4 bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
-          <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-            <span className="text-xl">📅</span>
-            <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Últimos {recentMatches.length} Partidos</h3>
+            )}
           </div>
-          <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
-            {recentMatches.map((match, idx) => {
-              const hScore = match.homeScore?.current ?? match.homeTeam?.score ?? match.home_team?.score;
-              const aScore = match.awayScore?.current ?? match.awayTeam?.score ?? match.away_team?.score;
-              const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
-              const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
-              const isHome = Number(match.homeTeam?.id || match.home_team?.id) === Number(id);
-              const weScored = isHome ? hScore : aScore;
-              const theyScored = isHome ? aScore : hScore;
-              let resultColor = 'bg-slate-500/20 text-slate-300';
-              let resultLetter = '-';
+
+          {/* 👥 Plantel / Jugadores */}
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+              <span className="text-xl">👥</span>
+              <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Plantel de Jugadores</h3>
+            </div>
+            
+            {(() => {
+              const positionsOrder = ['Dirección', 'Arqueros', 'Defensores', 'Mediocampistas', 'Delanteros'];
+              const groupedPlayers: Record<string, any[]> = {};
               
-              if (weScored !== undefined && theyScored !== undefined) {
-                if (Number(weScored) > Number(theyScored)) {
-                   resultColor = 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold';
-                   resultLetter = 'V';
-                }
-                else if (Number(weScored) < Number(theyScored)) {
-                   resultColor = 'bg-red-500/20 border border-red-500/30 text-red-500 font-bold';
-                   resultLetter = 'D';
-                }
-                else {
-                   resultColor = 'bg-amber-500/20 border border-amber-500/30 text-amber-500 font-bold';
-                   resultLetter = 'E';
-                }
-              }
+              team.detailedProfile.squad.forEach((p: any) => {
+                const pos = p.position || 'Otros';
+                if (!groupedPlayers[pos]) groupedPlayers[pos] = [];
+                groupedPlayers[pos].push(p);
+              });
 
-              const startDate = match.startTimestamp ? new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
-              const startHour = match.startTimestamp ? new Date(match.startTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+              const positionsToShow = positionsOrder.filter(pos => groupedPlayers[pos]?.length > 0);
+              Object.keys(groupedPlayers).forEach(pos => {
+                if (!positionsOrder.includes(pos) && groupedPlayers[pos]?.length > 0) {
+                  positionsToShow.push(pos);
+                }
+              });
 
-              return (
-                <div 
-                  key={match.id || match._id || idx} 
-                  onClick={() => router.push(`/match/${match.id || match._id}`)}
-                  className="grid grid-cols-[60px_1fr_auto_1fr_30px] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-3"
-                >
-                  <div className="flex flex-col items-center justify-center border-r border-white/5 pr-2 md:pr-4 mr-1 md:mr-2">
-                    <span className="text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1 text-center">{startDate}</span>
-                    <span className="text-xs text-slate-300 font-semibold leading-none">{startHour}</span>
-                  </div>
-                  <div className={`text-right text-xs md:text-sm font-bold truncate flex-1 flex items-center justify-end gap-2 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
-                     {hName}
-                  </div>
-                  <div className="flex items-center gap-1.5 md:gap-3 px-3 mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-1">
-                    <span className={`text-sm md:text-base font-black ${isHome ? 'text-emerald-400' : 'text-white'}`}>{hScore ?? '-'}</span>
-                    <span className="text-xs text-slate-500">-</span>
-                    <span className={`text-sm md:text-base font-black ${!isHome ? 'text-emerald-400' : 'text-white'}`}>{aScore ?? '-'}</span>
-                  </div>
-                  <div className={`text-left text-xs md:text-sm font-bold truncate flex-1 flex items-center gap-2 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
-                     {aName}
-                  </div>
-                  <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[10px] md:text-xs tracking-wider shrink-0 ml-1 md:ml-3 ${resultColor}`}>
-                    {resultLetter}
+              return positionsToShow.map(position => (
+                <div key={position} className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 flex flex-col gap-4 shadow-sm">
+                  <h4 className="text-sm font-black text-slate-300 uppercase tracking-wider pb-2 border-b border-white/5 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: primary }} />
+                    {position}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {groupedPlayers[position].map((player, idx) => (
+                      <div 
+                        key={idx} 
+                        className="flex items-center justify-between gap-3 bg-black/25 rounded-2xl px-4 py-3 border border-white/5 hover:border-white/15 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div 
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white shrink-0 select-none shadow-sm"
+                            style={{ backgroundColor: primary }}
+                          >
+                            {player.num || '—'}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-bold text-slate-100 truncate">{player.name}</span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                              {player.formation_position || (player.is_staff ? 'Cuerpo Técnico' : position.slice(0, -1))}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-400 text-xs shrink-0 font-medium">
+                          {player.age && (
+                            <span className="border-r border-white/5 pr-3">{player.age} años</span>
+                          )}
+                          {player.height && (
+                            <span>{player.height}m</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              );
-            })}
+              ));
+            })()}
           </div>
         </div>
       )}
