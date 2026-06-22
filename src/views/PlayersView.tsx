@@ -70,6 +70,26 @@ export default function PlayersView() {
     };
   }, [selectedPlayerName]);
 
+  // Intercept browser back button / swipe gesture to close the modal
+  useEffect(() => {
+    if (!selectedPlayerName) return;
+
+    window.history.pushState({ modalOpen: true }, '');
+
+    const handlePopState = () => {
+      setSelectedPlayerName(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.modalOpen) {
+        window.history.back();
+      }
+    };
+  }, [selectedPlayerName]);
+
   // Fetch players list on mount
   useEffect(() => {
     const fetchPlayers = async () => {
