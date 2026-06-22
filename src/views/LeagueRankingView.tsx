@@ -670,9 +670,9 @@ export default function LeagueRankingView() {
             ) : rankingTab === 'stats' ? (
               activeRanking.map((entry, idx) => {
                 const isMe = user && entry.userId === user.uid;
-                const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
+                const isLast = activeRanking.length > 2 && idx === activeRanking.length - 1;
                 const rowPadding = 'py-1';
-                const rowBg = isLastTwo
+                const rowBg = isLast
                   ? (isMe
                     ? 'bg-red-500/[0.08] border-l-2 border-red-500/50 hover:bg-red-500/[0.12]'
                     : 'bg-red-500/[0.03] border-l-2 border-red-500/20 hover:bg-red-500/[0.06]')
@@ -682,11 +682,11 @@ export default function LeagueRankingView() {
                 const avatarSize = 'w-7 h-7';
                 const initialsTextSize = 'text-[10px]';
                 const avatarBgClass = isMe
-                  ? (isLastTwo ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300')
-                  : isLastTwo
+                  ? (isLast ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300')
+                  : isLast
                     ? 'bg-red-500/10 border-red-500/20 text-red-400/90'
                     : 'bg-white/5 border-white/10 text-slate-400';
-                const nameTextClass = isLastTwo
+                const nameTextClass = isLast
                   ? `font-bold text-sm text-red-400 ${isMe ? 'underline decoration-red-500/50' : ''}`
                   : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
@@ -703,7 +703,7 @@ export default function LeagueRankingView() {
                   >
                     {/* Posición */}
                     <div className="flex items-center justify-center">
-                      {isLastTwo ? (
+                      {isLast ? (
                         <span className="text-sm font-black filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">💀</span>
                       ) : (
                         <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>
@@ -734,7 +734,7 @@ export default function LeagueRankingView() {
                     {/* Puntos / Partido */}
                     <div className="text-center">
                       {userStats ? (
-                        <span className={`text-sm font-black ${isLastTwo ? 'text-red-400/80' : 'text-white'}`}>
+                        <span className={`text-sm font-black ${isLast ? 'text-red-400/80' : 'text-white'}`}>
                           {userStats.pointsPerMatch.toFixed(1)} <span className="text-[10px] text-slate-400 font-normal">pts</span>
                         </span>
                       ) : (
@@ -745,7 +745,7 @@ export default function LeagueRankingView() {
                     {/* Eficacia */}
                     <div className="text-center">
                       {userStats ? (
-                        <span className={`text-sm font-black ${isLastTwo ? 'text-red-400' : 'text-emerald-400'}`}>
+                        <span className={`text-sm font-black ${isLast ? 'text-red-400' : 'text-emerald-400'}`}>
                           {userStats.hitRate}%
                         </span>
                       ) : (
@@ -801,7 +801,7 @@ export default function LeagueRankingView() {
                 const isMe = user && entry.userId === user.uid;
                 const isMundial = activeLeague.id === 'mundial';
                 const isTop3 = idx < 3;
-                const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
+                const isLast = activeRanking.length > 2 && idx === activeRanking.length - 1;
                 const medal = isMundial
                   ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : undefined)
                   : MEDAL[idx];
@@ -812,7 +812,7 @@ export default function LeagueRankingView() {
                     ? 'py-3 md:py-4'
                     : 'py-1';
 
-                const rowBg = isLastTwo
+                const rowBg = isLast
                   ? (isMe
                     ? 'bg-red-500/[0.08] border-l-2 border-red-500/50 hover:bg-red-500/[0.12]'
                     : 'bg-red-500/[0.03] border-l-2 border-red-500/20 hover:bg-red-500/[0.06]')
@@ -845,12 +845,12 @@ export default function LeagueRankingView() {
                     : 'text-[10px]';
 
                 const avatarBgClass = isMe
-                  ? (isLastTwo ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300')
+                  ? (isLast ? 'bg-red-500/20 border-red-500/40 text-red-300' : 'bg-amber-500/20 border-amber-500/40 text-amber-300')
                   : (isMundial && idx === 0)
                     ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
                     : (isMundial && idx === 1)
                       ? 'bg-slate-500/20 border-slate-500/30 text-slate-300'
-                      : isLastTwo
+                      : isLast
                         ? 'bg-red-500/10 border-red-500/20 text-red-400/90'
                         : isTop3 && !isMundial
                           ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
@@ -860,7 +860,7 @@ export default function LeagueRankingView() {
                   ? 'text-base md:text-2xl font-black text-amber-300'
                   : (isMundial && idx === 1)
                     ? 'text-sm md:text-base font-extrabold text-slate-200'
-                    : isLastTwo
+                    : isLast
                       ? `font-bold text-sm text-red-400 ${isMe ? 'underline decoration-red-500/50' : ''}`
                       : `font-bold text-sm ${isMe ? 'text-amber-300' : 'text-slate-200'}`;
 
@@ -868,7 +868,7 @@ export default function LeagueRankingView() {
                   ? 'text-xl md:text-3xl font-black text-amber-400'
                   : (isMundial && idx === 1)
                     ? 'text-base md:text-lg font-black text-slate-200'
-                    : `text-base font-black ${isMe ? 'text-amber-400' : (idx < 3) ? 'text-white' : 'text-slate-300'}`;
+                    : `text-base font-black ${isMe ? 'text-amber-400' : 'text-slate-300'}`;
 
                 return (
                   <div
@@ -880,12 +880,12 @@ export default function LeagueRankingView() {
                     className={`grid grid-cols-[36px_1fr_42px_42px_40px] md:grid-cols-[48px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
                   >
                     <div className="flex items-center justify-center">
-                      {isLastTwo ? (
+                      {isLast ? (
                         <span className="text-sm md:text-base inline-block text-center filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">💀</span>
                       ) : medal ? (
                         <span className={medalSize}>{medal}</span>
                       ) : (
-                        <span className={`text-sm font-black ${isMe ? 'text-amber-400' : 'text-slate-500'}`}>{idx + 1}</span>
+                        <span className={`text-sm font-black ${isMe ? 'text-amber-450' : 'text-slate-500'}`}>{idx + 1}</span>
                       )}
                     </div>
 
@@ -906,19 +906,19 @@ export default function LeagueRankingView() {
                     </div>
 
                     <div className="text-center">
-                      <span className={`text-sm font-bold ${isLastTwo ? 'text-red-400/70' : 'text-slate-300'}`}>
+                      <span className={`text-sm font-bold ${isLast ? 'text-red-400/70' : 'text-slate-300'}`}>
                         {Math.max(0, entry.correctTendencies - entry.exactResults)}
                       </span>
                     </div>
 
                     <div className="text-center">
-                      <span className={`text-sm font-bold ${isLastTwo ? 'text-red-400/60' : entry.exactResults > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                      <span className={`text-sm font-bold ${isLast ? 'text-red-400/60' : entry.exactResults > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
                         {entry.exactResults}
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <span className={isLastTwo ? 'text-base font-black text-red-500' : pointsClass}>
+                      <span className={isLast ? 'text-base font-black text-red-500' : pointsClass}>
                         {entry.totalPoints}
                       </span>
                     </div>
