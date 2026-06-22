@@ -526,18 +526,18 @@ export default function RankingView() {
                 setNavigatingUserId(activeRanking[0].userId);
                 router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${selectedLeague.tournamentId}&tournamentName=${encodeURIComponent(selectedLeague.name)}`);
               }}
-              className={`relative overflow-hidden border rounded-3xl py-2.5 px-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
+              className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
                 isDark 
                   ? 'bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/60' 
                   : 'bg-gradient-to-br from-amber-500/10 via-white to-white border-amber-500/30 shadow-[0_8px_16px_rgba(245,158,11,0.05)] hover:border-amber-500/50'
               }`}
             >
               <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
-              <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+              <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-20">
                 <span>👑</span> <span>1º PUESTO</span>
               </div>
               
-              <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2.5px] shadow-[0_0_10px_rgba(245,158,11,0.25)] shrink-0 mt-1">
+              <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2.5px] shadow-[0_0_10px_rgba(245,158,11,0.25)] shrink-0">
                 <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
                   <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{activeRanking[0].name?.slice(0, 1).toUpperCase()}</span>
                   <img
@@ -549,7 +549,7 @@ export default function RankingView() {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0 mt-1">
+              <div className="flex-1 min-w-0">
                 <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-amber-450' : 'text-amber-600'}`}>Puntero del Prode</h4>
                 <span className={`block font-black text-base truncate transition-colors leading-tight ${isDark ? 'text-white group-hover:text-amber-300' : 'text-slate-900 group-hover:text-amber-600'}`}>
                   {activeRanking[0].name}
@@ -561,7 +561,7 @@ export default function RankingView() {
                 </div>
               </div>
               
-              <div className="text-right shrink-0 pr-1 mt-1">
+              <div className="text-right shrink-0 pr-1">
                 <span className="text-2xl filter drop-shadow-md">🏆</span>
               </div>
             </div>
@@ -574,18 +574,18 @@ export default function RankingView() {
                 setNavigatingUserId(activeRanking[1].userId);
                 router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${selectedLeague.tournamentId}&tournamentName=${encodeURIComponent(selectedLeague.name)}`);
               }}
-              className={`relative overflow-hidden border rounded-3xl py-2.5 px-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
+              className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
                 isDark 
                   ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)] hover:border-slate-400/50' 
                   : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)] hover:border-slate-400/40'
               }`}
             >
               <div className="absolute top-0 right-0 w-20 h-20 bg-slate-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
-              <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-15">
+              <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1 z-20">
                 <span>🥈</span> <span>2º PUESTO</span>
               </div>
               
-              <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[2.5px] shadow-[0_0_10px_rgba(148,163,184,0.15)] shrink-0 mt-1">
+              <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[2.5px] shadow-[0_0_10px_rgba(148,163,184,0.15)] shrink-0">
                 <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
                   <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{activeRanking[1].name?.slice(0, 1).toUpperCase()}</span>
                   <img
@@ -597,7 +597,7 @@ export default function RankingView() {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0 mt-1">
+              <div className="flex-1 min-w-0">
                 <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Escolta</h4>
                 <span className={`block font-black text-base truncate transition-colors leading-tight ${isDark ? 'text-white group-hover:text-slate-350' : 'text-slate-900 group-hover:text-slate-600'}`}>
                   {activeRanking[1].name}
@@ -609,7 +609,7 @@ export default function RankingView() {
                 </div>
               </div>
 
-              <div className="text-right shrink-0 pr-1 mt-1">
+              <div className="text-right shrink-0 pr-1">
                 <span className="text-2xl filter drop-shadow-md">🥈</span>
               </div>
             </div>
