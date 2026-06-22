@@ -5,6 +5,10 @@ import { Search, User, Trophy, Calendar, Sparkles, Activity, ShieldAlert, Target
 import { createPortal } from 'react-dom';
 import { useTheme } from '../context/ThemeContext';
 
+const removeAccents = (str: string): string => {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+};
+
 const formatSelectionName = (flag: string | null | undefined): string => {
   if (!flag) return '';
   const mapping: Record<string, string> = {
@@ -340,11 +344,14 @@ export default function PlayersView() {
   const searchResults = searchQuery.trim().length < 3
     ? []
     : players.filter(p => {
-        const query = searchQuery.toLowerCase();
-        const matchesName = (p.nameFull || p.name || '').toLowerCase().includes(query);
-        const matchesSelectionFlag = p.selection ? p.selection.toLowerCase().includes(query) : false;
-        const matchesSelectionFormatted = p.selection ? formatSelectionName(p.selection).toLowerCase().includes(query) : false;
-        return matchesName || matchesSelectionFlag || matchesSelectionFormatted;
+        const query = removeAccents(searchQuery.toLowerCase());
+        const nameText = removeAccents((p.nameFull || p.name || '').toLowerCase());
+        const selectionFlagText = p.selection ? removeAccents(p.selection.toLowerCase()) : '';
+        const selectionFormattedText = p.selection ? removeAccents(formatSelectionName(p.selection).toLowerCase()) : '';
+        
+        return nameText.includes(query) || 
+               selectionFlagText.includes(query) || 
+               selectionFormattedText.includes(query);
       });
 
   // Fetch details for search results
