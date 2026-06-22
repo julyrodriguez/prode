@@ -90,6 +90,80 @@ const translateTeamToSpanish = (name: string): string => {
   return translations[trimmed] || translations[trimmed.replace(/\s+/g, ' ')] || trimmed;
 };
 
+const formatSelectionName = (flag: string | null | undefined): string => {
+  if (!flag) return '';
+  const mapping: Record<string, string> = {
+    'czech-republic': 'República Checa',
+    'bosnia-herzegovina': 'Bosnia y Herzegovina',
+    'cape-verde': 'Cabo Verde',
+    'dr-congo': 'RD Congo',
+    'ivory-coast': 'Costa de Marfil',
+    'netherlands': 'Países Bajos',
+    'new-zealand': 'Nueva Zelanda',
+    'saudi-arabia': 'Arabia Saudita',
+    'south-africa': 'Sudáfrica',
+    'south-korea': 'Corea del Sur',
+    'usa': 'EE. UU.',
+    'england': 'Inglaterra',
+    'france': 'Francia',
+    'germany': 'Alemania',
+    'japan': 'Japón',
+    'spain': 'España',
+    'turkey': 'Turquía',
+    'belgium': 'Bélgica',
+    'brazil': 'Brasil',
+    'italy': 'Italia',
+    'sweden': 'Suecia',
+    'switzerland': 'Suiza',
+    'croatia': 'Croacia',
+    'morocco': 'Marruecos',
+    'algeria': 'Argelia',
+    'egypt': 'Egipto',
+    'tunisia': 'Túnez',
+    'uzbekistan': 'Uzbekistán'
+  };
+  if (mapping[flag]) return mapping[flag];
+  return flag
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const isPlayerOfTeam = (playerSelection: string | null | undefined, teamName: string) => {
+  if (!playerSelection || !teamName) return false;
+  
+  const normTeam = teamName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const normSelection = playerSelection.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  
+  if (normTeam.includes(normSelection) || normSelection.includes(normTeam)) return true;
+  
+  const formattedSelection = formatSelectionName(playerSelection).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (normTeam.includes(formattedSelection) || formattedSelection.includes(normTeam)) return true;
+  
+  const spaceSelection = normSelection.replace(/-/g, ' ');
+  if (normTeam.includes(spaceSelection) || spaceSelection.includes(normTeam)) return true;
+
+  const teamTranslations: Record<string, string[]> = {
+    'saudi-arabia': ['arabia saudita', 'saudi arabia'],
+    'south-korea': ['corea del sur', 'south korea', 'korea republic'],
+    'netherlands': ['paises bajos', 'holanda', 'netherlands', 'holland'],
+    'usa': ['estados unidos', 'ee. uu.', 'usa', 'united states'],
+    'czech-republic': ['republica checa', 'czech republic'],
+    'bosnia-herzegovina': ['bosnia', 'bosnia y herzegovina', 'bosnia-herzegovina'],
+    'ivory-coast': ['costa de marfil', 'ivory coast'],
+    'dr-congo': ['rd congo', 'congo dr', 'dr congo'],
+    'cape-verde': ['cabo verde', 'cape verde'],
+    'new-zealand': ['nueva zelanda', 'new zealand'],
+    'south-africa': ['sudafrica', 'south africa']
+  };
+
+  if (teamTranslations[playerSelection]) {
+    return teamTranslations[playerSelection].some(trans => normTeam.includes(trans) || trans.includes(normTeam));
+  }
+  
+  return false;
+};
+
 const formatTabName = (key: string) => {
   const customMap: Record<string, string> = {
     grupoA: 'Grupo A',
@@ -130,6 +204,12 @@ export default function MatchDetailView() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showAllPlayerStats, setShowAllPlayerStats] = useState(false);
   const [showSubstitutes, setShowSubstitutes] = useState(false);
+
+  // Pre-match stats averages state
+  const [globalPlayers, setGlobalPlayers] = useState<any[]>([]);
+  const [preSortField, setPreSortField] = useState<'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon'>('shots');
+  const [preSortDirection, setPreSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [showAllPreStats, setShowAllPreStats] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -215,6 +295,21 @@ export default function MatchDetailView() {
     };
 
     fetchMundialStandings();
+    return () => { isMounted = false; };
+  }, [isMundialMatch]);
+
+  // Fetch promedios de jugadores de la base de datos para la comparación pre-partido
+  useEffect(() => {
+    if (!isMundialMatch) return;
+    let isMounted = true;
+    fetch('https://apivacas.jariel.com.ar/api/mundial/players')
+      .then(res => res.ok ? res.json() : null)
+      .then(json => {
+        if (json && json.success && isMounted) {
+          setGlobalPlayers(json.data || []);
+        }
+      })
+      .catch(err => console.error('Error fetching global players:', err));
     return () => { isMounted = false; };
   }, [isMundialMatch]);
 
@@ -1165,34 +1260,256 @@ export default function MatchDetailView() {
 
           {/* Detalles (solo antes de empezar el partido) */}
           {!hasStarted && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
-              <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
-              <div className="flex flex-col gap-2 z-10">
-                {dateStr && (
-                  <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
-                      <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <>
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
+                <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
+                <div className="flex flex-col gap-2 z-10">
+                  {dateStr && (
+                    <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                        <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Fecha Programada</span>
+                        <span className="text-[10px] md:text-xs text-slate-200 font-bold capitalize">{dateStr}</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Fecha Programada</span>
-                      <span className="text-[10px] md:text-xs text-slate-200 font-bold capitalize">{dateStr}</span>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {timeStr && (
-                  <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                      <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  {timeStr && (
+                    <div className="flex items-center gap-2 md:gap-3 bg-black/20 p-2 md:p-2.5 rounded-xl border border-white/5">
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Hora (Local)</span>
+                        <span className="text-[10px] md:text-xs text-slate-200 font-bold">{timeStr} HS</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-wider mb-0.5">Hora (Local)</span>
-                      <span className="text-[10px] md:text-xs text-slate-200 font-bold">{timeStr} HS</span>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+
+              {/* CUADRO DE ESTADÍSTICAS PROMEDIO PRE-PARTIDO */}
+              {(() => {
+                if (!globalPlayers || globalPlayers.length === 0) return null;
+
+                const findGlobalPlayer = (lineupPlayer: any) => {
+                  const dbName = (lineupPlayer.player?.name || lineupPlayer.player?.shortName || '').toLowerCase();
+                  const dbShort = (lineupPlayer.player?.shortName || '').toLowerCase();
+                  const dbNumber = lineupPlayer.jerseyNumber;
+
+                  const normalizeString = (str: string) => {
+                    return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+                  };
+
+                  const normDbName = normalizeString(dbName);
+                  const normDbShort = normalizeString(dbShort);
+
+                  const candidates = globalPlayers.filter((gp: any) => gp.number === dbNumber);
+                  if (candidates.length === 1) {
+                    return candidates[0];
+                  } else if (candidates.length > 1) {
+                    for (const gp of candidates) {
+                      const gpName = normalizeString(gp.nameFull || gp.name || '');
+                      if (gpName.includes(normDbShort) || normDbName.includes(gpName) || gpName.includes(normDbName)) {
+                        return gp;
+                      }
+                    }
+                  }
+
+                  return globalPlayers.find((gp: any) => {
+                    const gpName = normalizeString(gp.nameFull || gp.name || '');
+                    const gpShort = normalizeString(gp.name || '');
+                    return (
+                      gpName.includes(normDbName) || 
+                      normDbName.includes(gpName) ||
+                      gpName.includes(normDbShort) ||
+                      gpShort.includes(normDbShort)
+                    );
+                  }) || null;
+                };
+
+                const homeTeamName = hName;
+                const awayTeamName = aName;
+
+                let combined: any[] = [];
+
+                if (match.lineups && (match.lineups.home?.players?.length > 0 || match.lineups.away?.players?.length > 0)) {
+                  const homePlayersLineup = (match.lineups.home?.players || []).map((p: any) => ({ ...p, isHome: true }));
+                  const awayPlayersLineup = (match.lineups.away?.players || []).map((p: any) => ({ ...p, isHome: false }));
+                  const allLineup = [...homePlayersLineup, ...awayPlayersLineup];
+                  
+                  combined = allLineup.map(lp => {
+                    const gp = findGlobalPlayer(lp);
+                    if (!gp) return null;
+                    return {
+                      nameFull: gp.nameFull || lp.player?.name,
+                      name: gp.name || lp.player?.shortName,
+                      number: lp.jerseyNumber || gp.number,
+                      position: lp.position || gp.position,
+                      isHome: lp.isHome,
+                      totalMatches: gp.totalMatches || 0,
+                      stats: {
+                        shots: gp.shots || 0,
+                        shotsOnTarget: gp.shotsOnTarget || 0,
+                        foulsCommitted: gp.foulsCommitted || 0,
+                        foulsWon: gp.foulsWon || 0,
+                      }
+                    };
+                  }).filter(Boolean);
+                } else {
+                  const homeList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, homeTeamName)).map(gp => ({
+                    nameFull: gp.nameFull,
+                    name: gp.name,
+                    number: gp.number,
+                    position: gp.position,
+                    isHome: true,
+                    totalMatches: gp.totalMatches || 0,
+                    stats: {
+                      shots: gp.shots || 0,
+                      shotsOnTarget: gp.shotsOnTarget || 0,
+                      foulsCommitted: gp.foulsCommitted || 0,
+                      foulsWon: gp.foulsWon || 0,
+                    }
+                  }));
+
+                  const awayList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, awayTeamName)).map(gp => ({
+                    nameFull: gp.nameFull,
+                    name: gp.name,
+                    number: gp.number,
+                    position: gp.position,
+                    isHome: false,
+                    totalMatches: gp.totalMatches || 0,
+                    stats: {
+                      shots: gp.shots || 0,
+                      shotsOnTarget: gp.shotsOnTarget || 0,
+                      foulsCommitted: gp.foulsCommitted || 0,
+                      foulsWon: gp.foulsWon || 0,
+                    }
+                  }));
+
+                  combined = [...homeList, ...awayList];
+                }
+
+                const filtered = combined.filter(p => {
+                  const total = p.stats.shots + p.stats.shotsOnTarget + p.stats.foulsCommitted + p.stats.foulsWon;
+                  return p.totalMatches > 0 && total > 0;
+                }).map(p => {
+                  const matches = p.totalMatches;
+                  return {
+                    ...p,
+                    avgStats: {
+                      shots: p.stats.shots / matches,
+                      shotsOnTarget: p.stats.shotsOnTarget / matches,
+                      foulsCommitted: p.stats.foulsCommitted / matches,
+                      foulsWon: p.stats.foulsWon / matches,
+                    }
+                  };
+                });
+
+                if (filtered.length === 0) return null;
+
+                const sorted = [...filtered].sort((a, b) => {
+                  let valA = a.avgStats[preSortField] || 0;
+                  let valB = b.avgStats[preSortField] || 0;
+                  if (valA === valB) {
+                    return (a.nameFull || a.name || '').localeCompare(b.nameFull || b.name || '');
+                  }
+                  return preSortDirection === 'desc' ? valB - valA : valA - valB;
+                });
+
+                const displayed = showAllPreStats ? sorted : sorted.slice(0, 5);
+
+                const handlePreSort = (field: 'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon') => {
+                  if (preSortField === field) {
+                    setPreSortDirection(preSortDirection === 'desc' ? 'asc' : 'desc');
+                  } else {
+                    setPreSortField(field);
+                    setPreSortDirection('desc');
+                  }
+                };
+
+                return (
+                  <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg h-fit">
+                    <div className="flex flex-row items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 text-[10px] md:text-xs">📊</span>
+                        <h3 className="text-xs md:text-sm font-bold text-white">Promedios de Jugadores</h3>
+                      </div>
+                      <span className="text-[8px] md:text-[9px] text-slate-500 uppercase tracking-widest font-black">
+                        Partidos Previos
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto no-scrollbar">
+                      <table className="w-full text-left border-collapse text-[10px] sm:text-xs">
+                        <thead>
+                          <tr className="border-b border-white/5 text-slate-400 font-bold">
+                            <th className="py-1.5 pl-1 font-bold text-slate-400">Jugador</th>
+                            <th 
+                              onClick={() => handlePreSort('shots')}
+                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
+                            >
+                              Tiros {preSortField === 'shots' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                            <th 
+                              onClick={() => handlePreSort('shotsOnTarget')}
+                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
+                            >
+                              Al Arco {preSortField === 'shotsOnTarget' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                            <th 
+                              onClick={() => handlePreSort('foulsCommitted')}
+                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
+                            >
+                              Faltas {preSortField === 'foulsCommitted' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                            <th 
+                              onClick={() => handlePreSort('foulsWon')}
+                              className={`py-1.5 pr-1 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}`}
+                            >
+                              Recibidas {preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.02]">
+                          {displayed.map((player: any, pIdx: number) => {
+                            return (
+                              <tr 
+                                key={pIdx}
+                                className="hover:bg-white/[0.01] transition-colors group"
+                              >
+                                <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${player.isHome ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[120px] sm:max-w-xs">
+                                    {player.nameFull || player.name}
+                                  </span>
+                                  <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
+                                </td>
+                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shots.toFixed(2)}</td>
+                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shotsOnTarget.toFixed(2)}</td>
+                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.foulsCommitted.toFixed(2)}</td>
+                                <td className="py-2 pr-1 text-center font-bold text-slate-350">{player.avgStats.foulsWon.toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {sorted.length > 5 && (
+                      <button
+                        onClick={() => setShowAllPreStats(!showAllPreStats)}
+                        className="w-full text-center py-1.5 text-[9px] md:text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-1"
+                      >
+                        {showAllPreStats ? 'Ver menos ↑' : `Ver más (${sorted.length - 5} jugadores con promedios) ↓`}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </>
           )}
 
           {/* Alineaciones */}
