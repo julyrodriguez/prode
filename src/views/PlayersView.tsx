@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Search, User, Trophy, Calendar, Sparkles, Activity, ShieldAlert, Target, Award } from 'lucide-react';
+import { Search, User, Trophy, Calendar, Sparkles, Activity, ShieldAlert, Target, Award, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '../context/ThemeContext';
 
 interface PlayerAggregated {
@@ -38,6 +39,8 @@ export default function PlayersView() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
+  const [mounted, setMounted] = useState(false);
+
   const [players, setPlayers] = useState<PlayerAggregated[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +52,23 @@ export default function PlayersView() {
   const [selectedPlayerName, setSelectedPlayerName] = useState<string | null>(null);
   const [playerMatches, setPlayerMatches] = useState<MatchDetailHistory[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
+
+  // Set mounted state on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when selected player detail modal is open
+  useEffect(() => {
+    if (selectedPlayerName) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedPlayerName]);
 
   // Fetch players list on mount
   useEffect(() => {
@@ -312,9 +332,9 @@ export default function PlayersView() {
       )}
 
       {/* DETAIL MODAL PANEL */}
-      {selectedPlayerName && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
-          {/* Dismiss overlay */}
+      {mounted && selectedPlayerName && createPortal(
+        <div className="fixed inset-0 z-[100] flex justify-end bg-black/75 backdrop-blur-sm animate-fade-in">
+          {/* Dismiss overlay (blocks page clicks and closes modal on backdrop click) */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPlayerName(null)} />
           
           <div className="relative w-full max-w-2xl h-full bg-[#0b1015]/95 border-l border-white/10 shadow-2xl flex flex-col backdrop-blur-2xl">
@@ -341,14 +361,14 @@ export default function PlayersView() {
               </div>
               <button 
                 onClick={() => setSelectedPlayerName(null)}
-                className="text-slate-400 hover:text-white text-sm font-bold bg-white/5 border border-white/10 hover:bg-white/10 px-3 py-1.5 rounded-xl transition-all"
+                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full border border-white/10 transition-all flex items-center justify-center"
               >
-                Cerrar
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
               {/* Aggregated Quick Info */}
               <div className="grid grid-cols-3 gap-4 bg-black/20 rounded-2xl p-4 border border-white/5">
                 <div className="text-center border-r border-white/10">
@@ -398,7 +418,7 @@ export default function PlayersView() {
                                 </span>
                                 <span>{m.awayTeam.name}</span>
                               </div>
-                              <span className="text-[10px] text-slate-550 block mt-1">{date}</span>
+                              <span className="text-[10px] text-slate-500 block mt-1">{date}</span>
 
                               {m.events && (
                                 <div className="flex flex-wrap gap-1.5 mt-2">
@@ -585,7 +605,8 @@ export default function PlayersView() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
