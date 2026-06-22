@@ -62,6 +62,14 @@ export default function PlayersView() {
   // Player nationality/country state
   const [playerCountry, setPlayerCountry] = useState<string | null>(null);
 
+  // Visible matches limit state
+  const [visibleMatchesLimit, setVisibleMatchesLimit] = useState(5);
+
+  // Reset matches limit when player changes
+  useEffect(() => {
+    setVisibleMatchesLimit(5);
+  }, [selectedPlayerName]);
+
   // Set mounted state on client
   useEffect(() => {
     setMounted(true);
@@ -332,12 +340,12 @@ export default function PlayersView() {
       case 'Mediocampista':
       case 'Volante Central':
       case 'Midfielder':
-        return 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20';
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'Delantero':
       case 'Enganche':
       case 'Forward':
       case 'Striker':
-        return 'bg-rose-500/10 text-rose-450 border-rose-500/20';
+        return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
       default:
         return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
     }
@@ -698,11 +706,11 @@ export default function PlayersView() {
 
       {/* DETAIL MODAL PANEL */}
       {mounted && selectedPlayerName && createPortal(
-        <div className="fixed inset-0 z-[100] flex justify-end bg-black/75 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
           {/* Dismiss overlay */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPlayerName(null)} />
           
-          <div className="relative w-full max-w-sm sm:max-w-md h-full bg-[#0b1015]/95 border-l border-white/10 shadow-2xl flex flex-col backdrop-blur-2xl">
+          <div className="relative w-full max-w-sm sm:max-w-md max-h-[85vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
             {/* Modal Header */}
             <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
               <div className="flex items-center gap-2">
@@ -822,204 +830,216 @@ export default function PlayersView() {
                   <p className="text-slate-500 text-[10px] text-center py-4">No se encontraron detalles de partidos.</p>
                 ) : (
                   <div className="space-y-2">
-                    {playerMatches.map((m, idx) => {
-                      const date = m.startTimestamp ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-AR', {
-                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-                      }) : 'Fecha no disp.';
-                      return (
-                        <div key={idx} className="bg-black/20 border border-white/5 rounded-lg p-2 hover:border-white/10 transition-all">
-                          {/* Match Header */}
-                          <div className="flex justify-between items-start gap-2 mb-1.5 pb-1.5 border-b border-white/5">
-                            <div>
-                              <div className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-slate-300">
-                                <span>{m.homeTeam.name}</span>
-                                <span className="bg-white/5 text-slate-400 px-1 py-0.2 rounded text-[8px] border border-white/5">
-                                  {m.homeTeam.score} - {m.awayTeam.score}
-                                </span>
-                                <span>{m.awayTeam.name}</span>
-                              </div>
-                              <span className="text-[8px] text-slate-500 block mt-0.5">{date}</span>
-
-                              {m.events && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                  {m.events.yellowCard && (
-                                    <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
-                                      🟨 Amarilla
-                                    </span>
-                                  )}
-                                  {m.events.redCard && (
-                                    <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
-                                      🟥 Roja
-                                    </span>
-                                  )}
-                                  {m.events.subInMinute !== undefined && (
-                                    <span className="bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
-                                      🔄 Entró {m.events.subInMinute}'
-                                    </span>
-                                  )}
-                                  {m.events.subOutMinute !== undefined && (
-                                    <span className="bg-rose-500/10 text-rose-450 border border-rose-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
-                                      🔄 Salió {m.events.subOutMinute}'
-                                    </span>
-                                  )}
+                    {[...playerMatches]
+                      .sort((a, b) => b.startTimestamp - a.startTimestamp)
+                      .slice(0, visibleMatchesLimit)
+                      .map((m, idx) => {
+                        const date = m.startTimestamp ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-AR', {
+                          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        }) : 'Fecha no disp.';
+                        return (
+                          <div key={idx} className="bg-black/20 border border-white/5 rounded-lg p-2 hover:border-white/10 transition-all">
+                            {/* Match Header */}
+                            <div className="flex justify-between items-start gap-2 mb-1.5 pb-1.5 border-b border-white/5">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-slate-300">
+                                  <span>{m.homeTeam.name}</span>
+                                  <span className="bg-white/5 text-slate-400 px-1 py-0.2 rounded text-[8px] border border-white/5">
+                                    {m.homeTeam.score} - {m.awayTeam.score}
+                                  </span>
+                                  <span>{m.awayTeam.name}</span>
                                 </div>
+                                <span className="text-[8px] text-slate-500 block mt-0.5">{date}</span>
+
+                                {m.events && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {m.events.yellowCard && (
+                                      <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
+                                        🟨 Amarilla
+                                      </span>
+                                    )}
+                                    {m.events.redCard && (
+                                      <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
+                                        🟥 Roja
+                                      </span>
+                                    )}
+                                    {m.events.subInMinute !== undefined && (
+                                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
+                                        🔄 Entró {m.events.subInMinute}'
+                                      </span>
+                                    )}
+                                    {m.events.subOutMinute !== undefined && (
+                                      <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
+                                        🔄 Salió {m.events.subOutMinute}'
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              {m.status.type === 'inprogress' ? (
+                                <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-1 py-0.1 border border-emerald-500/20 rounded-full font-bold">
+                                  EN VIVO
+                                </span>
+                              ) : (
+                                <span className="bg-white/5 text-slate-500 text-[8px] px-1 py-0.1 rounded-full border border-white/5">
+                                  Finalizado
+                                </span>
                               )}
                             </div>
-                            {m.status.type === 'inprogress' ? (
-                              <span className="bg-emerald-500/10 text-emerald-450 text-[8px] px-1 py-0.1 border border-emerald-500/20 rounded-full font-bold">
-                                EN VIVO
-                              </span>
+
+                            {/* Individual Stats in Match */}
+                            {m.stats ? (
+                              <div className="grid grid-cols-2 gap-1 text-[9px]">
+                                {m.stats.minutesPlayed !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Minutos</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.minutesPlayed}'</span>
+                                  </div>
+                                )}
+                                
+                                {m.stats.goals !== undefined && m.stats.goals > 0 && (
+                                  <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Goles</span>
+                                    <span className="font-extrabold text-[10px]">{m.stats.goals}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.assists !== undefined && m.stats.assists > 0 && (
+                                  <div className="bg-amber-500/10 p-1 rounded border border-amber-500/20 text-amber-500">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Asistencias</span>
+                                    <span className="font-extrabold text-[10px]">{m.stats.assists}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.shots !== undefined && m.stats.shots > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Tiros (Al arco)</span>
+                                    <span className="font-extrabold text-slate-200">
+                                      {m.stats.shots}
+                                      {m.stats.shotsOnTarget !== undefined && ` (${m.stats.shotsOnTarget})`}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {m.stats.foulsCommitted !== undefined && m.stats.foulsCommitted > 0 && (
+                                  <div className="bg-rose-500/10 p-1 rounded border border-rose-500/20 text-rose-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Cometidas</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.foulsCommitted}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.foulsWon !== undefined && m.stats.foulsWon > 0 && (
+                                  <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Recibidas</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.foulsWon}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.saves !== undefined && (m.position === 'Arquero' || m.stats.saves > 0) && (
+                                  <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Atajadas</span>
+                                    <span className="font-extrabold text-[10px]">{m.stats.saves}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.passes && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pases</span>
+                                    <span className="font-extrabold text-slate-200">
+                                      {m.stats.passes.ok}/{m.stats.passes.total} 
+                                      <small className="text-slate-500 font-normal ml-0.5">({m.stats.passes.total ? Math.round((m.stats.passes.ok / m.stats.passes.total) * 100) : 0}%)</small>
+                                    </span>
+                                  </div>
+                                )}
+
+                                {m.stats.touches !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Toques</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.touches}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.tackles && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Entradas</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.tackles.ok}/{m.stats.tackles.total}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.recoveries !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Recuperaciones</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.recoveries}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.interceptions !== undefined && m.stats.interceptions > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Intercepciones</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.interceptions}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.clearances !== undefined && m.stats.clearances > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Despejes</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.clearances}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.possessionLost !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pérdidas</span>
+                                    <span className="font-extrabold text-slate-400">{m.stats.possessionLost}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.dispossessed !== undefined && m.stats.dispossessed > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Quitado/Robado</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.dispossessed}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.dribbles && m.stats.dribbles.total > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Regates</span>
+                                    <span className="font-extrabold text-slate-200">
+                                      {m.stats.dribbles.ok}/{m.stats.dribbles.total}
+                                      <small className="text-slate-500 font-normal ml-0.5">({m.stats.dribbles.total ? Math.round((m.stats.dribbles.ok / m.stats.dribbles.total) * 100) : 0}%)</small>
+                                    </span>
+                                  </div>
+                                )}
+
+                                {m.stats.groundDuels && m.stats.groundDuels.total > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Duelos Suelo</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.groundDuels.ok}/{m.stats.groundDuels.total}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.aerialDuels && m.stats.aerialDuels.total > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Duelos Aéreos</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.aerialDuels.ok}/{m.stats.aerialDuels.total}</span>
+                                  </div>
+                                )}
+                              </div>
                             ) : (
-                              <span className="bg-white/5 text-slate-500 text-[8px] px-1 py-0.1 rounded-full border border-white/5">
-                                Finalizado
-                              </span>
+                              <p className="text-[8px] text-slate-500">No hay estadísticas detalladas registradas para este partido.</p>
                             )}
                           </div>
+                        );
+                      })}
 
-                          {/* Individual Stats in Match */}
-                          {m.stats ? (
-                            <div className="grid grid-cols-2 gap-1 text-[9px]">
-                              {m.stats.minutesPlayed !== undefined && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Minutos</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.minutesPlayed}'</span>
-                                </div>
-                              )}
-                              
-                              {m.stats.goals !== undefined && m.stats.goals > 0 && (
-                                <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-450">
-                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Goles</span>
-                                  <span className="font-extrabold text-[10px]">{m.stats.goals}</span>
-                                </div>
-                              )}
-
-                              {m.stats.assists !== undefined && m.stats.assists > 0 && (
-                                <div className="bg-amber-500/10 p-1 rounded border border-amber-500/20 text-amber-505">
-                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Asistencias</span>
-                                  <span className="font-extrabold text-[10px]">{m.stats.assists}</span>
-                                </div>
-                              )}
-
-                              {m.stats.shots !== undefined && m.stats.shots > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Tiros (Al arco)</span>
-                                  <span className="font-extrabold text-slate-200">
-                                    {m.stats.shots}
-                                    {m.stats.shotsOnTarget !== undefined && ` (${m.stats.shotsOnTarget})`}
-                                  </span>
-                                </div>
-                              )}
-
-                              {m.stats.foulsCommitted !== undefined && m.stats.foulsCommitted > 0 && (
-                                <div className="bg-rose-500/10 p-1 rounded border border-rose-500/20 text-rose-450">
-                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Cometidas</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.foulsCommitted}</span>
-                                </div>
-                              )}
-
-                              {m.stats.foulsWon !== undefined && m.stats.foulsWon > 0 && (
-                                <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-450">
-                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Recibidas</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.foulsWon}</span>
-                                </div>
-                              )}
-
-                              {m.stats.saves !== undefined && (m.position === 'Arquero' || m.stats.saves > 0) && (
-                                <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-450">
-                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Atajadas</span>
-                                  <span className="font-extrabold text-[10px]">{m.stats.saves}</span>
-                                </div>
-                              )}
-
-                              {m.stats.passes && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pases</span>
-                                  <span className="font-extrabold text-slate-200">
-                                    {m.stats.passes.ok}/{m.stats.passes.total} 
-                                    <small className="text-slate-500 font-normal ml-0.5">({m.stats.passes.total ? Math.round((m.stats.passes.ok / m.stats.passes.total) * 100) : 0}%)</small>
-                                  </span>
-                                </div>
-                              )}
-
-                              {m.stats.touches !== undefined && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Toques</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.touches}</span>
-                                </div>
-                              )}
-
-                              {m.stats.tackles && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Entradas</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.tackles.ok}/{m.stats.tackles.total}</span>
-                                </div>
-                              )}
-
-                              {m.stats.recoveries !== undefined && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Recuperaciones</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.recoveries}</span>
-                                </div>
-                              )}
-
-                              {m.stats.interceptions !== undefined && m.stats.interceptions > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Intercepciones</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.interceptions}</span>
-                                </div>
-                              )}
-
-                              {m.stats.clearances !== undefined && m.stats.clearances > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Despejes</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.clearances}</span>
-                                </div>
-                              )}
-
-                              {m.stats.possessionLost !== undefined && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pérdidas</span>
-                                  <span className="font-extrabold text-slate-400">{m.stats.possessionLost}</span>
-                                </div>
-                              )}
-
-                              {m.stats.dispossessed !== undefined && m.stats.dispossessed > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Quitado/Robado</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.dispossessed}</span>
-                                </div>
-                              )}
-
-                              {m.stats.dribbles && m.stats.dribbles.total > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Regates</span>
-                                  <span className="font-extrabold text-slate-200">
-                                    {m.stats.dribbles.ok}/{m.stats.dribbles.total}
-                                    <small className="text-slate-500 font-normal ml-0.5">({m.stats.dribbles.total ? Math.round((m.stats.dribbles.ok / m.stats.dribbles.total) * 100) : 0}%)</small>
-                                  </span>
-                                </div>
-                              )}
-
-                              {m.stats.groundDuels && m.stats.groundDuels.total > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Duelos Suelo</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.groundDuels.ok}/{m.stats.groundDuels.total}</span>
-                                </div>
-                              )}
-
-                              {m.stats.aerialDuels && m.stats.aerialDuels.total > 0 && (
-                                <div className="bg-black/40 p-1 rounded border border-white/5">
-                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Duelos Aéreos</span>
-                                  <span className="font-extrabold text-slate-200">{m.stats.aerialDuels.ok}/{m.stats.aerialDuels.total}</span>
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <p className="text-[8px] text-slate-500">No hay estadísticas detalladas registradas para este partido.</p>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {playerMatches.length > visibleMatchesLimit && visibleMatchesLimit < 20 && (
+                      <button
+                        onClick={() => setVisibleMatchesLimit(prev => prev === 5 ? 10 : 20)}
+                        className="w-full text-center py-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/5 border border-dashed border-emerald-500/20 rounded-lg transition-all mt-1"
+                      >
+                        Ver más partidos ({playerMatches.length - visibleMatchesLimit} más)
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
