@@ -383,10 +383,8 @@ export default function MundialTablaView() {
   };
 
   const Header = () => (
-    <div className="relative bg-gradient-to-b from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-2xl md:rounded-3xl p-4 md:p-6 overflow-hidden shadow-[0_15px_30px_rgba(0,0,0,0.5)] mb-1 md:mb-2">
-      <div className="absolute top-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none translate-x-1/2 translate-y-1/2" />
-      <h1 className="relative z-10 text-xl md:text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 via-amber-250 to-emerald-400 tracking-tight drop-shadow-md">
+    <div className="relative bg-black/20 backdrop-blur-sm border border-white/5 rounded-2xl p-4 md:p-5 mb-2 overflow-hidden shadow-lg">
+      <h1 className="relative z-10 text-lg md:text-2xl font-black text-white tracking-tight">
         📊 Tabla de Posiciones
       </h1>
       <p className="text-slate-400 text-[10px] md:text-xs font-semibold mt-0.5 md:mt-1 relative z-10">
@@ -543,24 +541,24 @@ export default function MundialTablaView() {
               return (
                 <div 
                   key={stageIdx} 
-                  className={`${isMobileVisible ? 'flex' : 'hidden'} md:flex flex-col w-[240px] xs:w-[260px] md:w-72 shrink-0`}
+                  className={`${isMobileVisible ? 'flex' : 'hidden'} md:flex flex-col w-[170px] xs:w-[190px] md:w-[210px] shrink-0`}
                 >
                   <div className="flex items-center pl-2 mb-2">
                     <div className="w-1 h-3 bg-amber-500 rounded-full mr-1.5 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
-                    <h4 className="text-[11px] md:text-xs font-black uppercase text-slate-350 tracking-wider">
+                    <h4 className="text-[10px] md:text-[11px] font-black uppercase text-slate-350 tracking-wider">
                       {stage.name}
                     </h4>
                   </div>
                   
                   {/* min-h-0 on mobile keeps semifinal/final compact, while md:min-h-[850px] spaces stages vertically for horizontal alignment */}
-                  <div className="flex flex-col justify-around flex-grow min-h-0 md:min-h-[850px] relative gap-2.5 md:gap-4 p-2.5 md:p-3 bg-slate-900/10 border border-white/[0.02] rounded-2xl md:rounded-[2rem] shadow-inner">
+                  <div className="flex flex-col justify-around flex-grow min-h-0 md:min-h-[850px] relative gap-1.5 md:gap-2.5 p-1.5 bg-slate-900/10 border border-white/[0.02] rounded-xl shadow-inner">
                     {stage.groups?.map((match: any, idx: number) => (
                       <div 
                         key={idx}
-                        className="bg-[#0b1015]/85 border border-white/5 hover:border-amber-500/20 transition-all duration-300 rounded-xl md:rounded-2xl p-2.5 md:p-3.5 flex flex-col gap-2 shadow-md w-full relative group"
+                        className="bg-[#0b1015]/85 border border-white/5 hover:border-amber-500/20 transition-all duration-300 rounded-lg p-1.5 md:p-2 flex flex-col gap-1 shadow-md w-full relative group"
                       >
                         {match.games && match.games[0]?.start_time && (
-                          <div className="text-[8px] md:text-[9px] font-black text-slate-500 tracking-wider uppercase flex justify-between items-center px-0.5 border-b border-white/5 pb-1">
+                          <div className="text-[7px] md:text-[8px] font-black text-slate-500 tracking-wider uppercase flex justify-between items-center px-0.5 border-b border-white/5 pb-0.5">
                             <span>
                               {stageIdx === 4 
                                 ? (idx === 0 ? '🏆 Gran Final' : '🥉 Tercer Puesto') 
@@ -571,7 +569,7 @@ export default function MundialTablaView() {
                           </div>
                         )}
 
-                        <div className="flex flex-col gap-1 md:gap-1.5">
+                        <div className="flex flex-col gap-0.5 md:gap-1">
                           {match.participants?.map((p: any, pIdx: number) => {
                             const pName = p.nombre || p.name;
                             const localId = getTeamIdByName(pName);
@@ -585,14 +583,14 @@ export default function MundialTablaView() {
                               <div 
                                 key={pIdx} 
                                 onClick={() => hasId && router.push(`/team/${localId}`)}
-                                className={`flex items-center justify-between p-1 md:p-1.5 rounded-lg transition-all ${
+                                className={`flex items-center justify-between p-0.5 md:p-1 rounded transition-all ${
                                   hasId ? 'cursor-pointer hover:bg-white/5' : ''
                                 } ${
                                   isWinner ? 'bg-amber-500/10 text-white font-bold' : 'text-slate-350'
                                 } ${isLoser ? 'opacity-40' : ''}`}
                               >
-                                <div className="flex items-center gap-1.5 md:gap-2 truncate pr-1">
-                                  <div className="w-5 h-5 md:w-5.5 md:h-5.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
+                                <div className="flex items-center gap-1 md:gap-1.5 truncate pr-1">
+                                  <div className="w-4 h-4 md:w-4.5 md:h-4.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
                                     {hasId ? (
                                       <TeamLogo
                                         logoUrl={`/escudos/${localId}.png`}
@@ -600,16 +598,16 @@ export default function MundialTablaView() {
                                         className="w-full h-full p-0.5"
                                       />
                                     ) : (
-                                      <div className="text-[8px] text-slate-650">🏳️</div>
+                                      <div className="text-[7px] text-slate-655">🏳️</div>
                                     )}
                                   </div>
-                                  <span className={`text-[10px] md:text-xs truncate ${isWinner ? 'text-amber-400 font-extrabold' : 'font-medium'}`}>
+                                  <span className={`text-[9px] md:text-[10px] truncate ${isWinner ? 'text-amber-400 font-extrabold' : 'font-medium'}`}>
                                     {pName}
                                   </span>
                                 </div>
                                 
                                 {score !== null && score !== undefined && (
-                                  <span className={`text-[10px] md:text-xs font-black px-1.5 py-0.5 rounded-md ${isWinner ? 'bg-amber-500/25 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
+                                  <span className={`text-[9px] md:text-[10px] font-black px-1 py-0.5 rounded-md ${isWinner ? 'bg-amber-500/25 text-amber-400 border border-amber-500/20' : 'bg-slate-800 text-slate-400 border border-transparent'}`}>
                                     {score}
                                   </span>
                                 )}
@@ -724,11 +722,11 @@ export default function MundialTablaView() {
                           {/* Player Info */}
                           <td className="py-1.5 px-2">
                             <div className="flex flex-col">
-                              <span className="font-extrabold text-slate-250 group-hover:text-white truncate">
+                              <span className="font-extrabold text-[10px] md:text-[11px] text-slate-250 group-hover:text-white truncate">
                                 {row.playerName}
                               </span>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <div className="w-4 h-4 flex-shrink-0 bg-white/5 rounded-full border border-white/5 overflow-hidden flex items-center justify-center">
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <div className="w-3 h-3 md:w-3.5 md:h-3.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 overflow-hidden flex items-center justify-center">
                                   {localId ? (
                                     <TeamLogo
                                       logoUrl={`/escudos/${localId}.png`}
@@ -736,10 +734,10 @@ export default function MundialTablaView() {
                                       className="w-full h-full p-0.5"
                                     />
                                   ) : (
-                                    <span className="text-[8px]">🏳️</span>
+                                    <span className="text-[7px]">🏳️</span>
                                   )}
                                 </div>
-                                <span className="text-[9px] text-slate-400 font-medium truncate group-hover:text-slate-350">
+                                <span className="text-[8px] md:text-[9px] text-slate-400 font-medium truncate group-hover:text-slate-350">
                                   {row.teamName || "Desconocido"}
                                 </span>
                               </div>
