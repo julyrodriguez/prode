@@ -1361,6 +1361,7 @@ export default function MatchDetailView() {
         </div>
         )}
       </div>
+    </div>
 
       {/* MODAL DETALLES DEL JUGADOR */}
       {mounted && selectedPlayer && createPortal(
@@ -1473,7 +1474,7 @@ export default function MatchDetailView() {
                         </div>
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Oportunidades creadas</span>
-                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`">{selectedPlayer.stats.chancesCreated || 0}</span>
+                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.chancesCreated || 0}</span>
                         </div>
                       </div>
                     </div>
