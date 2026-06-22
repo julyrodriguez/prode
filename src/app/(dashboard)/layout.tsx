@@ -501,37 +501,71 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             const isActive = (league.id as string) === 'cs2'
               ? isCS2
               : (league.id === activeLeagueId || (league.id === 'general' && isGeneralSection && !isCS2));
+            const isMundialActive = league.id === 'mundial' && isActive;
             return (
-              <Link
-                key={league.id}
-                href={
-                  league.id === 'general'
-                    ? '/general'
-                    : (league.id as string) === 'cs2'
-                      ? '/cs2'
-                      : `/liga/${league.id}/partidos`
-                }
-                onClick={() => setMobileSidebarOpen(false)}
-                className={`
-                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer shrink-0
-                  ${league.id === 'mundial'
-                    ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
-                    : isActive && (league.id as string) === 'cs2'
-                      ? 'bg-amber-500/15 text-amber-400 shadow-[inset_0_1px_1px_rgba(245,158,11,0.1)]'
-                      : isActive
-                        ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+              <div key={league.id} className="flex flex-col w-full shrink-0">
+                <Link
+                  href={
+                    league.id === 'general'
+                      ? '/general'
+                      : (league.id as string) === 'cs2'
+                        ? '/cs2'
+                        : `/liga/${league.id}/partidos`
                   }
-                `}
-              >
-                <span className={`text-xl flex-shrink-0 w-6 text-center leading-none ${league.id === 'mundial' ? 'mundial-icon' : ''}`}>{league.icon}</span>
-                <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
-                  {league.name}
-                </span>
-                {isActive && (
-                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : (league.id as string) === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  onClick={() => setMobileSidebarOpen(false)}
+                  className={`
+                    flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
+                    ${league.id === 'mundial'
+                      ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
+                      : isActive && (league.id as string) === 'cs2'
+                        ? 'bg-amber-500/15 text-amber-400 shadow-[inset_0_1px_1px_rgba(245,158,11,0.1)]'
+                        : isActive
+                          ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }
+                  `}
+                >
+                  <span className={`text-xl flex-shrink-0 w-6 text-center leading-none ${league.id === 'mundial' ? 'mundial-icon' : ''}`}>{league.icon}</span>
+                  <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                    {league.name}
+                  </span>
+                  {isActive && (
+                    <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : (league.id as string) === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  )}
+                </Link>
+
+                {isMundialActive && (
+                  <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
+                    {currentLeagueTabs.map((tab) => {
+                      const isTabActive = activeTabId === tab.id;
+                      const href = tab.id === 'minijuegos'
+                        ? '/liga/mundial/minijuegos'
+                        : tab.id === 'jugadores'
+                          ? '/jugadores'
+                          : `/liga/${activeLeagueId}/${tab.id}`;
+                      return (
+                        <Link
+                          key={tab.id}
+                          href={href}
+                          onClick={() => setMobileSidebarOpen(false)}
+                          className={`
+                            flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer
+                            ${isTabActive
+                              ? 'bg-emerald-500/10 text-emerald-400 font-bold'
+                              : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }
+                          `}
+                        >
+                          <span className="mr-2 text-base flex-shrink-0">{tab.icon}</span>
+                          <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                            {tab.label}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              </Link>
+              </div>
             );
           })}
         </nav>

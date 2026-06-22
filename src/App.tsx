@@ -15,6 +15,7 @@ import LeagueTablaView from './views/LeagueTablaView';
 import LeagueMinigamesView from './views/LeagueMinigamesView';
 import LeagueSimulationView from './views/LeagueSimulationView';
 import ProfileView from './views/ProfileView';
+import PlayersView from './views/PlayersView';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="predicciones" element={<Navigate to="/general" replace />} />
             <Route path="ranking" element={<RankingView />} />
             <Route path="stats" element={<StatsView />} />
+            <Route path="jugadores" element={<PlayersView />} />
             <Route path="perfil" element={<ProfileView />} />
 
             {/* ── Match / Team Detail ── */}

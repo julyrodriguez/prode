@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import path from 'path';
 
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
   const url = searchParams.get('url');
 
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Falta el parámetro url' }, { status: 400 });
   }
 
-  return new Promise((resolve) => {
+  return new Promise<Response>((resolve) => {
     // Resolver la ruta absoluta al script de Python helper
     const scriptPath = path.join(process.cwd(), 'scripts', 'fetch-match-stats.py');
     

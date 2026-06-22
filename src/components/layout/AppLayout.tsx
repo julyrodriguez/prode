@@ -177,6 +177,7 @@ const GENERAL_TABS = [
   { id: 'minijuegos', label: 'Juegos', path: '/liga/mundial/minijuegos', icon: '🎮' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', icon: '🏅' },
   { id: 'estadisticas', label: 'Estadísticas', path: '/stats', icon: '📊' },
+  { id: 'jugadores', label: 'Jugadores', path: '/jugadores', icon: '🏃‍♂️' },
 ] as const;
 
 export default function AppLayout() {
@@ -201,12 +202,13 @@ export default function AppLayout() {
 
   // Detect if we're on a league sub-route
   const leagueMatch = location.pathname.match(/^\/liga\/([^/]+)\/?(.+)?$/);
-  const activeLeagueId = overriddenLeagueId || (leagueMatch ? leagueMatch[1] as LeagueId : 'general');
-  const activeTabId = leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null;
+  const isJugadoresPage = location.pathname === '/jugadores';
+  const activeLeagueId = overriddenLeagueId || (isJugadoresPage ? 'mundial' : (leagueMatch ? leagueMatch[1] as LeagueId : 'general'));
+  const activeTabId = isJugadoresPage ? 'jugadores' : (leagueMatch ? (leagueMatch[2]?.split('/')[0] || 'partidos') : null);
 
   const isMatchDetail = location.pathname.startsWith('/match/') || location.pathname.startsWith('/team/');
   const isCS2 = false;
-  const isGeneralSection = activeLeagueId === 'general' || !leagueMatch;
+  const isGeneralSection = activeLeagueId === 'general' || (!leagueMatch && !isJugadoresPage);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const argentineIds = ['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c', 'copa-arg'];
@@ -228,7 +230,7 @@ export default function AppLayout() {
   }, [activeLeagueId, isArgActive, isCopasActive, isLigasActive]);
 
   const rawLeagueTabs = activeLeagueId === 'mundial'
-    ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
+    ? [...LEAGUE_TABS, { id: 'simulacion', label: 'Simulación', icon: '🪄' } as const, { id: 'jugadores', label: 'Jugadores', icon: '🏃' } as const, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const]
     : [...LEAGUE_TABS, { id: 'minijuegos', label: 'Minijuegos', icon: '🎮' } as const];
 
   const currentLeagueTabs = rawLeagueTabs.filter(tab => {
@@ -256,6 +258,10 @@ export default function AppLayout() {
       navigate('/liga/mundial/minijuegos');
       return;
     }
+    if (tabId === 'jugadores') {
+      navigate('/jugadores');
+      return;
+    }
     if (activeLeagueId && !isGeneralSection) {
       navigate(`/liga/${activeLeagueId}/${tabId}`);
     }
@@ -265,7 +271,8 @@ export default function AppLayout() {
   const generalTabActive = isGeneralSection
     ? (location.pathname === '/ranking' ? 'ranking'
       : location.pathname === '/stats' ? 'estadisticas'
-        : 'partidos')
+        : location.pathname === '/jugadores' ? 'jugadores'
+          : 'partidos')
     : null;
 
   return (
@@ -481,30 +488,61 @@ export default function AppLayout() {
             const isActive = (league.id as string) === 'cs2'
               ? isCS2
               : (league.id === activeLeagueId || (league.id === 'general' && isGeneralSection && !isCS2));
+            const isMundialActive = league.id === 'mundial' && isActive;
             return (
-              <button
-                key={league.id}
-                onClick={() => handleLeagueSelect(league.id)}
-                className={`
-                  flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left shrink-0
-                  ${league.id === 'mundial'
-                    ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
-                    : isActive && (league.id as string) === 'cs2'
-                      ? 'bg-amber-500/15 text-amber-400 shadow-[inset_0_1px_1px_rgba(245,158,11,0.1)]'
-                      : isActive
-                        ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }
-                `}
-              >
-                <span className={`text-xl flex-shrink-0 w-6 text-center leading-none ${league.id === 'mundial' ? 'mundial-icon' : ''}`}>{league.icon}</span>
-                <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
-                  {league.name}
-                </span>
-                {isActive && (
-                  <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : (league.id as string) === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+              <div key={league.id} className="flex flex-col w-full shrink-0">
+                <button
+                  onClick={() => handleLeagueSelect(league.id)}
+                  className={`
+                    flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left shrink-0
+                    ${league.id === 'mundial'
+                      ? `mundial-menu-item ${isActive ? 'active-mundial' : ''}`
+                      : isActive && (league.id as string) === 'cs2'
+                        ? 'bg-amber-500/15 text-amber-400 shadow-[inset_0_1px_1px_rgba(245,158,11,0.1)]'
+                        : isActive
+                          ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }
+                  `}
+                >
+                  <span className={`text-xl flex-shrink-0 w-6 text-center leading-none ${league.id === 'mundial' ? 'mundial-icon' : ''}`}>{league.icon}</span>
+                  <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                    {league.name}
+                  </span>
+                  {isActive && (
+                    <div className={`ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 ${league.id === 'mundial' ? 'bg-amber-400' : (league.id as string) === 'cs2' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  )}
+                </button>
+
+                {isMundialActive && (
+                  <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
+                    {currentLeagueTabs.map((tab) => {
+                      const isTabActive = activeTabId === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            handleTabSelect(tab.id);
+                            setMobileSidebarOpen(false);
+                          }}
+                          className={`
+                            flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer text-left
+                            ${isTabActive
+                              ? 'bg-emerald-500/10 text-emerald-400 font-bold'
+                              : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }
+                          `}
+                        >
+                          <span className="mr-2 text-base flex-shrink-0">{tab.icon}</span>
+                          <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                            {tab.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </nav>
