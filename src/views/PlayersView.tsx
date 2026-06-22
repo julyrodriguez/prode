@@ -53,6 +53,12 @@ export default function PlayersView() {
   const [playerMatches, setPlayerMatches] = useState<MatchDetailHistory[]>([]);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
+  // Toggle mode: 'match' (per game) or 'minute' (per minute)
+  const [statMode, setStatMode] = useState<'match' | 'minute'>('match');
+  
+  // Cache for total minutes of players: nameFull -> minutes
+  const [playerMinutes, setPlayerMinutes] = useState<Record<string, number>>({});
+
   // Set mounted state on client
   useEffect(() => {
     setMounted(true);
@@ -137,27 +143,50 @@ export default function PlayersView() {
     fetchPlayerDetail();
   }, [selectedPlayerName]);
 
-  // Calculations for Top 5 (based on averages)
-  const getTop5 = (
-    key: 'goals' | 'assists' | 'shots' | 'foulsCommitted' | 'saves',
-    filterFn?: (p: PlayerAggregated) => boolean
-  ) => {
-    const list = filterFn ? players.filter(filterFn) : players;
-    return [...list]
-      .map(p => ({
-        ...p,
-        average: p.totalMatches > 0 ? p[key] / p.totalMatches : 0
-      }))
-      .filter(p => p[key] > 0) // only show if they have at least 1
-      .sort((a, b) => b.average - a.average || b[key] - a[key])
-      .slice(0, 5);
-  };
+  // Helper to fetch minutes for multiple players
+  const fetchMinutesForPlayers = async (names: string[]) => {
+    const namesToFetch = names.filter(name => playerMinutes[name] === undefined);
+    if (namesToFetch.length === 0) return;
 
-  const topGoleadores = getTop5('goals');
-  const topAsistidores = getTop5('assists');
-  const topTiros = getTop5('shots');
-  const topFaltas = getTop5('foulsCommitted');
-  const topAtajadas = getTop5('saves', p => p.position === 'Arquero');
+    // Set to loading (-1) to avoid duplicate fetches
+    setPlayerMinutes(prev => {
+      const next = { ...prev };
+      namesToFetch.forEach(name => {
+        next[name] = -1;
+      });
+      return next;
+    });
+
+    const fetchOne = async (name: string) => {
+      try {
+        const encodedName = encodeURIComponent(name);
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/mundial/players/detail?name=${encodedName}`);
+        if (!res.ok) throw new Error();
+        const json = await res.json();
+        if (json.success && json.data) {
+          const matches: MatchDetailHistory[] = json.data;
+          const totalMin = matches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
+          return { name, minutes: totalMin };
+        }
+      } catch (e) {
+        console.error('Error fetching detail for ' + name, e);
+      }
+      return { name, minutes: 0 };
+    };
+
+    try {
+      const results = await Promise.all(namesToFetch.map(name => fetchOne(name)));
+      setPlayerMinutes(prev => {
+        const next = { ...prev };
+        results.forEach(res => {
+          next[res.name] = res.minutes;
+        });
+        return next;
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Search filter
   const searchResults = searchQuery.trim() === ''
@@ -166,112 +195,349 @@ export default function PlayersView() {
         (p.nameFull || p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
 
+  // Fetch minutes for search results
+  useEffect(() => {
+    if (searchResults.length === 0) return;
+    const searchNames = searchResults.map(p => p.nameFull);
+    fetchMinutesForPlayers(searchNames);
+  }, [searchResults]);
+
+  // Calculations for leaderboards (supporting per match / per minute)
+  const getTop5 = (
+    key: 'goals' | 'assists' | 'shots' | 'foulsCommitted' | 'saves' | 'goalsAssists',
+    filterFn?: (p: PlayerAggregated) => boolean
+  ) => {
+    const list = filterFn ? players.filter(filterFn) : players;
+    return [...list]
+      .map(p => {
+        const goals = p.goals || 0;
+        const assists = p.assists || 0;
+        const val = key === 'goalsAssists' ? (goals + assists) : (p[key] as number || 0);
+        
+        let avg = 0;
+        if (statMode === 'minute') {
+          const min = playerMinutes[p.nameFull];
+          if (min && min > 0) {
+            avg = (val / min) * 90; // Normalized to 90 mins for standard display
+          } else {
+            avg = p.totalMatches > 0 ? (val / (p.totalMatches * 90)) * 90 : 0;
+          }
+        } else {
+          avg = p.totalMatches > 0 ? val / p.totalMatches : 0;
+        }
+
+        return {
+          ...p,
+          goalsAssists: goals + assists,
+          average: avg,
+          rawVal: val
+        };
+      })
+      .filter(p => p.rawVal > 0)
+      .sort((a, b) => b.average - a.average || b.rawVal - a.rawVal)
+      .slice(0, 5);
+  };
+
+  const topGoleadores = getTop5('goals');
+  const topAsistidores = getTop5('assists');
+  const topGolesAsistencias = getTop5('goalsAssists');
+  const topTiros = getTop5('shots');
+  const topFaltas = getTop5('foulsCommitted');
+  const topAtajadas = getTop5('saves', p => p.position === 'Arquero' || p.position === 'Goalkeeper');
+
+  // Fetch minutes for leaderboard players
+  useEffect(() => {
+    if (players.length === 0) return;
+    const topNames = new Set<string>();
+    
+    // Prefetch for both modes to ensure instant response
+    ['goals', 'assists', 'goalsAssists', 'shots', 'foulsCommitted', 'saves'].forEach(key => {
+      const listMatch = [...players]
+        .map(p => {
+          const val = key === 'goalsAssists' ? (p.goals + p.assists) : (p[key as keyof PlayerAggregated] as number || 0);
+          return { ...p, rawVal: val, average: p.totalMatches > 0 ? val / p.totalMatches : 0 };
+        })
+        .filter(p => p.rawVal > 0)
+        .sort((a, b) => b.average - a.average || b.rawVal - a.rawVal)
+        .slice(0, 10); // get top 10
+      
+      listMatch.forEach(p => topNames.add(p.nameFull));
+    });
+
+    fetchMinutesForPlayers(Array.from(topNames));
+  }, [players]);
+
   const getPositionBadgeColor = (pos: string) => {
     switch (pos) {
-      case 'Arquero': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
-      case 'Defensa': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
-      case 'Centrocampista': return 'bg-emerald-500/10 text-emerald-455 border-emerald-500/20';
-      case 'Delantero': return 'bg-rose-500/10 text-rose-455 border-rose-500/20';
-      default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      case 'Arquero':
+      case 'Goalkeeper':
+        return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+      case 'Defensa':
+      case 'Defensor':
+      case 'Defender':
+        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+      case 'Centrocampista':
+      case 'Mediocampista':
+      case 'Volante Central':
+      case 'Midfielder':
+        return 'bg-emerald-500/10 text-emerald-450 border-emerald-500/20';
+      case 'Delantero':
+      case 'Enganche':
+      case 'Forward':
+      case 'Striker':
+        return 'bg-rose-500/10 text-rose-450 border-rose-500/20';
+      default:
+        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
     }
   };
 
   const selectedPlayerAggInfo = players.find(p => p.nameFull === selectedPlayerName);
 
+  // Compute minutes and aggregated stats for modal
+  const totalMin = playerMatches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
+
+  const aggregated = playerMatches.reduce((acc, m) => {
+    const s = m.stats || {};
+    acc.minutesPlayed += s.minutesPlayed || 0;
+    acc.goals += s.goals || 0;
+    acc.assists += s.assists || 0;
+    acc.shots += s.shots || 0;
+    acc.shotsOnTarget += s.shotsOnTarget || 0;
+    acc.foulsCommitted += s.foulsCommitted || 0;
+    acc.foulsWon += s.foulsWon || 0;
+    acc.saves += s.saves || 0;
+    if (s.passes) {
+      acc.passesOk += s.passes.ok || 0;
+      acc.passesTotal += s.passes.total || 0;
+    }
+    acc.touches += s.touches || 0;
+    if (s.tackles) {
+      acc.tacklesOk += s.tackles.ok || 0;
+      acc.tacklesTotal += s.tackles.total || 0;
+    }
+    acc.recoveries += s.recoveries || 0;
+    acc.interceptions += s.interceptions || 0;
+    acc.clearances += s.clearances || 0;
+    acc.possessionLost += s.possessionLost || 0;
+    acc.dispossessed += s.dispossessed || 0;
+    if (s.dribbles) {
+      acc.dribblesOk += s.dribbles.ok || 0;
+      acc.dribblesTotal += s.dribbles.total || 0;
+    }
+    if (s.groundDuels) {
+      acc.groundDuelsOk += s.groundDuels.ok || 0;
+      acc.groundDuelsTotal += s.groundDuels.total || 0;
+    }
+    if (s.aerialDuels) {
+      acc.aerialDuelsOk += s.aerialDuels.ok || 0;
+      acc.aerialDuelsTotal += s.aerialDuels.total || 0;
+    }
+    return acc;
+  }, {
+    minutesPlayed: 0,
+    goals: 0,
+    assists: 0,
+    shots: 0,
+    shotsOnTarget: 0,
+    foulsCommitted: 0,
+    foulsWon: 0,
+    saves: 0,
+    passesOk: 0,
+    passesTotal: 0,
+    touches: 0,
+    tacklesOk: 0,
+    tacklesTotal: 0,
+    recoveries: 0,
+    interceptions: 0,
+    clearances: 0,
+    possessionLost: 0,
+    dispossessed: 0,
+    dribblesOk: 0,
+    dribblesTotal: 0,
+    groundDuelsOk: 0,
+    groundDuelsTotal: 0,
+    aerialDuelsOk: 0,
+    aerialDuelsTotal: 0
+  });
+
+  const statsList = [
+    { label: 'Goles', value: aggregated.goals },
+    { label: 'Asistencias', value: aggregated.assists },
+    { label: 'Goles + Asistencias', value: aggregated.goals + aggregated.assists },
+    { label: 'Tiros', value: aggregated.shots },
+    { label: 'Tiros al Arco', value: aggregated.shotsOnTarget },
+    { label: 'Faltas Cometidas', value: aggregated.foulsCommitted },
+    { label: 'Faltas Recibidas', value: aggregated.foulsWon },
+    { label: 'Atajadas', value: aggregated.saves, show: (selectedPlayerAggInfo?.position === 'Arquero' || selectedPlayerAggInfo?.position === 'Goalkeeper' || aggregated.saves > 0) },
+    { label: 'Recuperaciones', value: aggregated.recoveries },
+    { label: 'Intercepciones', value: aggregated.interceptions },
+    { label: 'Despejes', value: aggregated.clearances },
+    { label: 'Toques', value: aggregated.touches },
+    { label: 'Pérdidas', value: aggregated.possessionLost },
+    { label: 'Quitado/Robado', value: aggregated.dispossessed },
+    { 
+      label: 'Pases', 
+      value: aggregated.passesOk, 
+      extra: aggregated.passesTotal ? `${aggregated.passesOk}/${aggregated.passesTotal} (${Math.round((aggregated.passesOk/aggregated.passesTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Regates', 
+      value: aggregated.dribblesOk, 
+      extra: aggregated.dribblesTotal ? `${aggregated.dribblesOk}/${aggregated.dribblesTotal} (${Math.round((aggregated.dribblesOk/aggregated.dribblesTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Entradas', 
+      value: aggregated.tacklesOk, 
+      extra: aggregated.tacklesTotal ? `${aggregated.tacklesOk}/${aggregated.tacklesTotal} (${Math.round((aggregated.tacklesOk/aggregated.tacklesTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Duelos Suelo', 
+      value: aggregated.groundDuelsOk, 
+      extra: aggregated.groundDuelsTotal ? `${aggregated.groundDuelsOk}/${aggregated.groundDuelsTotal} (${Math.round((aggregated.groundDuelsOk/aggregated.groundDuelsTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Duelos Aéreos', 
+      value: aggregated.aerialDuelsOk, 
+      extra: aggregated.aerialDuelsTotal ? `${aggregated.aerialDuelsOk}/${aggregated.aerialDuelsTotal} (${Math.round((aggregated.aerialDuelsOk/aggregated.aerialDuelsTotal)*100)}%)` : null 
+    },
+  ];
+
   return (
-    <div className="flex flex-col h-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-4 sm:p-6 lg:p-8 text-slate-100">
+    <div className="flex flex-col h-full bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl p-2.5 sm:p-4 text-slate-100">
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h2 className="text-2xl font-black text-white flex items-center gap-2.5">
-            <Trophy className="w-6 h-6 text-emerald-400" />
+          <h2 className="text-lg font-black text-white flex items-center gap-1.5">
+            <Trophy className="w-5 h-5 text-emerald-400" />
             Estadísticas de Jugadores
           </h2>
-          <p className="text-slate-400 text-xs mt-1.5 font-medium">
+          <p className="text-slate-400 text-[10px] mt-0.5 font-medium">
             Consulta los líderes de estadísticas o busca un jugador específico.
           </p>
         </div>
 
-        {/* SEARCH BAR */}
-        <div className="relative w-full md:w-80">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input 
-            type="text"
-            placeholder="Buscar jugador..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="bg-black/20 border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-full transition-all placeholder:text-slate-500"
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Toggle Mode */}
+          <div className="flex items-center gap-0.5 bg-black/20 p-0.5 rounded-lg border border-white/5">
+            <button
+              onClick={() => setStatMode('match')}
+              className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${statMode === 'match' ? 'bg-emerald-500 text-black shadow' : 'text-slate-400 hover:text-white'}`}
+            >
+              Por Partido
+            </button>
+            <button
+              onClick={() => setStatMode('minute')}
+              className={`px-2 py-1 text-[9px] font-bold rounded-md transition-all ${statMode === 'minute' ? 'bg-emerald-500 text-black shadow' : 'text-slate-400 hover:text-white'}`}
+            >
+              Por Minuto
+            </button>
+          </div>
+
+          {/* SEARCH BAR */}
+          <div className="relative w-full sm:w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+            <input 
+              type="text"
+              placeholder="Buscar jugador..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="bg-black/20 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 w-full transition-all placeholder:text-slate-500"
+            />
+          </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl p-4 text-sm mb-6 text-center">
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-3 text-xs mb-4 text-center">
           ⚠️ {error}
         </div>
       )}
 
       {loading ? (
-        <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin w-10 h-10 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
+        <div className="flex h-[40vh] items-center justify-center">
+          <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
         </div>
       ) : searchQuery.trim() !== '' ? (
-        /* SEARCH RESULTS SCREEN */
+        /* SEARCH RESULTS SCREEN (4 columns) */
         <div>
-          <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-400 mb-4">
+          <h2 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3">
             Resultados de búsqueda ({searchResults.length})
           </h2>
           {searchResults.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 bg-white/[0.02] border border-white/5 rounded-[2rem] text-center text-slate-400">
-              <User className="w-12 h-12 mb-3 text-slate-600" />
-              <p className="font-semibold text-lg">No se encontraron jugadores para "{searchQuery}"</p>
-              <p className="text-sm mt-1">Prueba escribiendo otro nombre.</p>
+            <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-white/5 rounded-2xl text-center text-slate-400">
+              <User className="w-10 h-10 mb-2.5 text-slate-655" />
+              <p className="font-bold text-base">No se encontraron jugadores</p>
+              <p className="text-xs mt-0.5">Prueba escribiendo otro nombre.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 animate-fade-in">
               {searchResults.map((player, idx) => (
                 <div 
                   key={idx}
                   onClick={() => setSelectedPlayerName(player.nameFull)}
-                  className="bg-[#0b1015]/60 border border-white/5 rounded-xl p-3.5 hover:bg-emerald-500/[0.03] hover:border-white/10 transition-all duration-300 cursor-pointer flex flex-col justify-between group active:scale-[0.99] shadow-lg"
+                  className="bg-[#0b1015]/60 border border-white/5 rounded-lg p-2.5 hover:bg-emerald-500/[0.03] hover:border-white/10 transition-all duration-300 cursor-pointer flex flex-col justify-between group active:scale-[0.99] shadow"
                 >
                   <div>
-                    <div className="flex justify-between items-start mb-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 font-bold text-xs">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="w-6 h-6 rounded bg-white/5 border border-white/5 flex items-center justify-center text-slate-400 font-bold text-[10px] shrink-0">
                           {player.number || '#'}
                         </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-slate-200 group-hover:text-emerald-400 transition-colors">
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-xs text-slate-200 group-hover:text-emerald-400 transition-colors truncate">
                             {player.nameFull || player.name}
                           </h3>
-                          <span className={`inline-block text-[8px] uppercase font-bold tracking-wider px-1.5 py-0.5 border rounded-full mt-0.5 ${getPositionBadgeColor(player.position)}`}>
+                          <span className={`inline-block text-[6px] uppercase font-bold tracking-wider px-1 py-0.2 border rounded-full mt-0.5 ${getPositionBadgeColor(player.position)}`}>
                             {player.position}
                           </span>
                         </div>
                       </div>
-                      <span className="text-slate-500 text-[10px] font-semibold">
+                      <span className="text-slate-500 text-[9px] font-semibold shrink-0">
                         {player.totalMatches} {player.totalMatches === 1 ? 'partido' : 'partidos'}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-lg p-2 border border-white/5 text-[10px]">
+                    <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-md p-1.5 border border-white/5 text-[9px]">
                       <div className="text-center border-r border-white/5">
-                        <span className="block text-[8px] text-slate-500 uppercase font-bold tracking-wider">P. Goles</span>
-                        <span className="text-xs font-black text-emerald-400">{(player.goals / player.totalMatches).toFixed(1)}</span>
+                        <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                          {statMode === 'minute' ? 'Goles x90\'' : 'P. Goles'}
+                        </span>
+                        <span className="text-[11px] font-black text-emerald-400">
+                          {statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
+                                ? ((player.goals / playerMinutes[player.nameFull]) * 90).toFixed(2)
+                                : '...')
+                            : (player.goals / player.totalMatches).toFixed(1)}
+                        </span>
                       </div>
                       <div className="text-center border-r border-white/5">
-                        <span className="block text-[8px] text-slate-500 uppercase font-bold tracking-wider">P. Tiros</span>
-                        <span className="text-xs font-black text-teal-400">{(player.shots / player.totalMatches).toFixed(1)}</span>
+                        <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                          {statMode === 'minute' ? 'Tiros x90\'' : 'P. Tiros'}
+                        </span>
+                        <span className="text-[11px] font-black text-teal-400">
+                          {statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
+                                ? ((player.shots / playerMinutes[player.nameFull]) * 90).toFixed(2)
+                                : '...')
+                            : (player.shots / player.totalMatches).toFixed(1)}
+                        </span>
                       </div>
                       <div className="text-center">
-                        <span className="block text-[8px] text-slate-500 uppercase font-bold tracking-wider">P. Faltas</span>
-                        <span className="text-xs font-black text-orange-400">{(player.foulsCommitted / player.totalMatches).toFixed(1)}</span>
+                        <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                          {statMode === 'minute' ? 'Faltas x90\'' : 'P. Faltas'}
+                        </span>
+                        <span className="text-[11px] font-black text-orange-400">
+                          {statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
+                                ? ((player.foulsCommitted / playerMinutes[player.nameFull]) * 90).toFixed(2)
+                                : '...')
+                            : (player.foulsCommitted / player.totalMatches).toFixed(1)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-2.5 border-t border-white/5 flex justify-between items-center text-[10px] text-slate-500">
+                  <div className="mt-2 pt-1.5 border-t border-white/5 flex justify-between items-center text-[9px] text-slate-500">
                     <span>{player.age ? `${player.age} años` : ''}</span>
                     <span>{player.height ? `${player.height}m` : ''}</span>
                   </div>
@@ -281,71 +547,89 @@ export default function PlayersView() {
           )}
         </div>
       ) : (
-        /* LEADERBOARDS DASHBOARD SCREEN (TOP 5) */
-        <div className="space-y-6 animate-fade-in">
-          {/* Main Grid: Goals & Assists */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Top 5 Goleadores */}
+        /* LEADERBOARDS DASHBOARD SCREEN (3x2 layout, smaller) */
+        <div className="space-y-3 animate-fade-in">
+          {/* Main Grid: Goals, Assists & G+A */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <LeaderboardCard 
               title="Promedio de Goles" 
-              icon={<Award className="w-4.5 h-4.5 text-emerald-400" />}
+              icon={<Award className="w-4 h-4 text-emerald-400" />}
               data={topGoleadores}
               metricKey="goals"
               metricLabel="goles"
               onPlayerClick={setSelectedPlayerName}
               getPositionBadgeColor={getPositionBadgeColor}
               isLight={isLight}
+              statMode={statMode}
+              playerMinutes={playerMinutes}
             />
 
-            {/* Top 5 Asistidores */}
             <LeaderboardCard 
               title="Promedio de Asistencias" 
-              icon={<Sparkles className="w-4.5 h-4.5 text-indigo-400" />}
+              icon={<Sparkles className="w-4 h-4 text-indigo-400" />}
               data={topAsistidores}
               metricKey="assists"
               metricLabel="asistencias"
               onPlayerClick={setSelectedPlayerName}
               getPositionBadgeColor={getPositionBadgeColor}
               isLight={isLight}
+              statMode={statMode}
+              playerMinutes={playerMinutes}
+            />
+
+            <LeaderboardCard 
+              title="Goles + Asistencias (G+A)" 
+              icon={<Trophy className="w-4 h-4 text-amber-500" />}
+              data={topGolesAsistencias}
+              metricKey="goalsAssists"
+              metricLabel="G+A"
+              onPlayerClick={setSelectedPlayerName}
+              getPositionBadgeColor={getPositionBadgeColor}
+              isLight={isLight}
+              statMode={statMode}
+              playerMinutes={playerMinutes}
             />
           </div>
 
           {/* Secondary Grid: Shots, Fouls & Saves */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Top 5 Tiros */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             <LeaderboardCard 
               title="Promedio de Tiros" 
-              icon={<Target className="w-4.5 h-4.5 text-teal-400" />}
+              icon={<Target className="w-4 h-4 text-teal-400" />}
               data={topTiros}
               metricKey="shots"
               metricLabel="tiros"
               onPlayerClick={setSelectedPlayerName}
               getPositionBadgeColor={getPositionBadgeColor}
               isLight={isLight}
+              statMode={statMode}
+              playerMinutes={playerMinutes}
             />
 
-            {/* Top 5 Faltas Cometidas */}
             <LeaderboardCard 
-              title="Promedio de Faltas Cometidas" 
-              icon={<ShieldAlert className="w-4.5 h-4.5 text-orange-400" />}
+              title="Promedio de Faltas" 
+              icon={<ShieldAlert className="w-4 h-4 text-orange-400" />}
               data={topFaltas}
               metricKey="foulsCommitted"
               metricLabel="faltas"
               onPlayerClick={setSelectedPlayerName}
               getPositionBadgeColor={getPositionBadgeColor}
               isLight={isLight}
+              statMode={statMode}
+              playerMinutes={playerMinutes}
             />
 
-            {/* Top 5 Atajadas */}
             <LeaderboardCard 
               title="Promedio de Atajadas" 
-              icon={<Activity className="w-4.5 h-4.5 text-yellow-400" />}
+              icon={<Activity className="w-4 h-4 text-yellow-400" />}
               data={topAtajadas}
               metricKey="saves"
               metricLabel="atajadas"
               onPlayerClick={setSelectedPlayerName}
               getPositionBadgeColor={getPositionBadgeColor}
               isLight={isLight}
+              statMode={statMode}
+              playerMinutes={playerMinutes}
             />
           </div>
         </div>
@@ -357,108 +641,155 @@ export default function PlayersView() {
           {/* Dismiss overlay */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPlayerName(null)} />
           
-          <div className="relative w-full max-w-md h-full bg-[#0b1015]/95 border-l border-white/10 shadow-2xl flex flex-col backdrop-blur-2xl">
+          <div className="relative w-full max-w-sm sm:max-w-md h-full bg-[#0b1015]/95 border-l border-white/10 shadow-2xl flex flex-col backdrop-blur-2xl">
             {/* Modal Header */}
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/20">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-455 flex items-center justify-center font-black text-sm border border-emerald-500/20">
+            <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-black text-xs border border-emerald-500/20 shrink-0">
                   {selectedPlayerAggInfo?.number || '#'}
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-slate-100">{selectedPlayerName}</h2>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`text-[8px] uppercase font-black tracking-wider px-1.5 py-0.5 border rounded-full ${getPositionBadgeColor(selectedPlayerAggInfo?.position || '')}`}>
+                  <h2 className="text-sm font-black text-slate-100">{selectedPlayerName}</h2>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className={`text-[6px] uppercase font-black tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(selectedPlayerAggInfo?.position || '')}`}>
                       {selectedPlayerAggInfo?.position}
                     </span>
                     {selectedPlayerAggInfo?.age && (
-                      <span className="text-[10px] text-slate-500">• {selectedPlayerAggInfo.age} años</span>
+                      <span className="text-[9px] text-slate-500">• {selectedPlayerAggInfo.age} años</span>
                     )}
                     {selectedPlayerAggInfo?.height && (
-                      <span className="text-[10px] text-slate-500">• {selectedPlayerAggInfo.height}m</span>
+                      <span className="text-[9px] text-slate-500">• {selectedPlayerAggInfo.height}m</span>
                     )}
                   </div>
                 </div>
               </div>
               <button 
                 onClick={() => setSelectedPlayerName(null)}
-                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-1.5 rounded-full border border-white/10 transition-all flex items-center justify-center"
+                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-1 rounded-full border border-white/10 transition-all flex items-center justify-center"
               >
-                <X className="w-4.5 h-4.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Modal Content */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 no-scrollbar">
               {/* Aggregated Quick Info */}
-              <div className="grid grid-cols-3 gap-2 bg-black/20 rounded-xl p-2.5 border border-white/5">
+              <div className="grid grid-cols-4 gap-1 bg-black/20 rounded-lg p-2 border border-white/5 text-[9px]">
                 <div className="text-center border-r border-white/10">
-                  <Activity className="w-3.5 h-3.5 mx-auto mb-1 text-teal-400" />
-                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
-                  <span className="text-sm font-black text-slate-200">{selectedPlayerAggInfo?.totalMatches || 0}</span>
+                  <Calendar className="w-3 h-3 mx-auto mb-0.5 text-slate-400" />
+                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
+                  <span className="text-xs font-black text-slate-200">{selectedPlayerAggInfo?.totalMatches || 0}</span>
                 </div>
                 <div className="text-center border-r border-white/10">
-                  <Trophy className="w-3.5 h-3.5 mx-auto mb-1 text-emerald-400" />
-                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Goles</span>
-                  <span className="text-sm font-black text-emerald-400">{selectedPlayerAggInfo?.goals || 0}</span>
+                  <Activity className="w-3 h-3 mx-auto mb-0.5 text-teal-400" />
+                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Minutos</span>
+                  <span className="text-xs font-black text-slate-200">{totalMin}</span>
+                </div>
+                <div className="text-center border-r border-white/10">
+                  <Trophy className="w-3 h-3 mx-auto mb-0.5 text-emerald-400" />
+                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Goles</span>
+                  <span className="text-xs font-black text-emerald-400">{selectedPlayerAggInfo?.goals || 0}</span>
                 </div>
                 <div className="text-center">
-                  <Sparkles className="w-3.5 h-3.5 mx-auto mb-1 text-amber-500" />
-                  <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block">Asistencias</span>
-                  <span className="text-sm font-black text-amber-500">{selectedPlayerAggInfo?.assists || 0}</span>
+                  <Sparkles className="w-3 h-3 mx-auto mb-0.5 text-amber-505" />
+                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Asistencias</span>
+                  <span className="text-xs font-black text-amber-550">{selectedPlayerAggInfo?.assists || 0}</span>
+                </div>
+              </div>
+
+              {/* Aggregated Stats Table */}
+              <div className="bg-black/20 border border-white/5 rounded-xl p-2.5">
+                <h3 className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+                  <Activity className="w-3 h-3 text-emerald-400" /> Estadísticas Acumuladas
+                </h3>
+                
+                <div className="overflow-x-auto -mx-2.5 px-2.5">
+                  <table className="w-full text-left text-[9px] text-slate-350 border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[8px] uppercase tracking-wider text-slate-500">
+                        <th className="py-1 font-bold">Estadística</th>
+                        <th className="py-1 text-right font-bold">Total</th>
+                        <th className="py-1 text-right font-bold">x Part</th>
+                        <th className="py-1 text-right font-bold">x Min</th>
+                        <th className="py-1 text-right font-bold">x 90'</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {statsList.map((st, i) => {
+                        if (st.show === false) return null;
+                        const matchesCount = selectedPlayerAggInfo?.totalMatches || 1;
+                        const perMatch = (st.value / matchesCount).toFixed(2);
+                        const perMin = totalMin > 0 ? (st.value / totalMin).toFixed(3) : '0.000';
+                        const per90 = totalMin > 0 ? ((st.value / totalMin) * 90).toFixed(2) : '0.00';
+                        return (
+                          <tr key={i} className="hover:bg-white/5 transition-colors">
+                            <td className="py-1 pr-1.5 text-slate-300 font-medium whitespace-nowrap">
+                              {st.label}
+                              {st.extra && <span className="block text-[7px] text-slate-500 font-normal mt-0.5">{st.extra}</span>}
+                            </td>
+                            <td className="py-1 text-right text-slate-100 font-semibold">{st.value}</td>
+                            <td className="py-1 text-right text-emerald-400 font-semibold">{perMatch}</td>
+                            <td className="py-1 text-right text-amber-500 font-semibold">{perMin}</td>
+                            <td className="py-1 text-right text-teal-400 font-semibold">{per90}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
               {/* Match History Details */}
               <div>
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5 text-emerald-400" /> Historial de Partidos
+                <h3 className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-emerald-400" /> Historial de Partidos
                 </h3>
 
                 {loadingDetail ? (
-                  <div className="flex justify-center p-8">
-                    <div className="animate-spin w-6 h-6 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
+                  <div className="flex justify-center p-6">
+                    <div className="animate-spin w-5 h-5 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
                   </div>
                 ) : playerMatches.length === 0 ? (
-                  <p className="text-slate-500 text-xs text-center py-6">No se encontraron detalles de partidos.</p>
+                  <p className="text-slate-500 text-[10px] text-center py-4">No se encontraron detalles de partidos.</p>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {playerMatches.map((m, idx) => {
                       const date = m.startTimestamp ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-AR', {
                         day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
                       }) : 'Fecha no disp.';
                       return (
-                        <div key={idx} className="bg-black/20 border border-white/5 rounded-xl p-3 hover:border-white/10 transition-all">
+                        <div key={idx} className="bg-black/20 border border-white/5 rounded-lg p-2 hover:border-white/10 transition-all">
                           {/* Match Header */}
-                          <div className="flex justify-between items-start gap-3 mb-2.5 pb-2.5 border-b border-white/5">
+                          <div className="flex justify-between items-start gap-2 mb-1.5 pb-1.5 border-b border-white/5">
                             <div>
-                              <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-300">
+                              <div className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-slate-300">
                                 <span>{m.homeTeam.name}</span>
-                                <span className="bg-white/5 text-slate-400 px-1.5 py-0.2 rounded text-[9px] border border-white/5">
+                                <span className="bg-white/5 text-slate-400 px-1 py-0.2 rounded text-[8px] border border-white/5">
                                   {m.homeTeam.score} - {m.awayTeam.score}
                                 </span>
                                 <span>{m.awayTeam.name}</span>
                               </div>
-                              <span className="text-[9px] text-slate-500 block mt-1">{date}</span>
+                              <span className="text-[8px] text-slate-500 block mt-0.5">{date}</span>
 
                               {m.events && (
-                                <div className="flex flex-wrap gap-1 mt-2">
+                                <div className="flex flex-wrap gap-1 mt-1.5">
                                   {m.events.yellowCard && (
-                                    <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[8px] px-1 py-0.2 rounded font-black tracking-wider">
+                                    <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
                                       🟨 Amarilla
                                     </span>
                                   )}
                                   {m.events.redCard && (
-                                    <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[8px] px-1 py-0.2 rounded font-black tracking-wider">
+                                    <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
                                       🟥 Roja
                                     </span>
                                   )}
                                   {m.events.subInMinute !== undefined && (
-                                    <span className="bg-emerald-500/10 text-emerald-455 border border-emerald-500/20 text-[8px] px-1 py-0.2 rounded font-bold">
+                                    <span className="bg-emerald-500/10 text-emerald-450 border border-emerald-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
                                       🔄 Entró {m.events.subInMinute}'
                                     </span>
                                   )}
                                   {m.events.subOutMinute !== undefined && (
-                                    <span className="bg-rose-500/10 text-rose-455 border border-rose-500/20 text-[8px] px-1 py-0.2 rounded font-bold">
+                                    <span className="bg-rose-500/10 text-rose-450 border border-rose-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
                                       🔄 Salió {m.events.subOutMinute}'
                                     </span>
                                   )}
@@ -466,11 +797,11 @@ export default function PlayersView() {
                               )}
                             </div>
                             {m.status.type === 'inprogress' ? (
-                              <span className="bg-emerald-500/10 text-emerald-455 text-[9px] px-1.5 py-0.2 border border-emerald-500/20 rounded-full font-bold">
+                              <span className="bg-emerald-500/10 text-emerald-450 text-[8px] px-1 py-0.1 border border-emerald-500/20 rounded-full font-bold">
                                 EN VIVO
                               </span>
                             ) : (
-                              <span className="bg-white/5 text-slate-500 text-[9px] px-1.5 py-0.2 rounded-full border border-white/5">
+                              <span className="bg-white/5 text-slate-500 text-[8px] px-1 py-0.1 rounded-full border border-white/5">
                                 Finalizado
                               </span>
                             )}
@@ -478,31 +809,31 @@ export default function PlayersView() {
 
                           {/* Individual Stats in Match */}
                           {m.stats ? (
-                            <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                            <div className="grid grid-cols-2 gap-1 text-[9px]">
                               {m.stats.minutesPlayed !== undefined && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Minutos</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Minutos</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.minutesPlayed}'</span>
                                 </div>
                               )}
                               
                               {m.stats.goals !== undefined && m.stats.goals > 0 && (
-                                <div className="bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/20 text-emerald-455">
-                                  <span className="block text-[8px] uppercase font-bold tracking-wider opacity-85">Goles</span>
-                                  <span className="font-extrabold text-xs">{m.stats.goals}</span>
+                                <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-450">
+                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Goles</span>
+                                  <span className="font-extrabold text-[10px]">{m.stats.goals}</span>
                                 </div>
                               )}
 
                               {m.stats.assists !== undefined && m.stats.assists > 0 && (
-                                <div className="bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/20 text-amber-500">
-                                  <span className="block text-[8px] uppercase font-bold tracking-wider opacity-85">Asistencias</span>
-                                  <span className="font-extrabold text-xs">{m.stats.assists}</span>
+                                <div className="bg-amber-500/10 p-1 rounded border border-amber-500/20 text-amber-505">
+                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Asistencias</span>
+                                  <span className="font-extrabold text-[10px]">{m.stats.assists}</span>
                                 </div>
                               )}
 
                               {m.stats.shots !== undefined && m.stats.shots > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Tiros (Al arco)</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Tiros (Al arco)</span>
                                   <span className="font-extrabold text-slate-200">
                                     {m.stats.shots}
                                     {m.stats.shotsOnTarget !== undefined && ` (${m.stats.shotsOnTarget})`}
@@ -511,29 +842,29 @@ export default function PlayersView() {
                               )}
 
                               {m.stats.foulsCommitted !== undefined && m.stats.foulsCommitted > 0 && (
-                                <div className="bg-rose-500/10 p-1.5 rounded-lg border border-rose-500/20 text-rose-455">
-                                  <span className="block text-[8px] uppercase font-bold tracking-wider opacity-85">Faltas Cometidas</span>
+                                <div className="bg-rose-500/10 p-1 rounded border border-rose-500/20 text-rose-450">
+                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Cometidas</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.foulsCommitted}</span>
                                 </div>
                               )}
 
                               {m.stats.foulsWon !== undefined && m.stats.foulsWon > 0 && (
-                                <div className="bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/20 text-emerald-455">
-                                  <span className="block text-[8px] uppercase font-bold tracking-wider opacity-85">Faltas Recibidas</span>
+                                <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-450">
+                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Recibidas</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.foulsWon}</span>
                                 </div>
                               )}
 
                               {m.stats.saves !== undefined && (m.position === 'Arquero' || m.stats.saves > 0) && (
-                                <div className="bg-emerald-500/10 p-1.5 rounded-lg border border-emerald-500/20 text-emerald-455">
-                                  <span className="block text-[8px] uppercase font-bold tracking-wider opacity-85">Atajadas</span>
-                                  <span className="font-extrabold text-xs">{m.stats.saves}</span>
+                                <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-450">
+                                  <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Atajadas</span>
+                                  <span className="font-extrabold text-[10px]">{m.stats.saves}</span>
                                 </div>
                               )}
 
                               {m.stats.passes && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Pases</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pases</span>
                                   <span className="font-extrabold text-slate-200">
                                     {m.stats.passes.ok}/{m.stats.passes.total} 
                                     <small className="text-slate-500 font-normal ml-0.5">({m.stats.passes.total ? Math.round((m.stats.passes.ok / m.stats.passes.total) * 100) : 0}%)</small>
@@ -542,57 +873,57 @@ export default function PlayersView() {
                               )}
 
                               {m.stats.touches !== undefined && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Toques</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Toques</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.touches}</span>
                                 </div>
                               )}
 
                               {m.stats.tackles && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Entradas</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Entradas</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.tackles.ok}/{m.stats.tackles.total}</span>
                                 </div>
                               )}
 
                               {m.stats.recoveries !== undefined && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Recuperaciones</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Recuperaciones</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.recoveries}</span>
                                 </div>
                               )}
 
                               {m.stats.interceptions !== undefined && m.stats.interceptions > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Intercepciones</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Intercepciones</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.interceptions}</span>
                                 </div>
                               )}
 
                               {m.stats.clearances !== undefined && m.stats.clearances > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Despejes</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Despejes</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.clearances}</span>
                                 </div>
                               )}
 
                               {m.stats.possessionLost !== undefined && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Pérdidas</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pérdidas</span>
                                   <span className="font-extrabold text-slate-400">{m.stats.possessionLost}</span>
                                 </div>
                               )}
 
                               {m.stats.dispossessed !== undefined && m.stats.dispossessed > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Quitado/Robado</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Quitado/Robado</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.dispossessed}</span>
                                 </div>
                               )}
 
                               {m.stats.dribbles && m.stats.dribbles.total > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Regates</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Regates</span>
                                   <span className="font-extrabold text-slate-200">
                                     {m.stats.dribbles.ok}/{m.stats.dribbles.total}
                                     <small className="text-slate-500 font-normal ml-0.5">({m.stats.dribbles.total ? Math.round((m.stats.dribbles.ok / m.stats.dribbles.total) * 100) : 0}%)</small>
@@ -601,21 +932,21 @@ export default function PlayersView() {
                               )}
 
                               {m.stats.groundDuels && m.stats.groundDuels.total > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Duelos Suelo</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Duelos Suelo</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.groundDuels.ok}/{m.stats.groundDuels.total}</span>
                                 </div>
                               )}
 
                               {m.stats.aerialDuels && m.stats.aerialDuels.total > 0 && (
-                                <div className="bg-black/40 p-1.5 rounded-lg border border-white/5">
-                                  <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider">Duelos Aéreos</span>
+                                <div className="bg-black/40 p-1 rounded border border-white/5">
+                                  <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Duelos Aéreos</span>
                                   <span className="font-extrabold text-slate-200">{m.stats.aerialDuels.ok}/{m.stats.aerialDuels.total}</span>
                                 </div>
                               )}
                             </div>
                           ) : (
-                            <p className="text-[10px] text-slate-650">No hay estadísticas detalladas registradas para este partido.</p>
+                            <p className="text-[8px] text-slate-500">No hay estadísticas detalladas registradas para este partido.</p>
                           )}
                         </div>
                       );
@@ -641,6 +972,8 @@ interface LeaderboardCardProps {
   onPlayerClick: (name: string) => void;
   getPositionBadgeColor: (pos: string) => string;
   isLight: boolean;
+  statMode: 'match' | 'minute';
+  playerMinutes: Record<string, number>;
 }
 
 function LeaderboardCard({
@@ -651,20 +984,22 @@ function LeaderboardCard({
   metricLabel,
   onPlayerClick,
   getPositionBadgeColor,
-  isLight
+  isLight,
+  statMode,
+  playerMinutes
 }: LeaderboardCardProps) {
   return (
-    <div className="bg-[#0b1015]/60 backdrop-blur-xl border border-white/5 rounded-2xl p-4 flex flex-col justify-between shadow-xl transition-all duration-300">
+    <div className="bg-[#0b1015]/60 backdrop-blur-xl border border-white/5 rounded-xl p-2.5 flex flex-col justify-between shadow-md transition-all duration-300">
       <div>
-        <div className="flex items-center gap-2 mb-3 pb-2.5 border-b border-white/5">
+        <div className="flex items-center gap-1.5 mb-1.5 pb-1.5 border-b border-white/5">
           {icon}
-          <h3 className="font-extrabold text-slate-200 text-xs tracking-wide uppercase">{title}</h3>
+          <h3 className="font-extrabold text-slate-200 text-[10px] tracking-wide uppercase">{title}</h3>
         </div>
 
         {data.length === 0 ? (
-          <p className="text-slate-600 text-xs py-4 text-center">Aún no hay datos registrados.</p>
+          <p className="text-slate-600 text-[10px] py-3 text-center">Aún no hay datos registrados.</p>
         ) : (
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {data.map((player, idx) => {
               const rankStyles = [
                 'bg-amber-400/10 text-amber-500 border-amber-400/25',
@@ -674,25 +1009,50 @@ function LeaderboardCard({
                 isLight ? 'bg-slate-100 text-slate-400 border-slate-200/60' : 'bg-white/5 text-slate-500 border-white/5',
               ];
 
+              const minutes = playerMinutes[player.nameFull];
+              const hasMinutes = minutes !== undefined && minutes > 0;
+              const isMinutesLoading = minutes === -1;
+
+              let displayValue = '';
+              let displayLabel = '';
+
+              if (statMode === 'minute') {
+                if (isMinutesLoading) {
+                  displayValue = '...';
+                  displayLabel = 'cargando';
+                } else if (hasMinutes) {
+                  const perMin = player[metricKey] / minutes;
+                  const per90 = perMin * 90;
+                  displayValue = per90.toFixed(2);
+                  displayLabel = `x 90'`;
+                } else {
+                  displayValue = '0.00';
+                  displayLabel = 'sin min';
+                }
+              } else {
+                displayValue = player.average.toFixed(2);
+                displayLabel = `${metricLabel} / p`;
+              }
+
               return (
                 <div 
                   key={idx}
                   onClick={() => onPlayerClick(player.nameFull)}
-                  className="flex items-center justify-between p-1.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all cursor-pointer group active:scale-[0.98]"
+                  className="flex items-center justify-between p-1 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/10 transition-all cursor-pointer group active:scale-[0.98]"
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={`w-5 h-5 shrink-0 rounded-md flex items-center justify-center font-black text-[10px] border ${rankStyles[idx] || rankStyles[4]}`}>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={`w-4.5 h-4.5 shrink-0 rounded-md flex items-center justify-center font-black text-[9px] border ${rankStyles[idx] || rankStyles[4]}`}>
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <span className="font-bold text-slate-300 group-hover:text-emerald-400 transition-colors text-xs truncate block">
+                      <span className="font-bold text-slate-300 group-hover:text-emerald-400 transition-colors text-[11px] truncate block">
                         {player.nameFull || player.name}
                       </span>
                       <div className="flex items-center gap-1 mt-0.5">
-                        <span className={`text-[7px] uppercase font-bold tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(player.position)}`}>
+                        <span className={`text-[6px] uppercase font-bold tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(player.position)}`}>
                           {player.position}
                         </span>
-                        <span className="text-[9px] text-slate-500">
+                        <span className="text-[8px] text-slate-500">
                           {player.totalMatches} {player.totalMatches === 1 ? 'partido' : 'partidos'}
                         </span>
                       </div>
@@ -700,11 +1060,11 @@ function LeaderboardCard({
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="block text-xs font-black text-slate-200">
-                      {player.average.toFixed(2)}
+                    <span className="block text-[11px] font-black text-slate-200">
+                      {displayValue}
                     </span>
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">
-                      {metricLabel} / p
+                    <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider">
+                      {displayLabel}
                     </span>
                   </div>
                 </div>
