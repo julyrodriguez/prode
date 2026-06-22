@@ -481,6 +481,33 @@ export default function AppLayout() {
                       </div>
                     )}
                   </div>
+
+                  {/* Minijuegos Group */}
+                  {user && (
+                    <div key="minijuegos-group" className="flex flex-col w-full mt-1">
+                      <button
+                        onClick={() => {
+                          navigate('/liga/mundial/minijuegos');
+                          setMobileSidebarOpen(false);
+                        }}
+                        className={`
+                          flex items-center p-3 rounded-2xl transition-all duration-100 w-full text-left cursor-pointer
+                          ${location.pathname === '/liga/mundial/minijuegos'
+                            ? 'bg-white/10 text-emerald-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                          }
+                        `}
+                      >
+                        <span className="text-xl flex-shrink-0 w-6 text-center leading-none">🎮</span>
+                        <span className="ml-4 font-semibold text-sm md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
+                          Minijuegos
+                        </span>
+                        {location.pathname === '/liga/mundial/minijuegos' && (
+                          <div className="ml-auto w-1.5 h-1.5 rounded-full md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 flex-shrink-0 bg-emerald-400" />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             }
@@ -740,16 +767,16 @@ export default function AppLayout() {
 
                 const rawLeftItems = isGeneralSection
                   ? [
-                      { id: 'minijuegos', label: 'Juegos', icon: '🎮', path: '/liga/mundial/minijuegos' },
+                      { id: 'jugadores', label: 'Jugadores', icon: '🏃‍♂️', path: '/jugadores' },
                       { id: 'mundial', label: 'Mundial', icon: '🌍', path: '/liga/mundial/partidos' }
                     ]
                   : [
-                      { id: 'minijuegos', label: 'Juegos', icon: '🎮' },
+                      { id: 'jugadores', label: 'Jugadores', icon: '🏃‍♂️' },
                       { id: 'predicciones', label: 'Predicciones', icon: '🔮' }
                     ];
 
                 const leftItems = rawLeftItems.filter(item => {
-                  if (!user && (item.id === 'predicciones' || item.id === 'minijuegos')) return false;
+                  if (!user && item.id === 'predicciones') return false;
                   return true;
                 });
 
