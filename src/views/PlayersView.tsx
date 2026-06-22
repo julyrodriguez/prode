@@ -189,7 +189,7 @@ export default function PlayersView() {
   };
 
   // Search filter
-  const searchResults = searchQuery.trim() === ''
+  const searchResults = searchQuery.trim().length < 3
     ? []
     : players.filter(p => 
         (p.nameFull || p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -295,6 +295,8 @@ export default function PlayersView() {
 
   // Compute minutes and aggregated stats for modal
   const totalMin = playerMatches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
+  const playedMatchesCount = playerMatches.filter(m => (m.stats?.minutesPlayed || 0) > 0).length || 1;
+  const avgMinutes = totalMin / playedMatchesCount;
 
   const aggregated = playerMatches.reduce((acc, m) => {
     const s = m.stats || {};
@@ -457,7 +459,14 @@ export default function PlayersView() {
         <div className="flex h-[40vh] items-center justify-center">
           <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
         </div>
-      ) : searchQuery.trim() !== '' ? (
+      ) : (searchQuery.trim().length > 0 && searchQuery.trim().length < 3) ? (
+        /* SEARCH INSTRUCTIONS */
+        <div className="flex flex-col items-center justify-center p-8 bg-white/[0.02] border border-white/5 rounded-2xl text-center text-slate-400 animate-fade-in">
+          <Search className="w-8 h-8 mb-2 text-slate-500" />
+          <p className="font-bold text-sm text-slate-350">Búsqueda rápida</p>
+          <p className="text-[11px] text-slate-500 mt-1">Escribe al menos 3 letras para comenzar la búsqueda de un jugador.</p>
+        </div>
+      ) : searchQuery.trim().length >= 3 ? (
         /* SEARCH RESULTS SCREEN (4 columns) */
         <div>
           <h2 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-3">
@@ -674,26 +683,31 @@ export default function PlayersView() {
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3 no-scrollbar">
               {/* Aggregated Quick Info */}
-              <div className="grid grid-cols-4 gap-1 bg-black/20 rounded-lg p-2 border border-white/5 text-[9px]">
+              <div className="grid grid-cols-5 gap-1 bg-black/20 rounded-lg p-1.5 border border-white/5 text-[9px]">
                 <div className="text-center border-r border-white/10">
                   <Calendar className="w-3 h-3 mx-auto mb-0.5 text-slate-400" />
-                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
                   <span className="text-xs font-black text-slate-200">{selectedPlayerAggInfo?.totalMatches || 0}</span>
                 </div>
                 <div className="text-center border-r border-white/10">
                   <Activity className="w-3 h-3 mx-auto mb-0.5 text-teal-400" />
-                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Minutos</span>
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Min. Totales</span>
                   <span className="text-xs font-black text-slate-200">{totalMin}</span>
                 </div>
                 <div className="text-center border-r border-white/10">
+                  <Activity className="w-3 h-3 mx-auto mb-0.5 text-indigo-400" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Min. Promedio</span>
+                  <span className="text-xs font-black text-slate-200">{avgMinutes.toFixed(1)}'</span>
+                </div>
+                <div className="text-center border-r border-white/10">
                   <Trophy className="w-3 h-3 mx-auto mb-0.5 text-emerald-400" />
-                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Goles</span>
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Goles</span>
                   <span className="text-xs font-black text-emerald-400">{selectedPlayerAggInfo?.goals || 0}</span>
                 </div>
                 <div className="text-center">
-                  <Sparkles className="w-3 h-3 mx-auto mb-0.5 text-amber-505" />
-                  <span className="text-[7px] text-slate-500 font-bold uppercase tracking-wider block">Asistencias</span>
-                  <span className="text-xs font-black text-amber-550">{selectedPlayerAggInfo?.assists || 0}</span>
+                  <Sparkles className="w-3 h-3 mx-auto mb-0.5 text-amber-500" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Asistencias</span>
+                  <span className="text-xs font-black text-amber-500">{selectedPlayerAggInfo?.assists || 0}</span>
                 </div>
               </div>
 
@@ -710,7 +724,7 @@ export default function PlayersView() {
                         <th className="py-1 font-bold">Estadística</th>
                         <th className="py-1 text-right font-bold">Total</th>
                         <th className="py-1 text-right font-bold">x Part</th>
-                        <th className="py-1 text-right font-bold">x Min</th>
+                        <th className="py-1 text-right font-bold">x Prom</th>
                         <th className="py-1 text-right font-bold">x 90'</th>
                       </tr>
                     </thead>
@@ -719,7 +733,7 @@ export default function PlayersView() {
                         if (st.show === false) return null;
                         const matchesCount = selectedPlayerAggInfo?.totalMatches || 1;
                         const perMatch = (st.value / matchesCount).toFixed(2);
-                        const perMin = totalMin > 0 ? (st.value / totalMin).toFixed(3) : '0.000';
+                        const perProm = totalMin > 0 ? ((st.value / totalMin) * avgMinutes).toFixed(2) : '0.00';
                         const per90 = totalMin > 0 ? ((st.value / totalMin) * 90).toFixed(2) : '0.00';
                         return (
                           <tr key={i} className="hover:bg-white/5 transition-colors">
@@ -729,7 +743,7 @@ export default function PlayersView() {
                             </td>
                             <td className="py-1 text-right text-slate-100 font-semibold">{st.value}</td>
                             <td className="py-1 text-right text-emerald-400 font-semibold">{perMatch}</td>
-                            <td className="py-1 text-right text-amber-500 font-semibold">{perMin}</td>
+                            <td className="py-1 text-right text-amber-500 font-semibold">{perProm}</td>
                             <td className="py-1 text-right text-teal-400 font-semibold">{per90}</td>
                           </tr>
                         );
