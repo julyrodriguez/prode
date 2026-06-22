@@ -34,3 +34,7 @@ next-env.d.ts
 
 # scratch files
 /scratch/
+
+# teams JSON data (moved to vacas-locas/public)
+/public/teams/
+
