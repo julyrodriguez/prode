@@ -65,6 +65,9 @@ export default function PlayersView() {
   // Visible matches limit state
   const [visibleMatchesLimit, setVisibleMatchesLimit] = useState(5);
 
+  // Cache for search result details: nameFull -> MatchDetailHistory[]
+  const [searchDetails, setSearchDetails] = useState<Record<string, MatchDetailHistory[]>>({});
+
   // Reset matches limit when player changes
   useEffect(() => {
     setVisibleMatchesLimit(5);
@@ -203,16 +206,16 @@ export default function PlayersView() {
     return singleMatch.homeTeam?.name || null;
   };
 
-  // Helper to fetch minutes for multiple players
-  const fetchMinutesForPlayers = async (names: string[]) => {
-    const namesToFetch = names.filter(name => playerMinutes[name] === undefined);
+  // Helper to fetch details for multiple players (stores in searchDetails and playerMinutes)
+  const fetchDetailsForPlayers = async (names: string[]) => {
+    const namesToFetch = names.filter(name => searchDetails[name] === undefined);
     if (namesToFetch.length === 0) return;
 
-    // Set to loading (-1) to avoid duplicate fetches
-    setPlayerMinutes(prev => {
+    // Set to empty array loading indicator
+    setSearchDetails(prev => {
       const next = { ...prev };
       namesToFetch.forEach(name => {
-        next[name] = -1;
+        next[name] = [];
       });
       return next;
     });
@@ -226,26 +229,71 @@ export default function PlayersView() {
         if (json.success && json.data) {
           const matches: MatchDetailHistory[] = json.data;
           const totalMin = matches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
-          return { name, minutes: totalMin };
+          return { name, matches, minutes: totalMin };
         }
       } catch (e) {
         console.error('Error fetching detail for ' + name, e);
       }
-      return { name, minutes: 0 };
+      return { name, matches: null, minutes: 0 };
     };
 
     try {
       const results = await Promise.all(namesToFetch.map(name => fetchOne(name)));
+      
+      setSearchDetails(prev => {
+        const next = { ...prev };
+        results.forEach(res => {
+          if (res.matches) {
+            next[res.name] = res.matches;
+          } else {
+            delete next[res.name];
+          }
+        });
+        return next;
+      });
+
       setPlayerMinutes(prev => {
         const next = { ...prev };
         results.forEach(res => {
-          next[res.name] = res.minutes;
+          if (res.matches) {
+            next[res.name] = res.minutes;
+          } else {
+            next[res.name] = 0;
+          }
         });
         return next;
       });
     } catch (e) {
       console.error(e);
     }
+  };
+
+  // Helper to compute searched player statistics for the card preview
+  const getSearchPlayerStats = (playerName: string) => {
+    const matches = searchDetails[playerName];
+    if (!matches || matches.length === 0) return null;
+
+    return matches.reduce((acc, m) => {
+      const s = m.stats || {};
+      acc.saves += s.saves || 0;
+      if (s.passes) {
+        acc.passesOk += s.passes.ok || 0;
+        acc.passesTotal += s.passes.total || 0;
+      }
+      acc.clearances += s.clearances || 0;
+      if (s.tackles) {
+        acc.tacklesOk += s.tackles.ok || 0;
+        acc.tacklesTotal += s.tackles.total || 0;
+      }
+      return acc;
+    }, {
+      saves: 0,
+      passesOk: 0,
+      passesTotal: 0,
+      clearances: 0,
+      tacklesOk: 0,
+      tacklesTotal: 0
+    });
   };
 
   // Search filter
@@ -255,11 +303,11 @@ export default function PlayersView() {
         (p.nameFull || p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-  // Fetch minutes for search results
+  // Fetch details for search results
   useEffect(() => {
     if (searchResults.length === 0) return;
     const searchNames = searchResults.map(p => p.nameFull);
-    fetchMinutesForPlayers(searchNames);
+    fetchDetailsForPlayers(searchNames);
   }, [searchResults]);
 
   // Calculations for leaderboards (supporting per match / per minute)
@@ -324,7 +372,7 @@ export default function PlayersView() {
       listMatch.forEach(p => topNames.add(p.nameFull));
     });
 
-    fetchMinutesForPlayers(Array.from(topNames));
+    fetchDetailsForPlayers(Array.from(topNames));
   }, [players]);
 
   const getPositionBadgeColor = (pos: string) => {
@@ -566,44 +614,144 @@ export default function PlayersView() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-md p-1.5 border border-white/5 text-[9px]">
-                      <div className="text-center border-r border-white/5">
-                        <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
-                          {statMode === 'minute' ? 'Goles x90\'' : 'P. Goles'}
-                        </span>
-                        <span className="text-[11px] font-black text-emerald-400">
-                          {statMode === 'minute'
-                            ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
-                                ? ((player.goals / playerMinutes[player.nameFull]) * 90).toFixed(2)
-                                : '...')
-                            : (player.goals / player.totalMatches).toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="text-center border-r border-white/5">
-                        <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
-                          {statMode === 'minute' ? 'Tiros x90\'' : 'P. Tiros'}
-                        </span>
-                        <span className="text-[11px] font-black text-teal-400">
-                          {statMode === 'minute'
-                            ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
-                                ? ((player.shots / playerMinutes[player.nameFull]) * 90).toFixed(2)
-                                : '...')
-                            : (player.shots / player.totalMatches).toFixed(1)}
-                        </span>
-                      </div>
-                      <div className="text-center">
-                        <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
-                          {statMode === 'minute' ? 'Faltas x90\'' : 'P. Faltas'}
-                        </span>
-                        <span className="text-[11px] font-black text-orange-400">
-                          {statMode === 'minute'
-                            ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
-                                ? ((player.foulsCommitted / playerMinutes[player.nameFull]) * 90).toFixed(2)
-                                : '...')
-                            : (player.foulsCommitted / player.totalMatches).toFixed(1)}
-                        </span>
-                      </div>
-                    </div>
+                    {(() => {
+                      const pos = player.position || '';
+                      const isArquero = pos === 'Arquero' || pos === 'Goalkeeper';
+                      const isDefensor = pos === 'Defensa' || pos === 'Defensor' || pos === 'Defender';
+                      
+                      const detailLoaded = searchDetails[player.nameFull] !== undefined && searchDetails[player.nameFull].length > 0;
+                      const s = detailLoaded ? getSearchPlayerStats(player.nameFull) : null;
+                      
+                      if (isArquero) {
+                        let displaySaves = '...';
+                        let displayPasses = '...';
+                        let displayClearances = '...';
+
+                        if (detailLoaded && s) {
+                          displaySaves = statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] > 0 ? ((s.saves / playerMinutes[player.nameFull]) * 90).toFixed(2) : '0.00')
+                            : (s.saves / player.totalMatches).toFixed(1);
+                          displayPasses = s.passesTotal > 0 ? `${s.passesOk}/${s.passesTotal}` : '0/0';
+                          displayClearances = statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] > 0 ? ((s.clearances / playerMinutes[player.nameFull]) * 90).toFixed(2) : '0.00')
+                            : (s.clearances / player.totalMatches).toFixed(1);
+                        } else if (!detailLoaded) {
+                          displaySaves = statMode === 'minute' ? '...' : (player.saves / player.totalMatches).toFixed(1);
+                        }
+
+                        return (
+                          <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-md p-1.5 border border-white/5 text-[9px]">
+                            <div className="text-center border-r border-white/5">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Atajadas x90\'' : 'P. Atajadas'}
+                              </span>
+                              <span className="text-[11px] font-black text-amber-500">
+                                {displaySaves}
+                              </span>
+                            </div>
+                            <div className="text-center border-r border-white/5">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">Pases (Ok)</span>
+                              <span className="text-[11px] font-black text-emerald-400">
+                                {displayPasses}
+                              </span>
+                            </div>
+                            <div className="text-center">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Despejes x90\'' : 'P. Despejes'}
+                              </span>
+                              <span className="text-[11px] font-black text-teal-400">
+                                {displayClearances}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      } else if (isDefensor) {
+                        let displayShots = '...';
+                        let displayFouls = '...';
+                        let displayTackles = '...';
+
+                        if (detailLoaded && s) {
+                          displayShots = statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] > 0 ? ((player.shots / playerMinutes[player.nameFull]) * 90).toFixed(2) : '0.00')
+                            : (player.shots / player.totalMatches).toFixed(1);
+                          displayFouls = statMode === 'minute'
+                            ? (playerMinutes[player.nameFull] > 0 ? ((player.foulsCommitted / playerMinutes[player.nameFull]) * 90).toFixed(2) : '0.00')
+                            : (player.foulsCommitted / player.totalMatches).toFixed(1);
+                          displayTackles = s.tacklesTotal > 0 ? `${s.tacklesOk}/${s.tacklesTotal}` : '0/0';
+                        } else if (!detailLoaded) {
+                          displayShots = statMode === 'minute' ? '...' : (player.shots / player.totalMatches).toFixed(1);
+                          displayFouls = statMode === 'minute' ? '...' : (player.foulsCommitted / player.totalMatches).toFixed(1);
+                        }
+
+                        return (
+                          <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-md p-1.5 border border-white/5 text-[9px]">
+                            <div className="text-center border-r border-white/5">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Tiros x90\'' : 'P. Tiros'}
+                              </span>
+                              <span className="text-[11px] font-black text-teal-400">
+                                {displayShots}
+                              </span>
+                            </div>
+                            <div className="text-center border-r border-white/5">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Faltas x90\'' : 'P. Faltas'}
+                              </span>
+                              <span className="text-[11px] font-black text-orange-400">
+                                {displayFouls}
+                              </span>
+                            </div>
+                            <div className="text-center">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">Entradas</span>
+                              <span className="text-[11px] font-black text-emerald-400">
+                                {displayTackles}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className="grid grid-cols-3 gap-1 bg-black/40 rounded-md p-1.5 border border-white/5 text-[9px]">
+                            <div className="text-center border-r border-white/5">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Goles x90\'' : 'P. Goles'}
+                              </span>
+                              <span className="text-[11px] font-black text-emerald-400">
+                                {statMode === 'minute'
+                                  ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
+                                      ? ((player.goals / playerMinutes[player.nameFull]) * 90).toFixed(2)
+                                      : '...')
+                                  : (player.goals / player.totalMatches).toFixed(1)}
+                              </span>
+                            </div>
+                            <div className="text-center border-r border-white/5">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Tiros x90\'' : 'P. Tiros'}
+                              </span>
+                              <span className="text-[11px] font-black text-teal-400">
+                                {statMode === 'minute'
+                                  ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
+                                      ? ((player.shots / playerMinutes[player.nameFull]) * 90).toFixed(2)
+                                      : '...')
+                                  : (player.shots / player.totalMatches).toFixed(1)}
+                              </span>
+                            </div>
+                            <div className="text-center">
+                              <span className="block text-[7px] text-slate-500 uppercase font-bold tracking-wider">
+                                {statMode === 'minute' ? 'Faltas x90\'' : 'P. Faltas'}
+                              </span>
+                              <span className="text-[11px] font-black text-orange-400">
+                                {statMode === 'minute'
+                                  ? (playerMinutes[player.nameFull] && playerMinutes[player.nameFull] > 0
+                                      ? ((player.foulsCommitted / playerMinutes[player.nameFull]) * 90).toFixed(2)
+                                      : '...')
+                                  : (player.foulsCommitted / player.totalMatches).toFixed(1)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                    })()}
                   </div>
 
                   <div className="mt-2 pt-1.5 border-t border-white/5 flex justify-between items-center text-[9px] text-slate-500">
