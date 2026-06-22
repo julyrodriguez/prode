@@ -479,9 +479,42 @@ const MatchRow = memo(({
   );
 });
 
+const getLeagueMatchesCache = (tournamentId: number | undefined, date: string, direction: number, viewMode: string, isPredictionMode: boolean): any[] | null => {
+  if (typeof window === 'undefined') return null;
+  const w = window as any;
+  if (!w.__leagueMatchesCache) w.__leagueMatchesCache = {};
+  const cacheKey = `${tournamentId || 0}_${date}_${direction}_${viewMode}_${isPredictionMode}`;
+  const entry = w.__leagueMatchesCache[cacheKey];
+  if (!entry) return null;
+  if (Date.now() - entry.at > 30000) return null; // 30s TTL
+  return entry.data;
+};
 
-// Prediction mode is the separate "predicciones" tab, passed via context if needed
-// But here we just need to know if we're in prediction mode based on the URL tab
+const setLeagueMatchesCache = (tournamentId: number | undefined, date: string, direction: number, viewMode: string, isPredictionMode: boolean, data: any[]) => {
+  if (typeof window === 'undefined') return;
+  const w = window as any;
+  if (!w.__leagueMatchesCache) w.__leagueMatchesCache = {};
+  const cacheKey = `${tournamentId || 0}_${date}_${direction}_${viewMode}_${isPredictionMode}`;
+  w.__leagueMatchesCache[cacheKey] = { data, at: Date.now() };
+};
+
+const getLeaguePredictionsCache = (userId: string): Record<number, { home: string; away: string }> | null => {
+  if (typeof window === 'undefined') return null;
+  const w = window as any;
+  if (!w.__leaguePredictionsCache) w.__leaguePredictionsCache = {};
+  const entry = w.__leaguePredictionsCache[userId];
+  if (!entry) return null;
+  if (Date.now() - entry.at > 60000) return null; // 60s TTL
+  return entry.data;
+};
+
+const setLeaguePredictionsCache = (userId: string, data: Record<number, { home: string; away: string }>) => {
+  if (typeof window === 'undefined') return;
+  const w = window as any;
+  if (!w.__leaguePredictionsCache) w.__leaguePredictionsCache = {};
+  w.__leaguePredictionsCache[userId] = { data, at: Date.now() };
+};
+
 export default function LeagueMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const params = useParams();
   const leagueId = (params?.leagueId as string) || 'general';
@@ -489,21 +522,36 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   const { user } = useAuth();
   const router = useRouter();
 
-  const [allMatches, setAllMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [jumpMsg, setJumpMsg] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [searchDirection, setSearchDirection] = useState<1 | -1>(1);
-  const [localPredictions, setLocalPredictions] = useState<Record<number, { home: string; away: string }>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+
+  const tournamentId = activeLeague.tournamentId;
+
+  const [allMatches, setAllMatches] = useState<Match[]>(() => {
+    const cached = getLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode);
+    return cached || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = getLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode);
+    return !cached;
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [jumpMsg, setJumpMsg] = useState<string | null>(null);
+  const [localPredictions, setLocalPredictions] = useState<Record<number, { home: string; away: string }>>(() => {
+    if (user) {
+      const cached = getLeaguePredictionsCache(user.uid);
+      if (cached) return cached;
+    }
+    return {};
+  });
   const [mounted, setMounted] = useState(false);
   const [showOnlyLive, setShowOnlyLive] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -528,7 +576,6 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   const deadlineDate = new Date('2026-06-12T00:00:00-03:00'); // Límite: 11/06 inclusive
   const isBeforeDeadline = Date.now() < deadlineDate.getTime();
 
-  const tournamentId = activeLeague.tournamentId;
   const [prevTournamentId, setPrevTournamentId] = useState(tournamentId);
 
   // Reiniciamos la fecha a "hoy" si cambian la liga en el menú de navegación
@@ -638,6 +685,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
         });
 
         setAllMatches(events);
+        setLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode, events);
 
         if (user) {
           try {
@@ -653,6 +701,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                   predMap[idDelPartido] = { home: String(golesLocal), away: String(golesVisita) };
                 });
               }
+              setLeaguePredictionsCache(user.uid, predMap);
               // En el refresco automático (showLoading=false) NO sobreescribimos lo que
               // el usuario ya modificó localmente — solo rellenamos lo que no tiene.
               if (showLoading) {
@@ -684,7 +733,20 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       }
     };
 
-    fetchData(true);
+    const cached = getLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode);
+    const hasCache = !!cached;
+    if (cached) {
+      setAllMatches(cached);
+      setLoading(false);
+      if (user) {
+        const cachedPreds = getLeaguePredictionsCache(user.uid);
+        if (cachedPreds) {
+          setLocalPredictions(cachedPreds);
+        }
+      }
+    }
+
+    fetchData(!hasCache);
     const interval = setInterval(() => fetchData(false), 30000); // 30 segundos
     return () => clearInterval(interval);
   }, [user, tournamentId, selectedDate, searchDirection, viewMode]);

@@ -59,25 +59,72 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
   );
 }
 
+const getMatchesListCache = (date: string, direction: number, isPredictionMode: boolean): any[] | null => {
+  if (typeof window === 'undefined') return null;
+  const w = window as any;
+  if (!w.__matchesListCache) w.__matchesListCache = {};
+  const cacheKey = `${date}_${direction}_${isPredictionMode}`;
+  const entry = w.__matchesListCache[cacheKey];
+  if (!entry) return null;
+  if (Date.now() - entry.at > 30000) return null; // 30s TTL
+  return entry.data;
+};
 
+const setMatchesListCache = (date: string, direction: number, isPredictionMode: boolean, data: any[]) => {
+  if (typeof window === 'undefined') return;
+  const w = window as any;
+  if (!w.__matchesListCache) w.__matchesListCache = {};
+  const cacheKey = `${date}_${direction}_${isPredictionMode}`;
+  w.__matchesListCache[cacheKey] = { data, at: Date.now() };
+};
+
+const getPredictionsCache = (userId: string): Record<number, { home: string, away: string }> | null => {
+  if (typeof window === 'undefined') return null;
+  const w = window as any;
+  if (!w.__predictionsCache) w.__predictionsCache = {};
+  const entry = w.__predictionsCache[userId];
+  if (!entry) return null;
+  if (Date.now() - entry.at > 60000) return null; // 60s TTL
+  return entry.data;
+};
+
+const setPredictionsCache = (userId: string, data: Record<number, { home: string, away: string }>) => {
+  if (typeof window === 'undefined') return;
+  const w = window as any;
+  if (!w.__predictionsCache) w.__predictionsCache = {};
+  w.__predictionsCache[userId] = { data, at: Date.now() };
+};
 
 export default function MatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
 
-  const [allMatches, setAllMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [jumpMsg, setJumpMsg] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [searchDirection, setSearchDirection] = useState<1 | -1>(1);
-  const [localPredictions, setLocalPredictions] = useState<Record<number, { home: string, away: string }>>({});
+
+  const [allMatches, setAllMatches] = useState<Match[]>(() => {
+    const cached = getMatchesListCache(selectedDate, searchDirection, isPredictionMode);
+    return cached || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = getMatchesListCache(selectedDate, searchDirection, isPredictionMode);
+    return !cached;
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [jumpMsg, setJumpMsg] = useState<string | null>(null);
+  const [localPredictions, setLocalPredictions] = useState<Record<number, { home: string, away: string }>>(() => {
+    if (user) {
+      const cached = getPredictionsCache(user.uid);
+      if (cached) return cached;
+    }
+    return {};
+  });
   const [isSaving, setIsSaving] = useState(false);
-  const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);;
+  const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);
   const [redirectingMatchId, setRedirectingMatchId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -146,6 +193,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
         });
 
         setAllMatches(events);
+        setMatchesListCache(selectedDate, searchDirection, isPredictionMode, events);
 
         if (user) {
           try {
@@ -166,6 +214,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                   };
                 });
               }
+              setPredictionsCache(user.uid, predMap);
               if (showLoading) {
                 setLocalPredictions(predMap);
               } else {
@@ -193,7 +242,20 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
       }
     };
 
-    fetchMatchesAndPredictions(true);
+    const cached = getMatchesListCache(selectedDate, searchDirection, isPredictionMode);
+    const hasCache = !!cached;
+    if (cached) {
+      setAllMatches(cached);
+      setLoading(false);
+      if (user) {
+        const cachedPreds = getPredictionsCache(user.uid);
+        if (cachedPreds) {
+          setLocalPredictions(cachedPreds);
+        }
+      }
+    }
+
+    fetchMatchesAndPredictions(!hasCache);
     const interval = setInterval(() => fetchMatchesAndPredictions(false), 30000); // 30 segundos
     return () => clearInterval(interval);
   }, [user, selectedDate, searchDirection]);
