@@ -171,7 +171,7 @@ export default function TeamView() {
 
         // Obtener historial de partidos
         try {
-          const mRes = await fetch(`/teams/${id}-matches.json`);
+          const mRes = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}/matches?limit=10`);
           if (mRes.ok) {
             const matchesData = await mRes.json();
             setRecentMatches(matchesData);
