@@ -544,7 +544,7 @@ export default function LeagueRankingView() {
                 setNavigatingUserId(activeRanking[0].userId);
                 router.push(`/predictions/${activeRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
               }}
-              className={`relative overflow-hidden border rounded-3xl p-5 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
+              className={`relative overflow-hidden border rounded-3xl p-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
                 isDark 
                   ? 'bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_10px_30px_rgba(245,158,11,0.12)] hover:border-amber-500/60' 
                   : 'bg-gradient-to-br from-amber-500/10 via-white to-white border-amber-500/30 shadow-[0_10px_20px_rgba(245,158,11,0.06)] hover:border-amber-500/50'
@@ -555,7 +555,7 @@ export default function LeagueRankingView() {
                 <span>👑</span> <span>1º PUESTO</span>
               </div>
               
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-2">
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[3px] shadow-[0_0_15px_rgba(245,158,11,0.3)] shrink-0 mt-1">
                 <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
                   <span className={`absolute z-0 text-xl font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{activeRanking[0].name?.slice(0, 1).toUpperCase()}</span>
                   <img
@@ -567,7 +567,7 @@ export default function LeagueRankingView() {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0 mt-2">
+              <div className="flex-1 min-w-0 mt-1">
                 <h4 className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-amber-450' : 'text-amber-600'}`}>Puntero del Prode</h4>
                 <span className={`block font-black text-base truncate transition-colors ${isDark ? 'text-white group-hover:text-amber-300' : 'text-slate-900 group-hover:text-amber-600'}`}>
                   {activeRanking[0].name}
@@ -592,7 +592,7 @@ export default function LeagueRankingView() {
                 setNavigatingUserId(activeRanking[1].userId);
                 router.push(`/predictions/${activeRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
               }}
-              className={`relative overflow-hidden border rounded-3xl p-5 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
+              className={`relative overflow-hidden border rounded-3xl p-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
                 isDark 
                   ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_10px_30px_rgba(148,163,184,0.08)] hover:border-slate-400/50' 
                   : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_10px_20px_rgba(148,163,184,0.04)] hover:border-slate-400/40'
@@ -603,7 +603,7 @@ export default function LeagueRankingView() {
                 <span>🥈</span> <span>2º PUESTO</span>
               </div>
               
-              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-2">
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[3px] shadow-[0_0_15px_rgba(148,163,184,0.2)] shrink-0 mt-1">
                 <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
                   <span className={`absolute z-0 text-xl font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{activeRanking[1].name?.slice(0, 1).toUpperCase()}</span>
                   <img
@@ -615,7 +615,7 @@ export default function LeagueRankingView() {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0 mt-2">
+              <div className="flex-1 min-w-0 mt-1">
                 <h4 className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Escolta</h4>
                 <span className={`block font-black text-base truncate transition-colors ${isDark ? 'text-white group-hover:text-slate-300' : 'text-slate-900 group-hover:text-slate-600'}`}>
                   {activeRanking[1].name}
@@ -672,7 +672,7 @@ export default function LeagueRankingView() {
               activeRanking.map((entry, idx) => {
                 const isMe = user && entry.userId === user.uid;
                 const isLastTwo = activeRanking.length > 2 && idx >= activeRanking.length - 2;
-                const rowPadding = 'py-3.5';
+                const rowPadding = 'py-2.5';
                 const rowBg = isLastTwo
                   ? (isMe
                     ? 'bg-red-500/[0.08] border-l-2 border-red-500/50 hover:bg-red-500/[0.12]'
@@ -808,10 +808,10 @@ export default function LeagueRankingView() {
                   : MEDAL[idx];
 
                 const rowPadding = idx === 0
-                  ? 'py-5 md:py-8'
+                  ? 'py-4 md:py-6'
                   : (isMundial && idx === 1)
-                    ? 'py-4 md:py-5'
-                    : 'py-3.5';
+                    ? 'py-3 md:py-4'
+                    : 'py-2.5';
 
                 const rowBg = isLastTwo
                   ? (isMe
