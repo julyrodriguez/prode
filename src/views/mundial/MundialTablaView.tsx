@@ -39,6 +39,8 @@ export default function MundialTablaView() {
   const [error, setError] = useState<string | null>(null);
   const [standingsData, setStandingsData] = useState<Record<string, any[]>>({});
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [allMatches, setAllMatches] = useState<any[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   // Sub-tabs navigation
   const [activeSubTab, setActiveSubTab] = useState<'grupos' | 'estadisticas' | 'bracket'>('grupos');
@@ -211,7 +213,132 @@ export default function MundialTablaView() {
     };
   }, []);
 
+  const translateTeamToSpanish = (name: string): string => {
+    if (!name) return '';
+    const translations: Record<string, string> = {
+      'Brazil': 'Brasil',
+      'France': 'Francia',
+      'Germany': 'Alemania',
+      'Spain': 'España',
+      'England': 'Inglaterra',
+      'Belgium': 'Bélgica',
+      'Croatia': 'Croacia',
+      'Netherlands': 'Países Bajos',
+      'Holland': 'Holanda',
+      'Japan': 'Japón',
+      'Saudi Arabia': 'Arabia Saudita',
+      'South Korea': 'Corea del Sur',
+      'Switzerland': 'Suiza',
+      'Denmark': 'Dinamarca',
+      'Poland': 'Polonia',
+      'Mexico': 'México',
+      'Morocco': 'Marruecos',
+      'United States': 'Estados Unidos',
+      'USA': 'Estados Unidos',
+      'Cameroon': 'Camerún',
+      'Canada': 'Canadá',
+      'Ecuador': 'Ecuador',
+      'Senegal': 'Senegal',
+      'Tunisia': 'Túnez',
+      'Wales': 'Gales',
+      'Qatar': 'Qatar',
+      'Serbia': 'Serbia',
+      'Ghana': 'Ghana',
+      'Uruguay': 'Uruguay',
+      'Argentina': 'Argentina',
+      'Portugal': 'Portugal',
+      'Italy': 'Italia',
+      'Colombia': 'Colombia',
+      'Chile': 'Chile',
+      'Peru': 'Perú',
+      'Paraguay': 'Paraguay',
+      'Venezuela': 'Venezuela',
+      'Bolivia': 'Bolivia',
+      'Algeria': 'Argelia',
+      'Austria': 'Austria',
+      'Egypt': 'Egipto',
+      'Sweden': 'Suecia',
+      'Norway': 'Noruega',
+      'Scotland': 'Escocia',
+      'Ireland': 'Irlanda',
+      'Greece': 'Grecia',
+      'Turkey': 'Turquía',
+      'Ukraine': 'Ucrania',
+      'Czech Republic': 'República Checa',
+      'Czechia': 'República Checa',
+      'Romania': 'Rumania',
+      'Russia': 'Rusia',
+      'New Zealand': 'Nueva Zelanda',
+      'South Africa': 'Sudáfrica',
+      'Panama': 'Panamá',
+      'Costa Rica': 'Costa Rica',
+      'Honduras': 'Honduras',
+      'El Salvador': 'El Salvador',
+      'Jamaica': 'Jamaica',
+      'Hungary': 'Hungría'
+    };
+    const trimmed = name.trim();
+    return translations[trimmed] || translations[trimmed.replace(/\s+/g, ' ')] || trimmed;
+  };
 
+  useEffect(() => {
+    let isMounted = true;
+    const fetchAllMatches = async () => {
+      try {
+        const res = await fetch('https://apivacas.jariel.com.ar/api/matches/all');
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) {
+            const matchesArray = Array.isArray(data) ? data : [];
+            const filtered = matchesArray.filter((m: any) => 
+              m.tournamentId === tournamentId || 
+              m.tournament_id === tournamentId || 
+              m.tournament?.id === tournamentId ||
+              (m.tournament_name && m.tournament_name.toLowerCase().includes('world cup'))
+            );
+            setAllMatches(filtered);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching all matches:', err);
+      }
+    };
+    fetchAllMatches();
+    return () => {
+      isMounted = false;
+    };
+  }, [tournamentId]);
+
+  const getGroupMatches = (groupTeams: any[]) => {
+    if (!groupTeams || groupTeams.length === 0) return [];
+    
+    const teamIds = new Set(
+      groupTeams
+        .map(t => t.equipoId)
+        .filter(id => id !== undefined && id !== null)
+    );
+    
+    const teamNames = new Set(
+      groupTeams
+        .map(t => normalizeTeamName(t.nombre))
+        .filter(n => !!n)
+    );
+    
+    const filtered = allMatches.filter((m: any) => {
+      const hId = m.homeTeam?.id || m.home_team?.id;
+      const aId = m.awayTeam?.id || m.away_team?.id;
+      
+      if (hId && aId && teamIds.has(hId) && teamIds.has(aId)) {
+        return true;
+      }
+      
+      const hName = normalizeTeamName(m.homeTeam?.name || m.home_team?.name || '');
+      const aName = normalizeTeamName(m.awayTeam?.name || m.away_team?.name || '');
+      return teamNames.has(hName) && teamNames.has(aName);
+    });
+
+    return filtered.sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
+  };
 
   const getBackgroundColorForPromotion = (promoDesc: string | null) => {
     if (!promoDesc) return '';
@@ -850,6 +977,111 @@ export default function MundialTablaView() {
                       </table>
                     </div>
                   </div>
+
+                  {/* Botón desplegar partidos y listado */}
+                  {isGroupLeague && (
+                    <div className="mt-1 px-1">
+                      <button
+                        onClick={() => {
+                          setExpandedGroups(prev => ({
+                            ...prev,
+                            [tab]: !prev[tab]
+                          }));
+                        }}
+                        className="w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 text-xs font-bold text-slate-350 hover:text-white flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <span>⚽</span>
+                        {expandedGroups[tab] ? 'Ocultar partidos' : 'Desplegar partidos'}
+                        <span className="text-[10px] opacity-60">
+                          {expandedGroups[tab] ? '▲' : '▼'}
+                        </span>
+                      </button>
+
+                      {expandedGroups[tab] && (
+                        <div className="mt-3 flex flex-col gap-2 p-3 bg-[#0b1015]/40 border border-white/5 rounded-2xl animate-fade-in">
+                          {getGroupMatches(currentData).length === 0 ? (
+                            <span className="text-[11px] text-slate-500 text-center font-medium py-2">
+                              No hay partidos cargados para este grupo.
+                            </span>
+                          ) : (
+                            <div className="flex flex-col gap-1.5">
+                              {getGroupMatches(currentData).map((m: any) => {
+                                const hName = translateTeamToSpanish(m.homeTeam?.name || m.home_team?.name || 'Local');
+                                const aName = translateTeamToSpanish(m.awayTeam?.name || m.away_team?.name || 'Visitante');
+                                const hId = m.homeTeam?.id || m.home_team?.id;
+                                const aId = m.awayTeam?.id || m.away_team?.id;
+                                
+                                const hLogo = hId ? `/escudos/${hId}.png` : null;
+                                const aLogo = aId ? `/escudos/${aId}.png` : null;
+                                
+                                const statusType = typeof m.status === 'object' ? m.status?.type : m.status;
+                                const isFinished = statusType === 'finished';
+                                const isInProgress = statusType === 'inprogress';
+                                
+                                const hScore = m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score ?? (isFinished || isInProgress ? 0 : '-');
+                                const aScore = m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score ?? (isFinished || isInProgress ? 0 : '-');
+                                
+                                const date = m.startTimestamp ? new Date(m.startTimestamp * 1000) : null;
+                                const dateStr = date ? date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '';
+                                const timeStr = date ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                                return (
+                                  <div
+                                    key={m.id || m._id}
+                                    onClick={() => router.push(`/match/${m.id || m._id}`)}
+                                    className="flex items-center justify-between p-2 rounded-xl bg-white/[0.01] hover:bg-white/[0.04] border border-white/5 transition-all cursor-pointer group"
+                                  >
+                                    <div className="flex flex-col justify-center items-start pl-1 shrink-0 min-w-[55px]">
+                                      {isInProgress ? (
+                                        <span className="text-[9px] font-black text-red-500 animate-pulse tracking-wide">EN VIVO</span>
+                                      ) : isFinished ? (
+                                        <span className="text-[9px] font-bold text-slate-500">FINALIZADO</span>
+                                      ) : (
+                                        <>
+                                          <span className="text-[10px] font-extrabold text-amber-500/80 leading-none">{dateStr}</span>
+                                          <span className="text-[9px] font-medium text-slate-400 mt-0.5 leading-none">{timeStr}</span>
+                                        </>
+                                      )}
+                                    </div>
+
+                                    <div className="flex-1 flex items-center justify-center gap-2 px-2 min-w-0">
+                                      <div className="flex-1 flex items-center justify-end gap-1.5 text-right min-w-0">
+                                        <span className="text-[11px] font-bold text-slate-200 group-hover:text-white truncate">
+                                          {hName}
+                                        </span>
+                                        <div className="w-5 h-5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
+                                          <TeamLogo logoUrl={hLogo} teamName={hName} className="w-full h-full p-0.5" />
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-black/40 border border-white/5 font-mono text-xs font-black select-none shrink-0">
+                                        <span className={isFinished || isInProgress ? 'text-white' : 'text-slate-550'}>{hScore}</span>
+                                        <span className="text-slate-600 font-sans font-medium">-</span>
+                                        <span className={isFinished || isInProgress ? 'text-white' : 'text-slate-550'}>{aScore}</span>
+                                      </div>
+
+                                      <div className="flex-1 flex items-center justify-start gap-1.5 text-left min-w-0">
+                                        <div className="w-5 h-5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
+                                          <TeamLogo logoUrl={aLogo} teamName={aName} className="w-full h-full p-0.5" />
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-200 group-hover:text-white truncate">
+                                          {aName}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="pr-1 text-slate-600 group-hover:text-slate-350 transition-colors text-[9px] shrink-0 select-none">
+                                      ▶
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
