@@ -5,6 +5,45 @@ import { Search, User, Trophy, Calendar, Sparkles, Activity, ShieldAlert, Target
 import { createPortal } from 'react-dom';
 import { useTheme } from '../context/ThemeContext';
 
+const formatSelectionName = (flag: string | null | undefined): string => {
+  if (!flag) return '';
+  const mapping: Record<string, string> = {
+    'czech-republic': 'República Checa',
+    'bosnia-herzegovina': 'Bosnia y Herzegovina',
+    'cape-verde': 'Cabo Verde',
+    'dr-congo': 'RD Congo',
+    'ivory-coast': 'Costa de Marfil',
+    'netherlands': 'Países Bajos',
+    'new-zealand': 'Nueva Zelanda',
+    'saudi-arabia': 'Arabia Saudita',
+    'south-africa': 'Sudáfrica',
+    'south-korea': 'Corea del Sur',
+    'usa': 'EE. UU.',
+    'england': 'Inglaterra',
+    'france': 'Francia',
+    'germany': 'Alemania',
+    'japan': 'Japón',
+    'spain': 'España',
+    'turkey': 'Turquía',
+    'belgium': 'Bélgica',
+    'brazil': 'Brasil',
+    'italy': 'Italia',
+    'sweden': 'Suecia',
+    'switzerland': 'Suiza',
+    'croatia': 'Croacia',
+    'morocco': 'Marruecos',
+    'algeria': 'Argelia',
+    'egypt': 'Egipto',
+    'tunisia': 'Túnez',
+    'uzbekistan': 'Uzbekistán'
+  };
+  if (mapping[flag]) return mapping[flag];
+  return flag
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 interface PlayerAggregated {
   _id: string;
   name: string;
@@ -19,6 +58,7 @@ interface PlayerAggregated {
   shots: number;
   foulsCommitted: number;
   saves: number;
+  selection?: string | null;
 }
 
 interface MatchDetailHistory {
@@ -299,9 +339,13 @@ export default function PlayersView() {
   // Search filter
   const searchResults = searchQuery.trim().length < 3
     ? []
-    : players.filter(p => 
-        (p.nameFull || p.name || '').toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    : players.filter(p => {
+        const query = searchQuery.toLowerCase();
+        const matchesName = (p.nameFull || p.name || '').toLowerCase().includes(query);
+        const matchesSelectionFlag = p.selection ? p.selection.toLowerCase().includes(query) : false;
+        const matchesSelectionFormatted = p.selection ? formatSelectionName(p.selection).toLowerCase().includes(query) : false;
+        return matchesName || matchesSelectionFlag || matchesSelectionFormatted;
+      });
 
   // Fetch details for search results
   useEffect(() => {
@@ -604,9 +648,22 @@ export default function PlayersView() {
                           <h3 className="font-bold text-xs text-slate-200 group-hover:text-emerald-400 transition-colors truncate">
                             {player.nameFull || player.name}
                           </h3>
-                          <span className={`inline-block text-[6px] uppercase font-bold tracking-wider px-1 py-0.2 border rounded-full mt-0.5 ${getPositionBadgeColor(player.position)}`}>
-                            {player.position}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                            <span className={`inline-block text-[6px] uppercase font-bold tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(player.position)}`}>
+                              {player.position}
+                            </span>
+                            {player.selection && (
+                              <span className="inline-flex items-center gap-1 text-[8px] text-slate-400 font-medium bg-white/5 px-1 py-0.2 border border-white/5 rounded-full shrink-0">
+                                <img
+                                  src={`https://img.icons8.com/color/20/000000/${player.selection}.png`}
+                                  alt={player.selection}
+                                  className="w-2.5 h-2.5 object-contain"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                                {formatSelectionName(player.selection)}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <span className="text-slate-500 text-[9px] font-semibold shrink-0">
@@ -1285,10 +1342,21 @@ function LeaderboardCard({
                       <span className="font-bold text-slate-300 group-hover:text-emerald-400 transition-colors text-[11px] truncate block">
                         {player.nameFull || player.name}
                       </span>
-                      <div className="flex items-center gap-1 mt-0.5">
+                      <div className="flex flex-wrap items-center gap-1 mt-0.5">
                         <span className={`text-[6px] uppercase font-bold tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(player.position)}`}>
                           {player.position}
                         </span>
+                        {player.selection && (
+                          <span className="inline-flex items-center gap-0.5 text-[7px] text-slate-400 font-bold bg-white/5 px-1 py-0.2 border border-white/5 rounded-full shrink-0">
+                            <img
+                              src={`https://img.icons8.com/color/16/000000/${player.selection}.png`}
+                              alt={player.selection}
+                              className="w-2 h-2 object-contain"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                            {formatSelectionName(player.selection)}
+                          </span>
+                        )}
                         <span className="text-[8px] text-slate-500">
                           {player.totalMatches} {player.totalMatches === 1 ? 'partido' : 'partidos'}
                         </span>
