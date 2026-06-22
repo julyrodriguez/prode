@@ -7,9 +7,11 @@ import { DashboardContext } from '../app/(dashboard)/layout';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, Clock, Calendar } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, X, BarChart3 } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
 import TeamHoverCard from '../components/TeamHoverCard';
+import { elnineMappings } from '../lib/elnineMappings';
+
 
 const parseStatValue = (val: string | number | undefined): number => {
   if (val === undefined || val === null) return 0;
@@ -114,6 +116,11 @@ export default function MatchDetailView() {
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [now, setNow] = useState(Date.now());
+
+  const [elninePlayers, setElninePlayers] = useState<any[] | null>(null);
+  const [loadingElnine, setLoadingElnine] = useState<boolean>(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+
 
   const [mundialStandings, setMundialStandings] = useState<Record<string, any[]> | null>(null);
   const [loadingMundialStandings, setLoadingMundialStandings] = useState(false);
@@ -239,6 +246,74 @@ export default function MatchDetailView() {
       .then(d => setMatchPredictions(Array.isArray(d) ? d : []))
       .catch(() => setMatchPredictions([]));
   }, [id]);
+
+  // Fetch estadísticas detalladas de elnine.com.ar
+  useEffect(() => {
+    if (!id) return;
+    const url = match?.elnineUrl || match?.elnine_url || elnineMappings[id];
+    if (!url) {
+      setElninePlayers(null);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchElnineStats = async () => {
+      setLoadingElnine(true);
+      try {
+        const res = await fetch(`/api/match-stats?url=${encodeURIComponent(url)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data.players) {
+            setElninePlayers(data.players);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching elnine stats:', err);
+      } finally {
+        if (isMounted) {
+          setLoadingElnine(false);
+        }
+      }
+    };
+
+    fetchElnineStats();
+    return () => { isMounted = false; };
+  }, [id, match]);
+
+  // Helper para vincular jugador de lineups con datos scrapeados
+  const findScrapedPlayer = (p: any, isHome: boolean) => {
+    if (!elninePlayers) return null;
+    const dbName = (p.player?.name || p.player?.shortName || '').toLowerCase();
+    const dbShort = (p.player?.shortName || '').toLowerCase();
+    const dbNumber = p.jerseyNumber;
+
+    // 1. Intentar buscar por número de camiseta primero
+    const sameNumberPlayers = elninePlayers.filter((ep: any) => ep.number === dbNumber);
+    if (sameNumberPlayers.length === 1) {
+      return sameNumberPlayers[0];
+    } else if (sameNumberPlayers.length > 1) {
+      // Si hay más de uno con el mismo número (uno de cada equipo), comparamos por coincidencia básica de nombre
+      for (const ep of sameNumberPlayers) {
+        const epName = (ep.nameFull || ep.name || '').toLowerCase();
+        if (epName.includes(dbShort) || dbName.includes(epName) || epName.includes(dbName)) {
+          return ep;
+        }
+      }
+    }
+
+    // 2. Fallback: buscar por coincidencia de nombre
+    return elninePlayers.find((ep: any) => {
+      const epName = (ep.nameFull || ep.name || '').toLowerCase();
+      const epShort = (ep.name || '').toLowerCase();
+      return (
+        epName.includes(dbName) || 
+        dbName.includes(epName) ||
+        epName.includes(dbShort) ||
+        epShort.includes(dbShort)
+      );
+    }) || null;
+  };
+
 
   if (loading) {
     return (
@@ -819,17 +894,28 @@ export default function MatchDetailView() {
                 <div className="flex w-full gap-2">
                   {/* LOCAL */}
                   <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
-                    {(match.lineups.home?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
-                      <div key={i} className="flex items-center gap-2 group min-w-0">
-                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0">
-                          {p.jerseyNumber}
-                        </span>
-                        <div className="flex flex-col truncate border-b border-transparent group-hover:border-emerald-500/30 transition-all overflow-hidden w-full">
-                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
-                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                    {(match.lineups.home?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => {
+                      const scrapedPlayer = findScrapedPlayer(p, true);
+                      const hasStats = !!scrapedPlayer?.stats;
+                      return (
+                        <div 
+                          key={i} 
+                          onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                          className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
+                        >
+                          <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0 animate-pulse-slow">
+                            {p.jerseyNumber}
+                          </span>
+                          <div className="flex flex-col truncate overflow-hidden w-full">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
+                              {hasStats && <BarChart3 className="w-2.5 h-2.5 text-emerald-450/70 group-hover:text-emerald-400 transition-all shrink-0" />}
+                            </div>
+                            <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Divisor */}
@@ -837,19 +923,94 @@ export default function MatchDetailView() {
 
                   {/* VISITANTE */}
                   <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
-                    {(match.lineups.away?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => (
-                      <div key={i} className="flex items-center justify-end gap-2 group text-right min-w-0">
-                        <div className="flex flex-col truncate items-end border-b border-transparent group-hover:border-indigo-500/30 transition-all overflow-hidden w-full">
-                          <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors w-full">{p.player?.shortName || p.player?.name}</span>
-                          <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                    {(match.lineups.away?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => {
+                      const scrapedPlayer = findScrapedPlayer(p, false);
+                      const hasStats = !!scrapedPlayer?.stats;
+                      return (
+                        <div 
+                          key={i} 
+                          onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                          className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
+                        >
+                          <div className="flex flex-col truncate overflow-hidden w-full items-end">
+                            <div className="flex items-center gap-1.5">
+                              {hasStats && <BarChart3 className="w-2.5 h-2.5 text-indigo-450/70 group-hover:text-indigo-400 transition-all shrink-0" />}
+                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
+                            </div>
+                            <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                          </div>
+                          <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0 animate-pulse-slow">
+                            {p.jerseyNumber}
+                          </span>
                         </div>
-                        <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0">
-                          {p.jerseyNumber}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
+
+                {/* SUPLENTES */}
+                {((match.lineups.home?.players || []).some((p: any) => p.substitute) || 
+                  (match.lineups.away?.players || []).some((p: any) => p.substitute)) && (
+                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2">
+                    <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center mb-1">Suplentes</h4>
+                    <div className="flex w-full gap-2">
+                      {/* LOCAL SUPLENTES */}
+                      <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
+                        {(match.lineups.home?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
+                          const scrapedPlayer = findScrapedPlayer(p, true);
+                          const hasStats = !!scrapedPlayer?.stats;
+                          return (
+                            <div 
+                              key={i} 
+                              onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                              className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
+                            >
+                              <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/5 text-emerald-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/10 shadow-sm shrink-0">
+                                {p.jerseyNumber}
+                              </span>
+                              <div className="flex flex-col truncate overflow-hidden w-full">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
+                                  {hasStats && <BarChart3 className="w-2.5 h-2.5 text-emerald-400/65 group-hover:text-emerald-400 transition-all shrink-0" />}
+                                </div>
+                                <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Divisor */}
+                      <div className="w-px bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
+
+                      {/* VISITANTE SUPLENTES */}
+                      <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
+                        {(match.lineups.away?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
+                          const scrapedPlayer = findScrapedPlayer(p, false);
+                          const hasStats = !!scrapedPlayer?.stats;
+                          return (
+                            <div 
+                              key={i} 
+                              onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                              className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
+                            >
+                              <div className="flex flex-col truncate overflow-hidden w-full items-end">
+                                <div className="flex items-center gap-1.5">
+                                  {hasStats && <BarChart3 className="w-2.5 h-2.5 text-indigo-400/65 group-hover:text-indigo-400 transition-all shrink-0" />}
+                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors">{p.player?.shortName || p.player?.name}</span>
+                                </div>
+                                <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                              </div>
+                              <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/5 text-indigo-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/10 shadow-sm shrink-0">
+                                {p.jerseyNumber}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1177,7 +1338,241 @@ export default function MatchDetailView() {
         </div>
         )}
       </div>
+
+      {/* MODAL DETALLES DEL JUGADOR */}
+      {selectedPlayer && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          {/* Contenedor del Modal */}
+          <div className="relative w-full max-w-2xl bg-[#0f141c] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+            
+            {/* Header Modal */}
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/5 bg-gradient-to-r from-emerald-500/10 to-indigo-500/10">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-sm border border-emerald-500/30">
+                  {selectedPlayer.number || '#'}
+                </span>
+                <div className="flex flex-col">
+                  <h3 className="text-sm md:text-lg font-black text-white leading-tight flex items-center gap-1.5">
+                    {selectedPlayer.nameFull || selectedPlayer.name}
+                    {selectedPlayer.isCaptain && (
+                      <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1 py-0.5 rounded border border-amber-500/30 font-bold uppercase">C</span>
+                    )}
+                  </h3>
+                  <span className="text-[10px] md:text-xs text-slate-400 font-medium">
+                    {selectedPlayer.position} • {selectedPlayer.age ? `${selectedPlayer.age} años` : ''} {selectedPlayer.height ? `• ${selectedPlayer.height}m` : ''}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedPlayer(null)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Cuerpo del Modal */}
+            <div className="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1 flex flex-col gap-6">
+              
+              {!selectedPlayer.stats ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-2">
+                  <span className="text-3xl">📭</span>
+                  <p className="text-xs font-semibold">Sin estadísticas detalladas disponibles para este partido.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Grid de Estadísticas */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    {/* ATAQUE */}
+                    {selectedPlayer.position !== "Arquero" && (
+                      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex flex-col gap-2.5">
+                        <h4 className="text-[9px] font-black text-emerald-400 uppercase tracking-wider border-b border-white/5 pb-1">Ataque</h4>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Goles</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.goals || selectedPlayer.events?.goals || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Remates</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.shots || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Al arco</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.shotsOnTarget || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Bloqueados</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.blockedShots || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Regates</span>
+                            <span className="text-white font-bold">
+                              {selectedPlayer.stats.dribbles?.ok || 0}/{selectedPlayer.stats.dribbles?.total || 0}
+                            </span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Toques área rival</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.touchesOppBox || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* DISTRIBUCIÓN */}
+                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex flex-col gap-2.5">
+                      <h4 className="text-[9px] font-black text-indigo-400 uppercase tracking-wider border-b border-white/5 pb-1">Distribución y Creación</h4>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                        <div className="flex justify-between py-0.5 col-span-2">
+                          <span className="text-slate-400">Pases efectivos</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.passes?.ok || 0}/{selectedPlayer.stats.passes?.total || 0} 
+                            {selectedPlayer.stats.passes?.total ? ` (${Math.round((selectedPlayer.stats.passes.ok / selectedPlayer.stats.passes.total) * 100)}%)` : ''}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Centros</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.crosses?.ok || 0}/{selectedPlayer.stats.crosses?.total || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Pelotas largas</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.longBalls?.ok || 0}/{selectedPlayer.stats.longBalls?.total || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Pases filtrados</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.throughBalls?.ok || 0}/{selectedPlayer.stats.throughBalls?.total || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Oportunidades creadas</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.chancesCreated || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* DEFENSA Y DUELOS */}
+                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex flex-col gap-2.5">
+                      <h4 className="text-[9px] font-black text-cyan-400 uppercase tracking-wider border-b border-white/5 pb-1">Defensa y Duelos</h4>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Recuperaciones</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.recoveries || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Quites ganados</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.tackles?.ok || 0}/{selectedPlayer.stats.tackles?.total || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Interceptaciones</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.interceptions || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Despejes</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.clearances || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Duelos en tierra</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.groundDuels?.ok || 0}/{selectedPlayer.stats.groundDuels?.total || 0}
+                          </span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Duelos aéreos</span>
+                          <span className="text-white font-bold">
+                            {selectedPlayer.stats.aerialDuels?.ok || 0}/{selectedPlayer.stats.aerialDuels?.total || 0}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* DISCIPLINA Y DETALLES */}
+                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex flex-col gap-2.5">
+                      <h4 className="text-[9px] font-black text-rose-400 uppercase tracking-wider border-b border-white/5 pb-1">Disciplina y Otros</h4>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Pérdidas de balón</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.possessionLost || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Desposeído</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.dispossessed || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Faltas cometidas</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.foulsCommitted || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Faltas recibidas</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.foulsWon || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Fueras de juego</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.offsides || 0}</span>
+                        </div>
+                        <div className="flex justify-between py-0.5">
+                          <span className="text-slate-400">Toques totales</span>
+                          <span className="text-white font-bold">{selectedPlayer.stats.touches || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ARQUERO */}
+                    {selectedPlayer.position === "Arquero" && (
+                      <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3 flex flex-col gap-2.5 col-span-2">
+                        <h4 className="text-[9px] font-black text-amber-400 uppercase tracking-wider border-b border-white/5 pb-1">Estadísticas de Portería</h4>
+                        <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-[11px]">
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Atajadas</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.saves || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Atajadas clave</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.bigSaves || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Centros atrapados</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.highClaims || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Goles concedidos</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.goalsConceded || 0}</span>
+                          </div>
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-slate-400">Goles evitados</span>
+                            <span className="text-white font-bold">{selectedPlayer.stats.goalsPrevented || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer Modal */}
+            <div className="flex items-center justify-end p-4 border-t border-white/5 bg-[#0b0e14]/50">
+              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mr-auto">Datos provistos por elnine.com.ar</span>
+              <button 
+                onClick={() => setSelectedPlayer(null)}
+                className="px-5 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-xs font-bold transition-all border border-white/10"
+              >
+                Cerrar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
