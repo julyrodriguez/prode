@@ -294,17 +294,12 @@ export default function MatchDetailView() {
       .catch(() => setMatchPredictions([]));
   }, [id]);
 
-  // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos
+  // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos con actualización automática en vivo
   useEffect(() => {
     if (!id) return;
-    
-    // Si ya vienen las estadísticas detalladas en el objeto del partido, las usamos directamente
-    if (match && match.elnine_players && match.elnine_players.length > 0) {
-      setElninePlayers(match.elnine_players);
-      return;
-    }
 
     let isMounted = true;
+
     const fetchElnineStats = async () => {
       setLoadingElnine(true);
       try {
@@ -324,9 +319,33 @@ export default function MatchDetailView() {
       }
     };
 
-    fetchElnineStats();
-    return () => { isMounted = false; };
-  }, [id, match]);
+    // Si ya vienen en el match actual, cargarlos inicialmente
+    if (match && match.elnine_players && match.elnine_players.length > 0) {
+      setElninePlayers(match.elnine_players);
+    } else {
+      // Si no, hacer el fetch inicial
+      fetchElnineStats();
+    }
+
+    // Determinar si el partido está en vivo para activar polling
+    const statusType = typeof match?.status === 'string' ? match.status : match?.status?.type;
+    const isLiveMatch = statusType === 'inprogress';
+
+    // Establecer un intervalo de actualización automática cada 30 segundos si el partido está en vivo
+    let interval: NodeJS.Timeout | null = null;
+    if (isLiveMatch) {
+      interval = setInterval(() => {
+        fetchElnineStats();
+      }, 30000); // 30 segundos
+    }
+
+    return () => {
+      isMounted = false;
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [id, match?.status]);
 
   // Helper para vincular jugador de lineups con datos scrapeados
   const findScrapedPlayer = (p: any, isHome: boolean) => {
