@@ -209,9 +209,15 @@ img, svg, canvas, video, iframe {
 /* Tailwind generates opacity modifiers as CSS custom property on background-color,
    so we override using the generated class names with opacity suffix */
 [data-theme="light"] .bg-\[\#09090b\]\/80  { background-color: rgba(241,245,249,0.92) !important; }
+[data-theme="light"] .bg-\[\#0b1015\]\/40  { background-color: rgba(0,0,0,0.03) !important; }
 [data-theme="light"] .bg-\[\#0b1015\]\/60  { background-color: rgba(255,255,255,0.85) !important; }
 [data-theme="light"] .bg-\[\#0b1015\]\/80  { background-color: rgba(255,255,255,0.92) !important; }
+[data-theme="light"] .bg-\[\#0b1015\]\/85  { background-color: rgba(255,255,255,0.92) !important; }
 [data-theme="light"] .bg-\[\#0f172a\]\/95  { background-color: rgba(241,245,249,0.97) !important; }
+[data-theme="light"] .bg-\[\#121820\]\/30  { background-color: rgba(232, 237, 245, 0.40) !important; }
+[data-theme="light"] .bg-\[\#121820\]\/45  { background-color: rgba(232, 237, 245, 0.60) !important; }
+[data-theme="light"] .bg-\[\#121820\]\/80  { background-color: rgba(232, 237, 245, 0.85) !important; }
+[data-theme="light"] .bg-slate-900\/10     { background-color: rgba(0,0,0,0.02) !important; }
 
 /* --- Glow blobs --- */
 [data-theme="light"] .bg-indigo-600\/10  { background-color: rgba(99,102,241,0.06) !important; }
@@ -231,10 +237,15 @@ img, svg, canvas, video, iframe {
 /* --- Text colors --- */
 [data-theme="light"] .text-slate-100  { color: #0f172a !important; }
 [data-theme="light"] .text-slate-200  { color: #1e293b !important; }
+[data-theme="light"] .text-slate-250  { color: #1e293b !important; }
 [data-theme="light"] .text-slate-300  { color: #334155 !important; }
+[data-theme="light"] .text-slate-350  { color: #334155 !important; }
 [data-theme="light"] .text-slate-400  { color: #475569 !important; }
+[data-theme="light"] .text-slate-450  { color: #475569 !important; }
+[data-theme="light"] .text-slate-455  { color: #475569 !important; }
 [data-theme="light"] .text-slate-500  { color: #64748b !important; }
 [data-theme="light"] .text-slate-600  { color: #475569 !important; }
+[data-theme="light"] .text-slate-655  { color: #64748b !important; }
 [data-theme="light"] .text-white      { color: #0f172a !important; }
 
 /* --- Hover overrides --- */
@@ -299,6 +310,9 @@ img, svg, canvas, video, iframe {
 [data-theme="light"] .hover\:text-red-300:hover { color: #b91c1c !important; }
 
 /* --- CS2 Component Overrides --- */
+[data-theme="light"] .cs2-header { background: rgba(255, 255, 255, 0.80) !important; border-color: rgba(234, 88, 12, 0.25) !important; box-shadow: 0 8px 32px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.8) !important; }
+[data-theme="light"] .cs2-title { color: #0f172a !important; }
+[data-theme="light"] .cs2-subtitle { color: #475569 !important; }
 [data-theme="light"] .cs2-date-nav { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
 [data-theme="light"] .cs2-nav-btn { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06); color: var(--text-secondary); }
 [data-theme="light"] .cs2-nav-btn:hover { background: rgba(234,88,12,0.1); border-color: rgba(234,88,12,0.3); color: #ea580c; }
