@@ -230,5 +230,16 @@ def main():
         
     print(f"Se actualizó el archivo de mapeos en: {mappings_file}")
 
+    # 6. Escribir los resultados en data-processor/elnine_mappings.json
+    try:
+        dp_dir = os.path.join(os.path.dirname(__file__), "..", "..", "data-processor")
+        dp_file = os.path.join(dp_dir, "elnine_mappings.json")
+        os.makedirs(dp_dir, exist_ok=True)
+        with open(dp_file, "w", encoding="utf-8") as f:
+            json.dump(mappings, f, indent=2, ensure_ascii=False)
+        print(f"Se actualizó el archivo de mapeos JSON en: {dp_file}")
+    except Exception as e:
+        print(f"Advertencia: No se pudo guardar en data-processor/elnine_mappings.json: {e}")
+
 if __name__ == "__main__":
     main()

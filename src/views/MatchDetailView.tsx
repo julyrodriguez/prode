@@ -247,12 +247,13 @@ export default function MatchDetailView() {
       .catch(() => setMatchPredictions([]));
   }, [id]);
 
-  // Fetch estadísticas detalladas de elnine.com.ar
+  // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos
   useEffect(() => {
     if (!id) return;
-    const url = match?.elnineUrl || match?.elnine_url || elnineMappings[id];
-    if (!url) {
-      setElninePlayers(null);
+    
+    // Si ya vienen las estadísticas detalladas en el objeto del partido, las usamos directamente
+    if (match && match.elnine_players && match.elnine_players.length > 0) {
+      setElninePlayers(match.elnine_players);
       return;
     }
 
@@ -260,7 +261,7 @@ export default function MatchDetailView() {
     const fetchElnineStats = async () => {
       setLoadingElnine(true);
       try {
-        const res = await fetch(`/api/match-stats?url=${encodeURIComponent(url)}`);
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/elnine-players/${id}`);
         if (res.ok) {
           const data = await res.json();
           if (isMounted && data.players) {
@@ -268,7 +269,7 @@ export default function MatchDetailView() {
           }
         }
       } catch (err) {
-        console.error('Error fetching elnine stats:', err);
+        console.error('Error fetching elnine stats from database:', err);
       } finally {
         if (isMounted) {
           setLoadingElnine(false);
