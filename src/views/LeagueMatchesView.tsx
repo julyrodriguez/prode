@@ -286,8 +286,8 @@ const MatchRow = memo(({
       }}
     >
       {/* Columna Izquierda: Logo Torneo y Tiempo */}
-      <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-3 px-1">
-        <div className="w-5 h-5 md:w-6 md:h-6 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
+      <div className="row-span-2 flex flex-col items-center justify-center border-r border-white/5 py-2 px-1">
+        <div className="w-4 h-4 md:w-5 md:h-5 mb-1.5 opacity-80 flex items-center justify-center overflow-hidden shrink-0">
           {isRedirecting ? (
             <div className="animate-spin w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent" />
           ) : (
@@ -300,20 +300,20 @@ const MatchRow = memo(({
           )}
         </div>
         {viewMode === 'week' && match.startTimestamp && (
-          <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
+          <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
             {new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', {
               weekday: 'short', day: '2-digit'
             }).replace('.', '')}
           </span>
         )}
         {status.isLive ? (
-          <span className="text-red-500 text-[10px] md:text-xs font-black animate-pulse drop-shadow-[0_0_5px_rgba(239,68,68,0.5)] text-center leading-tight break-words">
+          <span className="text-red-500 text-[9px] md:text-[11px] font-black animate-pulse drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] text-center leading-tight break-words">
             {liveTime || "VIVO"}
           </span>
         ) : status.hasStarted ? (
-          <span className="text-slate-500 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-center leading-tight break-words">{status.label}</span>
+          <span className="text-slate-500 text-[8px] md:text-[9px] font-bold uppercase tracking-wider text-center leading-tight break-words">{status.label}</span>
         ) : (
-          <span className="text-slate-300 text-[11px] md:text-sm font-bold text-center leading-tight break-words">
+          <span className="text-slate-300 text-[10px] md:text-xs font-bold text-center leading-tight break-words">
             {match.startTimestamp
               ? new Date(match.startTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               : status.label}
@@ -322,9 +322,9 @@ const MatchRow = memo(({
       </div>
 
       {/* Columna Derecha: Equipos, Score y Prode */}
-      <div className="flex flex-col py-2 px-2 md:px-4 justify-center relative">
+      <div className="flex flex-col py-1.5 px-2 md:px-3 justify-center relative">
         {(match.round_name || showGoldStyle) && (
-          <div className="w-full text-center text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 opacity-80 flex items-center justify-center gap-2">
+          <div className="w-full text-center text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1 opacity-80 flex items-center justify-center gap-1.5">
             {match.round_name && <span>{match.round_name}</span>}
             {showGoldStyle && (
               <span className="bg-amber-500/25 text-amber-400 border border-amber-500/35 px-1.5 py-0.5 rounded text-[8px] font-black tracking-widest animate-pulse">
@@ -335,7 +335,7 @@ const MatchRow = memo(({
         )}
 
         {/* ── Fila de equipos + centro (scores/VS) ── */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 md:gap-4">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1 md:gap-3">
 
           {/* HOME TEAM */}
           <TeamHoverCard teamId={hId} teamName={hName} className="flex items-center justify-end gap-2 md:gap-3 text-right bg-transparent border-0 min-w-0">
@@ -343,13 +343,13 @@ const MatchRow = memo(({
               <div className="flex flex-col items-end justify-center min-w-0">
                 <div className="relative inline-block">
                   <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={true} />
-                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
+                  <span className="font-bold text-slate-100 text-xs sm:text-[13px] md:text-sm leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{hName}</span>
                 </div>
                 <div className="mt-1">
                   <TeamForm teamId={hId} align="left" />
                 </div>
               </div>
-              <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+              <div className="shrink-0 w-5.5 h-5.5 md:w-7 md:h-7 flex items-center justify-center">
                 <TeamLogo logoUrl={hLogo} teamName={hName} className="w-full h-full" />
               </div>
             </div>
@@ -358,7 +358,7 @@ const MatchRow = memo(({
           {/* CENTER: score / VS separator / dashes */}
           <div className="flex flex-col items-center justify-center shrink-0">
             {isPredictionMode && !status.hasStarted && !isLocked && !canPredict && (
-              <div className="text-amber-500/80 text-[9px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1">
+              <div className="text-amber-500/80 text-[8px] uppercase font-bold tracking-widest mb-1 flex items-center gap-1">
                 🔒
               </div>
             )}
@@ -366,33 +366,33 @@ const MatchRow = memo(({
             {canPredict ? (
               // En modo predicción el centro queda limpio — inputs van abajo
               <div className="flex items-center gap-1 px-2 py-1">
-                <span className="text-lg font-black text-slate-700">–</span>
+                <span className="text-sm font-black text-slate-700">–</span>
               </div>
             ) : status.hasStarted && (hScore !== null || aScore !== null) ? (
               // Scores live/finished
               <div className="flex flex-col items-center gap-0.5">
-                <div className={`flex items-center gap-2 md:gap-3 px-2 py-0.5 rounded ${status.isLive ? 'bg-red-500/[0.08] border border-red-500/20' : 'bg-black/30 border border-white/5'}`}>
-                  <span className={`text-base md:text-lg font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{hScore ?? 0}</span>
-                  <span className={`text-xs md:text-sm ${status.isLive ? 'text-red-500/50' : 'text-slate-500'}`}>-</span>
-                  <span className={`text-base md:text-lg font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{aScore ?? 0}</span>
+                <div className={`flex items-center gap-1.5 md:gap-2 px-1.5 py-0.5 rounded ${status.isLive ? 'bg-red-500/[0.08] border border-red-500/20' : 'bg-black/30 border border-white/5'}`}>
+                  <span className={`text-sm md:text-[15px] font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{hScore ?? 0}</span>
+                  <span className={`text-[10px] md:text-xs ${status.isLive ? 'text-red-500/50' : 'text-slate-500'}`}>-</span>
+                  <span className={`text-sm md:text-[15px] font-black ${status.isLive ? 'text-red-500' : 'text-slate-100'}`}>{aScore ?? 0}</span>
                 </div>
                 {status.isPenalties && (
                   <PenaltyScoreDisplay matchId={match.id} />
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 md:gap-3 px-2 py-0.5">
-                <span className="text-base md:text-lg font-black text-slate-500">-</span>
-                <span className="text-xs md:text-sm text-slate-600">-</span>
-                <span className="text-base md:text-lg font-black text-slate-500">-</span>
+              <div className="flex items-center gap-1.5 md:gap-2 px-1.5 py-0.5">
+                <span className="text-sm md:text-[15px] font-black text-slate-500">-</span>
+                <span className="text-[10px] md:text-xs text-slate-600">-</span>
+                <span className="text-sm md:text-[15px] font-black text-slate-500">-</span>
               </div>
             )}
 
             {/* Mi prode (si el partido empezó) */}
             {isPredictionMode && status.hasStarted && hasPrediction && (
               <div className="mt-1 flex items-center justify-center gap-1.5 px-2 py-[2px] bg-black/40 border border-white/5 rounded-full">
-                <span className="text-[8px] md:text-[9px] uppercase font-bold tracking-widest text-slate-500">Mi prode</span>
-                <span className="text-[10px] md:text-[11px] font-black text-emerald-400/90 tracking-widest">
+                <span className="text-[7.5px] md:text-[8px] uppercase font-bold tracking-widest text-slate-500">Mi prode</span>
+                <span className="text-[9px] md:text-[10px] font-black text-emerald-400/90 tracking-widest">
                   {prediction?.home}-{prediction?.away}
                 </span>
               </div>
@@ -402,13 +402,13 @@ const MatchRow = memo(({
           {/* AWAY TEAM */}
           <TeamHoverCard teamId={aId} teamName={aName} className="flex items-center justify-start gap-2 md:gap-3 text-left bg-transparent border-0 min-w-0">
             <div className="flex items-center justify-start gap-2 md:gap-3 text-left min-w-0">
-              <div className="shrink-0 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center">
+              <div className="shrink-0 w-5.5 h-5.5 md:w-7 md:h-7 flex items-center justify-center">
                 <TeamLogo logoUrl={aLogo} teamName={aName} className="w-full h-full" />
               </div>
               <div className="flex flex-col items-start justify-center min-w-0">
                 <div className="relative inline-block">
                   <TeamRedCards matchId={match.id} hasStarted={status.hasStarted} isLive={status.isLive} isHome={false} />
-                  <span className="font-bold text-slate-100 text-xs sm:text-sm md:text-[15px] leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
+                  <span className="font-bold text-slate-100 text-xs sm:text-[13px] md:text-sm leading-tight line-clamp-2 hover:text-emerald-400 transition-colors">{aName}</span>
                 </div>
                 <div className="mt-1">
                   <TeamForm teamId={aId} align="right" />
@@ -421,44 +421,44 @@ const MatchRow = memo(({
         {/* ── Inputs de predicción: fila separada DEBAJO de los equipos ── */}
         {canPredict && (
           <div
-            className="mt-2.5 pt-2.5 border-t border-emerald-500/10 flex items-center justify-center gap-3"
+            className="mt-1.5 pt-1.5 border-t border-emerald-500/10 flex items-center justify-center gap-2"
             onClick={e => e.stopPropagation()}
           >
             {/* Nombre local */}
-            <span className="text-[10px] text-slate-500 font-bold truncate max-w-[60px] text-right hidden sm:block">{hName}</span>
+            <span className="text-[9px] text-slate-500 font-bold truncate max-w-[50px] text-right hidden sm:block">{hName}</span>
 
             {/* HOME STEPPER */}
             <div className="flex items-center bg-black/40 border border-emerald-500/20 rounded-lg overflow-hidden hover:border-emerald-500/40 transition-colors">
-              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'home', -1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">−</button>
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'home', -1); }} className="w-6.5 h-7.5 sm:w-7 sm:h-8 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs sm:text-sm font-black transition-colors select-none">−</button>
               <input
                 type="text" inputMode="numeric" pattern="[0-9]*"
                 value={prediction?.home ?? ''}
                 onClick={e => e.stopPropagation()}
                 placeholder="0"
                 onChange={e => onPredictionChange(match.id, 'home', e.target.value.replace(/\D/g, '').slice(0, 2))}
-                className="w-8 h-9 bg-transparent text-center font-black text-base text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
+                className="w-6.5 h-7.5 sm:w-7 sm:h-8 bg-transparent text-center font-black text-xs sm:text-sm text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
               />
-              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'home', 1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">+</button>
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'home', 1); }} className="w-6.5 h-7.5 sm:w-7 sm:h-8 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs sm:text-sm font-black transition-colors select-none">+</button>
             </div>
 
-            <span className="text-slate-600 font-black text-lg">—</span>
+            <span className="text-slate-600 font-black text-xs">—</span>
 
             {/* AWAY STEPPER */}
             <div className="flex items-center bg-black/40 border border-emerald-500/20 rounded-lg overflow-hidden hover:border-emerald-500/40 transition-colors">
-              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'away', -1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">−</button>
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'away', -1); }} className="w-6.5 h-7.5 sm:w-7 sm:h-8 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs sm:text-sm font-black transition-colors select-none">−</button>
               <input
                 type="text" inputMode="numeric" pattern="[0-9]*"
                 value={prediction?.away ?? ''}
                 onClick={e => e.stopPropagation()}
                 placeholder="0"
                 onChange={e => onPredictionChange(match.id, 'away', e.target.value.replace(/\D/g, '').slice(0, 2))}
-                className="w-8 h-9 bg-transparent text-center font-black text-base text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
+                className="w-6.5 h-7.5 sm:w-7 sm:h-8 bg-transparent text-center font-black text-xs sm:text-sm text-emerald-400 outline-none placeholder:text-slate-700 p-0 m-0"
               />
-              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'away', 1); }} className="w-8 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-sm font-black transition-colors select-none">+</button>
+              <button onClick={e => { e.stopPropagation(); onStepScore(match.id, 'away', 1); }} className="w-6.5 h-7.5 sm:w-7 sm:h-8 flex items-center justify-center bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs sm:text-sm font-black transition-colors select-none">+</button>
             </div>
 
             {/* Nombre visitante */}
-            <span className="text-[10px] text-slate-500 font-bold truncate max-w-[60px] hidden sm:block">{aName}</span>
+            <span className="text-[9px] text-slate-500 font-bold truncate max-w-[50px] hidden sm:block">{aName}</span>
           </div>
         )}
       </div>
