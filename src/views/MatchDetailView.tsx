@@ -1365,9 +1365,9 @@ export default function MatchDetailView() {
 
       {/* MODAL DETALLES DEL JUGADOR */}
       {mounted && selectedPlayer && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md animate-fade-in">
           {/* Contenedor del Modal */}
-          <div className={`relative w-full max-w-2xl ${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0f141c] border-white/10 text-slate-200'} border rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}>
+          <div className={`relative w-full max-w-2xl ${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0f141c] border-white/10 text-slate-200'} border rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col`}>
             
             {/* Header Modal */}
             <div className={`flex items-center justify-between p-4 md:p-6 border-b ${isLight ? 'border-slate-100 bg-slate-50' : 'border-white/5 bg-gradient-to-r from-emerald-500/10 to-indigo-500/10'}`}>
@@ -1396,7 +1396,7 @@ export default function MatchDetailView() {
             </div>
 
             {/* Cuerpo del Modal */}
-            <div className="p-4 md:p-6 overflow-y-auto no-scrollbar flex-1 flex flex-col gap-6">
+            <div className="p-3 sm:p-4 md:p-6 overflow-y-auto no-scrollbar flex-1 flex flex-col gap-4 sm:gap-6">
               
               {!selectedPlayer.stats ? (
                 <div className={`flex flex-col items-center justify-center py-12 ${isLight ? 'text-slate-400' : 'text-slate-500'} gap-2`}>
@@ -1412,7 +1412,7 @@ export default function MatchDetailView() {
                     {selectedPlayer.position !== "Arquero" && (
                       <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5`}>
                         <h4 className={`text-[9px] font-black ${isLight ? 'text-emerald-600' : 'text-emerald-455'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Ataque</h4>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
                           <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                             <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Goles</span>
                             <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.goals || selectedPlayer.events?.goals || 0}</span>
@@ -1446,7 +1446,7 @@ export default function MatchDetailView() {
                     {/* DISTRIBUCIÓN */}
                     <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5`}>
                       <h4 className={`text-[9px] font-black ${isLight ? 'text-indigo-600' : 'text-indigo-400'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Distribución y Creación</h4>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
                         <div className={`flex justify-between py-0.5 col-span-2 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Pases efectivos</span>
                           <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>
@@ -1482,7 +1482,7 @@ export default function MatchDetailView() {
                     {/* DEFENSA Y DUELOS */}
                     <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5`}>
                       <h4 className={`text-[9px] font-black ${isLight ? 'text-cyan-600' : 'text-cyan-400'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Defensa y Duelos</h4>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Recuperaciones</span>
                           <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.recoveries || 0}</span>
@@ -1519,7 +1519,7 @@ export default function MatchDetailView() {
                     {/* DISCIPLINA Y DETALLES */}
                     <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5`}>
                       <h4 className={`text-[9px] font-black ${isLight ? 'text-rose-600' : 'text-rose-400'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Disciplina y Otros</h4>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Pérdidas de balón</span>
                           <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.possessionLost || 0}</span>
@@ -1551,7 +1551,7 @@ export default function MatchDetailView() {
                     {selectedPlayer.position === "Arquero" && (
                       <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5 col-span-2`}>
                         <h4 className={`text-[9px] font-black ${isLight ? 'text-amber-600' : 'text-amber-400'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Estadísticas de Portería</h4>
-                        <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-[11px]">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
                           <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                             <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Atajadas</span>
                             <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.saves || 0}</span>
