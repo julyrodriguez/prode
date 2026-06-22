@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { getMatch as getCachedMatch, setMatch as setCachedMatch, TTL_LIVE_MS } from '../lib/matchCache';
 import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
@@ -123,6 +124,23 @@ export default function MatchDetailView() {
   const [elninePlayers, setElninePlayers] = useState<any[] | null>(null);
   const [loadingElnine, setLoadingElnine] = useState<boolean>(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (selectedPlayer) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedPlayer]);
 
 
   const [mundialStandings, setMundialStandings] = useState<Record<string, any[]> | null>(null);
@@ -1345,7 +1363,7 @@ export default function MatchDetailView() {
       </div>
 
       {/* MODAL DETALLES DEL JUGADOR */}
-      {selectedPlayer && (
+      {mounted && selectedPlayer && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
           {/* Contenedor del Modal */}
           <div className={`relative w-full max-w-2xl ${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0f141c] border-white/10 text-slate-200'} border rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col`}>
@@ -1392,7 +1410,7 @@ export default function MatchDetailView() {
                     {/* ATAQUE */}
                     {selectedPlayer.position !== "Arquero" && (
                       <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5`}>
-                        <h4 className={`text-[9px] font-black ${isLight ? 'text-emerald-600' : 'text-emerald-450'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Ataque</h4>
+                        <h4 className={`text-[9px] font-black ${isLight ? 'text-emerald-600' : 'text-emerald-455'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Ataque</h4>
                         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
                           <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                             <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Goles</span>
@@ -1466,7 +1484,7 @@ export default function MatchDetailView() {
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Recuperaciones</span>
-                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`">{selectedPlayer.stats.recoveries || 0}</span>
+                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.recoveries || 0}</span>
                         </div>
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Quites ganados</span>
@@ -1476,11 +1494,11 @@ export default function MatchDetailView() {
                         </div>
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Interceptaciones</span>
-                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`">{selectedPlayer.stats.interceptions || 0}</span>
+                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.interceptions || 0}</span>
                         </div>
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Despejes</span>
-                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`">{selectedPlayer.stats.clearances || 0}</span>
+                          <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.clearances || 0}</span>
                         </div>
                         <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                           <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Duelos en tierra</span>
@@ -1564,7 +1582,6 @@ export default function MatchDetailView() {
 
             {/* Footer Modal */}
             <div className={`flex items-center justify-end p-4 border-t ${isLight ? 'border-slate-100 bg-slate-50' : 'border-white/5 bg-[#0b0e14]/50'}`}>
-              <span className={`text-[8px] font-bold ${isLight ? 'text-slate-400' : 'text-slate-550'} uppercase tracking-wider mr-auto`}>Datos provistos por elnine.com.ar</span>
               <button 
                 onClick={() => setSelectedPlayer(null)}
                 className={`px-5 py-1.5 ${isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200 hover:border-slate-350' : 'bg-white/5 hover:bg-white/10 text-white border-white/10'} rounded-lg text-xs font-bold transition-all border`}
@@ -1574,7 +1591,8 @@ export default function MatchDetailView() {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
