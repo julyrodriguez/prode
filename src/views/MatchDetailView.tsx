@@ -336,6 +336,100 @@ export default function MatchDetailView() {
     }) || null;
   };
 
+  // Helper para calcular minutos jugados a partir de lineups e incidencias de sustitución
+  const getPlayerMinutesPlayed = (player: any) => {
+    if (!match || !match.lineups) return null;
+
+    const normalizeString = (str: string) => {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    };
+
+    // 1. Buscar al jugador en las alineaciones
+    const lp = [
+      ...(match.lineups.home?.players || []),
+      ...(match.lineups.away?.players || [])
+    ].find((item: any) => {
+      if (item.jerseyNumber !== player.number) return false;
+      const itemClean = normalizeString(item.player?.name || item.player?.shortName || '');
+      const pCleanFull = normalizeString(player.nameFull || '');
+      const pCleanShort = normalizeString(player.name || '');
+      return pCleanFull.includes(itemClean) || itemClean.includes(pCleanShort) || pCleanShort.includes(itemClean);
+    });
+
+    if (!lp) return null;
+
+    const isStarter = !lp.substitute;
+    const playerNameForMatching = (player.name || lp.player?.shortName || lp.player?.name || '').toLowerCase();
+    const playerFullNameForMatching = (player.nameFull || lp.player?.name || lp.player?.shortName || '').toLowerCase();
+
+    const matchesPlayer = (incPlayer: any) => {
+      if (!incPlayer) return false;
+      const incName = normalizeString(incPlayer.name || incPlayer.shortName || '');
+      const pName = normalizeString(playerNameForMatching);
+      const pFull = normalizeString(playerFullNameForMatching);
+      return pFull.includes(incName) || pName.includes(incName) || incName.includes(pName);
+    };
+
+    const subs = (match.incidents || []).filter((inc: any) => inc.incidentType === 'substitution');
+    
+    const subOut = subs.find((inc: any) => matchesPlayer(inc.playerOut));
+    const subIn = subs.find((inc: any) => matchesPlayer(inc.playerIn));
+
+    let endMinute = 90;
+    if (match.status) {
+      if (match.status.type === 'finished') {
+        endMinute = 90;
+      } else if (match.status.type === 'inprogress') {
+        const minStr = match.status.minute || match.status.description || '';
+        const parsedMin = parseInt(minStr.replace("'", ""), 10);
+        endMinute = isNaN(parsedMin) ? 90 : parsedMin;
+      } else if (match.status.type === 'notstarted') {
+        endMinute = 0;
+      }
+    }
+
+    if (isStarter) {
+      if (subOut) {
+        return {
+          minutes: subOut.time,
+          details: `Titular (jugó ${subOut.time}')`
+        };
+      } else {
+        return {
+          minutes: endMinute,
+          details: match.status?.type === 'inprogress' 
+            ? `Titular (jugando, ${endMinute}')` 
+            : `Titular (jugó ${endMinute}')`
+        };
+      }
+    } else {
+      if (subIn) {
+        const subOutAfterIn = subs.find((inc: any) => matchesPlayer(inc.playerOut) && inc.time > subIn.time);
+        if (subOutAfterIn) {
+          const played = subOutAfterIn.time - subIn.time;
+          return {
+            minutes: played,
+            details: `Entró a los ${subIn.time}' y salió a los ${subOutAfterIn.time}' (jugó ${played}')`
+          };
+        } else {
+          const played = endMinute - subIn.time;
+          const playedClean = played >= 0 ? played : 0;
+          return {
+            minutes: playedClean,
+            details: match.status?.type === 'inprogress'
+              ? `Entró a los ${subIn.time}' (jugando, ${playedClean}')`
+              : `Entró a los ${subIn.time}' (jugó ${playedClean}')`
+          };
+        }
+      } else {
+        return {
+          minutes: 0,
+          details: 'Suplente (no ingresó)'
+        };
+      }
+    }
+  };
+
 
   if (loading) {
     return (
@@ -1384,6 +1478,10 @@ export default function MatchDetailView() {
                   </h3>
                   <span className={`text-[10px] md:text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'} font-medium`}>
                     {selectedPlayer.position} • {selectedPlayer.age ? `${selectedPlayer.age} años` : ''} {selectedPlayer.height ? `• ${selectedPlayer.height}m` : ''}
+                    {(() => {
+                      const minsInfo = getPlayerMinutesPlayed(selectedPlayer);
+                      return minsInfo ? ` • ${minsInfo.details}` : '';
+                    })()}
                   </span>
                 </div>
               </div>
@@ -1402,6 +1500,14 @@ export default function MatchDetailView() {
                 <div className={`flex flex-col items-center justify-center py-12 ${isLight ? 'text-slate-400' : 'text-slate-500'} gap-2`}>
                   <span className="text-3xl">📭</span>
                   <p className="text-xs font-semibold">Sin estadísticas detalladas disponibles para este partido.</p>
+                  {(() => {
+                    const minsInfo = getPlayerMinutesPlayed(selectedPlayer);
+                    return minsInfo ? (
+                      <p className={`text-[11px] mt-2 px-3 py-1 rounded border ${isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-500/10 border-slate-500/20 text-slate-400'}`}>
+                        Estado: <strong className={isLight ? 'text-slate-800' : 'text-slate-300'}>{minsInfo.details}</strong>
+                      </p>
+                    ) : null;
+                  })()}
                 </div>
               ) : (
                 <>
