@@ -772,12 +772,14 @@ export default function MundialRankingView() {
           debt,
           subtitle,
           rewardText,
+          rewardPoints,
           accent,
         }: {
           entry: RankingEntry | undefined;
           debt: string;
           subtitle: string;
           rewardText: string;
+          rewardPoints?: string;
           accent: string;
         }) => {
           if (!entry) return null;
@@ -863,12 +865,17 @@ export default function MundialRankingView() {
                 className="relative z-10 w-full flex flex-col items-center py-2 px-3 text-center"
                 style={{ background: `${accent}22` }}
               >
-                <div className="text-[7px] uppercase tracking-[0.25em] mb-0.5" style={{ color: accent }}>
+                <div className="text-[7px] uppercase tracking-[0.25em] mb-1" style={{ color: accent }}>
                   Recompensa
                 </div>
-                <div className="text-[11px] font-black text-amber-100 uppercase leading-tight">
+                <div className="text-[12px] font-black text-amber-100 uppercase leading-tight tracking-wider">
                   {rewardText}
                 </div>
+                {rewardPoints && (
+                  <div className="text-[10px] font-black uppercase leading-tight mt-0.5" style={{ color: accent }}>
+                    {rewardPoints}
+                  </div>
+                )}
               </div>
 
               {/* Bottom stars decoration */}
@@ -880,19 +887,20 @@ export default function MundialRankingView() {
         };
 
         return (
-          <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4 max-w-sm mx-auto w-full">
             <WantedCard
               entry={wantedUser1}
               debt="$15.000"
               subtitle="Deudor del Prode"
-              rewardText="Se busca vivo o muerto"
+              rewardText="Vivo o Muerto"
               accent="#f59e0b"
             />
             <WantedCard
               entry={lastUser}
               debt="$10.000"
               subtitle="Último del Ranking"
-              rewardText="Muertos o vivos · 10 puntos"
+              rewardText="Vivo o Muerto"
+              rewardPoints="🎯 10 Puntos"
               accent="#ef4444"
             />
           </div>
