@@ -379,7 +379,8 @@ export default function MundialTablaView() {
     const { type, num } = parsed;
     const sourceMatch = getMatchByNumber(stagesList, num);
     if (!sourceMatch) {
-      return { name: p.short_name || name, isReal: false };
+      const cleanLabel = type === 'winner' ? `Ganador Partido ${num}` : `Perdedor Partido ${num}`;
+      return { name: cleanLabel, isReal: false };
     }
 
     const sWinnerIdx = sourceMatch.winner;
@@ -397,22 +398,56 @@ export default function MundialTablaView() {
       }
     }
 
-    // Unresolved source match: let's get names of contestants
+    // Unresolved source match: return the clean label
+    const cleanLabel = type === 'winner' ? `Ganador Partido ${num}` : `Perdedor Partido ${num}`;
+    return { name: cleanLabel, isReal: false };
+  };
+
+  const getContestantsLabel = (p: any, stagesList: any[]): string => {
+    const name = p.nombre || p.name || '';
+    const parsed = parseMatchNumber(name);
+    if (!parsed) {
+      return translateTeamToSpanish(name);
+    }
+    const { num } = parsed;
+    const sourceMatch = getMatchByNumber(stagesList, num);
+    if (!sourceMatch) return name;
+    
     const p0 = sourceMatch.participants?.[0];
     const p1 = sourceMatch.participants?.[1];
+    if (p0 && p1) {
+      const r0 = resolveParticipantName(p0, stagesList);
+      const r1 = resolveParticipantName(p1, stagesList);
+      return `${r0.name} vs ${r1.name}`;
+    }
+    return name;
+  };
 
+  const getCompactContestantsLabel = (p: any, stagesList: any[]): string => {
+    const name = p.nombre || p.name || '';
+    const parsed = parseMatchNumber(name);
+    if (!parsed) {
+      return translateTeamToSpanish(name);
+    }
+    const { num } = parsed;
+    const sourceMatch = getMatchByNumber(stagesList, num);
+    if (!sourceMatch) return name;
+    
+    const p0 = sourceMatch.participants?.[0];
+    const p1 = sourceMatch.participants?.[1];
     if (p0 && p1) {
       const r0 = resolveParticipantName(p0, stagesList);
       const r1 = resolveParticipantName(p1, stagesList);
       
-      const name0 = r0.isReal ? r0.name : (p0.short_name || p0.name);
-      const name1 = r1.isReal ? r1.name : (p1.short_name || p1.name);
+      const parsed0 = parseMatchNumber(p0.nombre || p0.name || '');
+      const parsed1 = parseMatchNumber(p1.nombre || p1.name || '');
       
-      const label = type === 'winner' ? 'Ganador entre' : 'Perdedor entre';
-      return { name: `${label} ${name0} y ${name1}`, isReal: false };
+      const label0 = r0.isReal ? r0.name : (parsed0 ? `${parsed0.type === 'winner' ? 'G' : 'P'}${parsed0.num}` : r0.name);
+      const label1 = r1.isReal ? r1.name : (parsed1 ? `${parsed1.type === 'winner' ? 'G' : 'P'}${parsed1.num}` : r1.name);
+      
+      return `${label0} vs ${label1}`;
     }
-
-    return { name: p.short_name || name, isReal: false };
+    return name;
   };
 
   const getBackgroundColorForPromotion = (promoDesc: string | null) => {
@@ -650,6 +685,7 @@ export default function MundialTablaView() {
                             const pName = resolved.name;
                             const localId = resolved.isReal ? getTeamIdByName(pName) : null;
                             const hasId = localId !== null;
+                            const tooltipText = resolved.isReal ? pName : getContestantsLabel(p, stages);
 
                             const isWinner = match.winner === pIdx || (hasId && match.winner === localId);
                             const isLoser = match.winner !== -1 && !isWinner;
@@ -659,13 +695,14 @@ export default function MundialTablaView() {
                               <div 
                                 key={pIdx} 
                                 onClick={() => hasId && router.push(`/team/${localId}`)}
+                                title={tooltipText}
                                 className={`flex items-center justify-between p-0.5 md:p-1 rounded transition-all ${
                                   hasId ? 'cursor-pointer hover:bg-white/5' : ''
                                 } ${
                                   isWinner ? 'bg-amber-500/10 text-white font-bold' : 'text-slate-350'
                                 } ${isLoser ? 'opacity-40' : ''}`}
                               >
-                                <div className="flex items-center gap-1 md:gap-1.5 truncate pr-1">
+                                <div className="flex items-center gap-1 md:gap-1.5 min-w-0 flex-grow pr-1">
                                   <div className="w-4 h-4 md:w-4.5 md:h-4.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">
                                     {hasId ? (
                                       <TeamLogo
@@ -677,9 +714,16 @@ export default function MundialTablaView() {
                                       <div className="text-[7px] text-slate-655">🏳️</div>
                                     )}
                                   </div>
-                                  <span className={`text-[9px] md:text-[10px] truncate ${isWinner ? 'text-amber-400 font-extrabold' : 'font-medium'}`}>
-                                    {pName}
-                                  </span>
+                                  <div className="flex flex-col min-w-0 flex-grow">
+                                    <span className={`text-[9px] md:text-[10px] truncate block ${isWinner ? 'text-white font-bold' : 'font-medium'}`}>
+                                      {pName}
+                                    </span>
+                                    {!resolved.isReal && (
+                                      <span className="text-[8px] text-slate-455 font-normal truncate block mt-0.5">
+                                        {getCompactContestantsLabel(p, stages)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                                 
                                 {score !== null && score !== undefined && (
