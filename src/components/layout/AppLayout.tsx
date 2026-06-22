@@ -541,34 +541,7 @@ export default function AppLayout() {
                   )}
                 </button>
 
-                {isMundialActive && (
-                  <div className="pl-4 ml-6 border-l border-white/10 flex flex-col gap-1 mt-1">
-                    {currentLeagueTabs.map((tab) => {
-                      const isTabActive = activeTabId === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          onClick={() => {
-                            handleTabSelect(tab.id);
-                            setMobileSidebarOpen(false);
-                          }}
-                          className={`
-                            flex items-center p-2 rounded-xl text-xs font-semibold transition-all duration-100 cursor-pointer text-left
-                            ${isTabActive
-                              ? 'bg-emerald-500/10 text-emerald-400 font-bold'
-                              : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }
-                          `}
-                        >
-                          <span className="mr-2 text-base flex-shrink-0">{tab.icon}</span>
-                          <span className="md:opacity-0 md:group-hover:opacity-100 opacity-100 transition-opacity duration-150 whitespace-nowrap">
-                            {tab.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+
               </div>
             );
           })}
