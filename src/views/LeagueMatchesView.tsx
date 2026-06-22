@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, usePathname } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
@@ -249,7 +249,12 @@ const MatchRow = memo(({
   onStepScore
 }: MatchRowProps) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [isRedirecting, setIsRedirecting] = useState(false);
+
+  useEffect(() => {
+    setIsRedirecting(false);
+  }, [pathname]);
 
   const status = parseMatchStatus(match);
   const hScore = getScore(match, 'home');

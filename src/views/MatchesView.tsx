@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { prefetchMatches } from '../lib/matchCache';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
@@ -63,6 +63,7 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
 
 export default function MatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
 
   const [allMatches, setAllMatches] = useState<Match[]>([]);
@@ -78,6 +79,10 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const [isSaving, setIsSaving] = useState(false);
   const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);;
   const [redirectingMatchId, setRedirectingMatchId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setRedirectingMatchId(null);
+  }, [pathname]);
 
   // Filtros de "En vivo" y collapsible de competencias
   const [showOnlyLive, setShowOnlyLive] = useState(false);
