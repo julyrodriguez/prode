@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, Clock, Calendar, X, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
 import TeamHoverCard from '../components/TeamHoverCard';
 import { elnineMappings } from '../lib/elnineMappings';
@@ -129,6 +129,7 @@ export default function MatchDetailView() {
   const [sortField, setSortField] = useState<'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon' | 'tackles'>('shots');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showAllPlayerStats, setShowAllPlayerStats] = useState(false);
+  const [showSubstitutes, setShowSubstitutes] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -1249,64 +1250,76 @@ export default function MatchDetailView() {
                 {/* SUPLENTES */}
                 {((match.lineups.home?.players || []).some((p: any) => p.substitute) || 
                   (match.lineups.away?.players || []).some((p: any) => p.substitute)) && (
-                  <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2">
-                    <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center mb-1">Suplentes</h4>
-                    <div className="flex w-full gap-2">
-                      {/* LOCAL SUPLENTES */}
-                      <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
-                        {(match.lineups.home?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
-                          const scrapedPlayer = findScrapedPlayer(p, true);
-                          const hasStats = !!scrapedPlayer?.stats;
-                          return (
-                            <div 
-                              key={i} 
-                              onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
-                              className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
-                            >
-                              <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/5 text-emerald-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/10 shadow-sm shrink-0">
-                                {p.jerseyNumber}
-                              </span>
-                              <div className="flex flex-col truncate overflow-hidden w-full">
-                                <div className="flex items-center gap-1.5 w-full min-w-0">
-                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
-                                  {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowSubstitutes(!showSubstitutes)}
+                      className="w-full text-center py-2 text-[10px] md:text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-3 flex items-center justify-center gap-1.5"
+                    >
+                      {showSubstitutes ? 'Ocultar suplentes' : 'Ver suplentes'}
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showSubstitutes ? 'rotate-180' : ''}`} />
+                    </button>
+                    {showSubstitutes && (
+                      <div className="mt-2 pt-3 border-t border-white/5 flex flex-col gap-2 animate-fade-in">
+                        <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center mb-1">Suplentes</h4>
+                        <div className="flex w-full gap-2">
+                          {/* LOCAL SUPLENTES */}
+                          <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
+                            {(match.lineups.home?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
+                              const scrapedPlayer = findScrapedPlayer(p, true);
+                              const hasStats = !!scrapedPlayer?.stats;
+                              return (
+                                <div 
+                                  key={i} 
+                                  onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                                  className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
+                                >
+                                  <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/5 text-emerald-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/10 shadow-sm shrink-0">
+                                    {p.jerseyNumber}
+                                  </span>
+                                  <div className="flex flex-col truncate overflow-hidden w-full">
+                                    <div className="flex items-center gap-1.5 w-full min-w-0">
+                                      <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                      {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
+                                    </div>
+                                    <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                                  </div>
                                 </div>
-                                <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                              );
+                            })}
+                          </div>
 
-                      {/* Divisor */}
-                      <div className="w-px bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
+                          {/* Divisor */}
+                          <div className="w-px bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
 
-                      {/* VISITANTE SUPLENTES */}
-                      <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
-                        {(match.lineups.away?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
-                          const scrapedPlayer = findScrapedPlayer(p, false);
-                          const hasStats = !!scrapedPlayer?.stats;
-                          return (
-                            <div 
-                              key={i} 
-                              onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
-                              className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
-                            >
-                              <div className="flex flex-col truncate overflow-hidden w-full items-end">
-                                <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
-                                  {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
-                                  <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                          {/* VISITANTE SUPLENTES */}
+                          <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
+                            {(match.lineups.away?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
+                              const scrapedPlayer = findScrapedPlayer(p, false);
+                              const hasStats = !!scrapedPlayer?.stats;
+                              return (
+                                <div 
+                                  key={i} 
+                                  onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                                  className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
+                                >
+                                  <div className="flex flex-col truncate overflow-hidden w-full items-end">
+                                    <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
+                                      {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
+                                      <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                    </div>
+                                    <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                                  </div>
+                                  <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/5 text-indigo-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/10 shadow-sm shrink-0">
+                                    {p.jerseyNumber}
+                                  </span>
                                 </div>
-                                <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                              </div>
-                              <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/5 text-indigo-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/10 shadow-sm shrink-0">
-                                {p.jerseyNumber}
-                              </span>
-                            </div>
-                          );
-                        })}
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
