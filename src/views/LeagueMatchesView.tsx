@@ -7,7 +7,6 @@ import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
-import CopaBracket from '../components/CopaBracket';
 import TeamHoverCard from '../components/TeamHoverCard';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
@@ -1269,10 +1268,6 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
           </div>
         </div>
-      )}
-
-      {activeLeague.id === 'liga-arg' && !isPredictionMode && (
-        <CopaBracket />
       )}
 
       {/* Selector de Filtro (Todos / En Vivo) */}
