@@ -5,6 +5,9 @@ import datetime
 import os
 import sys
 
+# NOTA DE APRENDIZAJE: Este mapa traduce los nombres de equipos de nuestra BD (Football-Data API)
+# a los nombres correspondientes en castellano tal cual se usan en los slugs de elnine.com.ar.
+# Debe mantenerse actualizado si se añaden selecciones con diferentes grafías en la API.
 TRANSLATIONS = {
     # CONMEBOL - Sudamérica
     'Brazil': 'Brasil',
@@ -196,6 +199,9 @@ def main():
     elnine_matches = [] # lista de diccionarios: { slug, url, home_slug, away_slug, date_str }
     
     # regex para capturar enlaces de partidos: /partido/home-vs-away-yyyy-mm-dd-id
+    # NOTA DE APRENDIZAJE: Los IDs generados por Next.js en elnine.com.ar pueden contener guiones medios (-)
+    # y guiones bajos (_) (ej. C-pmrJR24t, UkKu9IV9ui). Por ende, el patrón al final es [a-zA-Z0-9\-_]+ para evitar truncar
+    # los enlaces y que la vinculación falle silenciosamente.
     match_pattern = re.compile(r'/partido/([a-z0-9\-]+-vs-[a-z0-9\-]+-(\d{4}-\d{2}-\d{2})-[a-zA-Z0-9\-_]+)')
     
     for i, date_str in enumerate(sorted_dates):
