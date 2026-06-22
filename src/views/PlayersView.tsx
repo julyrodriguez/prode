@@ -30,6 +30,7 @@ interface MatchDetailHistory {
   position: string;
   age?: number;
   height?: string;
+  events?: Record<string, any>;
 }
 
 export default function PlayersView() {
@@ -389,6 +390,31 @@ export default function PlayersView() {
                                 <span>{m.awayTeam.name}</span>
                               </div>
                               <span className="text-[10px] text-slate-500 block mt-1">{date}</span>
+
+                              {m.events && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {m.events.yellowCard && (
+                                    <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider">
+                                      🟨 Amarilla
+                                    </span>
+                                  )}
+                                  {m.events.redCard && (
+                                    <span className="bg-red-500/10 text-red-555 border border-red-500/20 text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider">
+                                      🟥 Roja
+                                    </span>
+                                  )}
+                                  {m.events.subInMinute !== undefined && (
+                                    <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold">
+                                      🔄 Entró {m.events.subInMinute}'
+                                    </span>
+                                  )}
+                                  {m.events.subOutMinute !== undefined && (
+                                    <span className="bg-rose-500/10 text-rose-455 border border-rose-500/20 text-[9px] px-1.5 py-0.5 rounded font-bold">
+                                      🔄 Salió {m.events.subOutMinute}'
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             {m.status.type === 'inprogress' ? (
                               <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 border border-emerald-500/20 rounded-full font-bold">
@@ -403,19 +429,59 @@ export default function PlayersView() {
 
                           {/* Individual Stats in Match */}
                           {m.stats ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2.5 text-xs">
                               {m.stats.minutesPlayed !== undefined && (
                                 <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
                                   <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Minutos</span>
                                   <span className="font-extrabold text-slate-300">{m.stats.minutesPlayed}'</span>
                                 </div>
                               )}
+                              
                               {m.stats.goals !== undefined && m.stats.goals > 0 && (
-                                <div className="bg-emerald-500/5 p-2 rounded-xl border border-emerald-500/10">
-                                  <span className="text-emerald-500/70 block text-[9px] uppercase font-bold tracking-wider">Goles</span>
+                                <div className="bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/25">
+                                  <span className="text-emerald-400 block text-[9px] uppercase font-bold tracking-wider">Goles</span>
                                   <span className="font-extrabold text-emerald-400">{m.stats.goals}</span>
                                 </div>
                               )}
+
+                              {m.stats.assists !== undefined && m.stats.assists > 0 && (
+                                <div className="bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/25">
+                                  <span className="text-indigo-400 block text-[9px] uppercase font-bold tracking-wider">Asistencias</span>
+                                  <span className="font-extrabold text-indigo-400">{m.stats.assists}</span>
+                                </div>
+                              )}
+
+                              {m.stats.shots !== undefined && m.stats.shots > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Tiros (Al arco)</span>
+                                  <span className="font-extrabold text-slate-300">
+                                    {m.stats.shots}
+                                    {m.stats.shotsOnTarget !== undefined && ` (${m.stats.shotsOnTarget})`}
+                                  </span>
+                                </div>
+                              )}
+
+                              {m.stats.foulsCommitted !== undefined && m.stats.foulsCommitted > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Faltas Cometidas</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.foulsCommitted}</span>
+                                </div>
+                              )}
+
+                              {m.stats.foulsWon !== undefined && m.stats.foulsWon > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Faltas Recibidas</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.foulsWon}</span>
+                                </div>
+                              )}
+
+                              {m.stats.saves !== undefined && (m.position === 'Arquero' || m.stats.saves > 0) && (
+                                <div className="bg-yellow-500/10 p-2 rounded-xl border border-yellow-500/25">
+                                  <span className="text-yellow-400 block text-[9px] uppercase font-bold tracking-wider">Atajadas</span>
+                                  <span className="font-extrabold text-yellow-400">{m.stats.saves}</span>
+                                </div>
+                              )}
+
                               {m.stats.passes && (
                                 <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
                                   <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Pases</span>
@@ -425,34 +491,77 @@ export default function PlayersView() {
                                   </span>
                                 </div>
                               )}
+
                               {m.stats.touches !== undefined && (
                                 <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
                                   <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Toques</span>
                                   <span className="font-extrabold text-slate-300">{m.stats.touches}</span>
                                 </div>
                               )}
+
                               {m.stats.tackles && (
                                 <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
                                   <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Entradas</span>
                                   <span className="font-extrabold text-slate-300">{m.stats.tackles.ok}/{m.stats.tackles.total}</span>
                                 </div>
                               )}
+
                               {m.stats.recoveries !== undefined && (
                                 <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
                                   <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Recuperaciones</span>
                                   <span className="font-extrabold text-slate-300">{m.stats.recoveries}</span>
                                 </div>
                               )}
-                              {m.stats.saves !== undefined && m.position === 'Arquero' && (
-                                <div className="bg-yellow-500/5 p-2 rounded-xl border border-yellow-500/10">
-                                  <span className="text-yellow-500/70 block text-[9px] uppercase font-bold tracking-wider">Atajadas</span>
-                                  <span className="font-extrabold text-yellow-400">{m.stats.saves}</span>
+
+                              {m.stats.interceptions !== undefined && m.stats.interceptions > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Intercepciones</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.interceptions}</span>
                                 </div>
                               )}
+
+                              {m.stats.clearances !== undefined && m.stats.clearances > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Despejes</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.clearances}</span>
+                                </div>
+                              )}
+
                               {m.stats.possessionLost !== undefined && (
                                 <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
                                   <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Pérdidas</span>
                                   <span className="font-extrabold text-slate-400">{m.stats.possessionLost}</span>
+                                </div>
+                              )}
+
+                              {m.stats.dispossessed !== undefined && m.stats.dispossessed > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Quitado/Robado</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.dispossessed}</span>
+                                </div>
+                              )}
+
+                              {m.stats.dribbles && m.stats.dribbles.total > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Regates</span>
+                                  <span className="font-extrabold text-slate-300">
+                                    {m.stats.dribbles.ok}/{m.stats.dribbles.total}
+                                    <small className="text-slate-500 font-normal ml-0.5">({m.stats.dribbles.total ? Math.round((m.stats.dribbles.ok / m.stats.dribbles.total) * 100) : 0}%)</small>
+                                  </span>
+                                </div>
+                              )}
+
+                              {m.stats.groundDuels && m.stats.groundDuels.total > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Duelos Suelo</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.groundDuels.ok}/{m.stats.groundDuels.total}</span>
+                                </div>
+                              )}
+
+                              {m.stats.aerialDuels && m.stats.aerialDuels.total > 0 && (
+                                <div className="bg-slate-950/40 p-2 rounded-xl border border-slate-900/40">
+                                  <span className="text-slate-500 block text-[9px] uppercase font-bold tracking-wider">Duelos Aéreos</span>
+                                  <span className="font-extrabold text-slate-300">{m.stats.aerialDuels.ok}/{m.stats.aerialDuels.total}</span>
                                 </div>
                               )}
                             </div>

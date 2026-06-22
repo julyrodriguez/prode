@@ -196,7 +196,7 @@ def main():
     elnine_matches = [] # lista de diccionarios: { slug, url, home_slug, away_slug, date_str }
     
     # regex para capturar enlaces de partidos: /partido/home-vs-away-yyyy-mm-dd-id
-    match_pattern = re.compile(r'/partido/([a-z0-9\-]+-vs-[a-z0-9\-]+-(\d{4}-\d{2}-\d{2})-[a-zA-Z0-9\-]+)')
+    match_pattern = re.compile(r'/partido/([a-z0-9\-]+-vs-[a-z0-9\-]+-(\d{4}-\d{2}-\d{2})-[a-zA-Z0-9\-_]+)')
     
     for i, date_str in enumerate(sorted_dates):
         print(f"[{i+1}/{len(sorted_dates)}] Buscando partidos en fecha: {date_str}...")
