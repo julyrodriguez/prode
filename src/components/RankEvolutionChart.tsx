@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 interface MatchInfo {
   matchId: number;
@@ -54,6 +55,8 @@ export const getColorForUser = (userId: string): string => {
 };
 
 export default function RankEvolutionChart({ history, users, activeUserId }: RankEvolutionChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme !== 'light';
   const [hoveredUserId, setHoveredUserId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [hoveredStepIndex, setHoveredStepIndex] = useState<number | null>(null);
@@ -200,7 +203,9 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
     <div className="w-full flex flex-col gap-6">
       
       {/* ── Legend pills ── */}
-      <div className="flex flex-wrap gap-2 justify-center bg-slate-950/95 backdrop-blur-md p-4 border border-slate-800 rounded-2xl shadow-xl">
+      <div className={`flex flex-wrap gap-2 justify-center backdrop-blur-md p-4 rounded-2xl border transition-all duration-300 shadow-xl ${
+        isDark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200 shadow-md'
+      }`}>
         {users.map((u) => {
           const color = getColorForUser(u.userId);
           const isHovered = hoveredUserId === u.userId;
@@ -218,10 +223,10 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
               className={`
                 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer select-none
                 ${isHighlighted 
-                  ? 'scale-105 text-white font-black border-white/20' 
+                  ? `scale-105 font-black ${isDark ? 'text-white border-white/20' : 'text-slate-900 border-slate-300'}` 
                   : isAnyHighlighted 
-                    ? 'border-transparent opacity-20 scale-95 text-slate-400' 
-                    : 'border-white/5 opacity-90 text-slate-200 hover:text-white hover:border-white/10'}
+                    ? `border-transparent opacity-20 scale-95 text-slate-400` 
+                    : `${isDark ? 'border-white/5 opacity-90 text-slate-200 hover:text-white hover:border-white/10' : 'border-slate-100 opacity-90 text-slate-600 hover:text-slate-900 hover:border-slate-300'}`}
               `}
               style={{
                 backgroundColor: isSelected ? `${color}25` : isHovered ? `${color}15` : `${color}08`,
@@ -231,8 +236,8 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             >
               <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
               <span>{u.name}</span>
-              {isMe && <span className="text-[9px] px-1 bg-white/10 rounded uppercase tracking-wider text-slate-300">Vos</span>}
-              {isSelected && <span className="text-[9px] font-bold text-white bg-white/20 px-1 rounded ml-0.5">📌</span>}
+              {isMe && <span className={`text-[9px] px-1 rounded uppercase tracking-wider ${isDark ? 'bg-white/10 text-slate-300' : 'bg-slate-100 text-slate-655'}`}>Vos</span>}
+              {isSelected && <span className={`text-[9px] font-bold px-1 rounded ml-0.5 ${isDark ? 'text-white bg-white/20' : 'text-slate-900 bg-slate-100'}`}>📌</span>}
             </button>
           );
         })}
@@ -249,13 +254,15 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       {/* ── Grouping Toggle (only for history > 5) ── */}
       {history.length > 5 && (
         <div className="flex justify-center -mb-2">
-          <div className="flex bg-slate-950/95 backdrop-blur-md border border-slate-800 p-1 rounded-2xl shadow-lg gap-1">
+          <div className={`flex backdrop-blur-md p-1 rounded-2xl shadow-lg border transition-all duration-300 gap-1 ${
+            isDark ? 'bg-slate-950/95 border-slate-800' : 'bg-white/95 border-slate-200'
+          }`}>
             <button
               onClick={() => setIsGroupedBy5(false)}
               className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider transition-all cursor-pointer ${
                 !isGroupedBy5
                   ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : `${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`
               }`}
             >
               TODAS LAS FECHAS
@@ -265,7 +272,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
               className={`px-4 py-2 rounded-xl text-xs font-black tracking-wider transition-all cursor-pointer ${
                 isGroupedBy5
                   ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.35)]'
-                  : 'text-slate-400 hover:text-slate-200'
+                  : `${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800'}`
               }`}
             >
               CADA 5 FECHAS
@@ -275,7 +282,9 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       )}
 
       {/* ── Chart Container ── */}
-      <div className="relative w-full bg-slate-950/90 border border-slate-800 rounded-[2.5rem] p-4 md:p-6 overflow-hidden shadow-2xl">
+      <div className={`relative w-full rounded-[2.5rem] p-4 md:p-6 overflow-hidden transition-all duration-300 shadow-2xl border ${
+        isDark ? 'bg-slate-950/90 border-slate-800' : 'bg-white border-slate-200 shadow-xl'
+      }`}>
         
         {/* SVG Wrapper */}
         <div className="w-full overflow-x-auto no-scrollbar scroll-smooth">
@@ -311,7 +320,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     y1={yVal}
                     x2={width - paddingRight}
                     y2={yVal}
-                    stroke="rgba(255, 255, 255, 0.12)"
+                    stroke={isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)"}
                     strokeDasharray="4 4"
                     strokeWidth={1}
                   />
@@ -319,7 +328,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     x={paddingLeft - 7}
                     y={yVal + 4}
                     textAnchor="end"
-                    className="text-xs font-black fill-slate-200"
+                    className={`text-xs font-black ${isDark ? 'fill-slate-200' : 'fill-slate-600'}`}
                   >
                     {pos}º
                   </text>
@@ -340,7 +349,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     y1={paddingTop}
                     x2={xVal}
                     y2={height - paddingBottom}
-                    stroke="rgba(255, 255, 255, 0.08)"
+                    stroke={isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(0, 0, 0, 0.05)"}
                     strokeDasharray="2 4"
                     strokeWidth={1}
                   />
@@ -349,7 +358,7 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                       x={xVal}
                       y={height - paddingBottom + 22}
                       textAnchor="middle"
-                      className="text-[11px] font-black fill-slate-300 uppercase tracking-wider"
+                      className={`text-[11px] font-black uppercase tracking-wider ${isDark ? 'fill-slate-300' : 'fill-slate-500'}`}
                     >
                       {step.originalIdx === 0 ? 'Inicio' : `P${step.originalIdx}`}
                     </text>
@@ -451,9 +460,13 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
       </div>
 
       {/* ── Detalle de la Fecha (Info Panel) ── */}
-      <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col gap-4">
+      <div className={`backdrop-blur-md border rounded-3xl p-5 md:p-6 shadow-xl flex flex-col gap-4 transition-all duration-300 ${
+        isDark ? 'bg-slate-950/90 border-slate-800' : 'bg-white border-slate-200 shadow-md'
+      }`}>
         {/* Panel Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/5 pb-3">
+        <div className={`flex flex-col md:flex-row md:items-center justify-between gap-3 border-b pb-3 ${
+          isDark ? 'border-white/5' : 'border-slate-100'
+        }`}>
           <div className="flex items-center gap-3">
             <span className="text-2xl">🗓️</span>
             <div className="flex flex-col">
@@ -470,7 +483,11 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
             </div>
           </div>
           {activeStep.match?.stage && (
-            <span className="self-start md:self-auto text-[10px] font-black uppercase tracking-wider bg-white/5 border border-white/10 px-3 py-1 rounded-full text-slate-300">
+            <span className={`self-start md:self-auto text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${
+              isDark 
+                ? 'bg-white/5 border-white/10 text-slate-300' 
+                : 'bg-slate-50 border-slate-200 text-slate-600'
+            }`}>
               {activeStep.match.stage}
             </span>
           )}
@@ -494,7 +511,9 @@ export default function RankEvolutionChart({ history, users, activeUserId }: Ran
                     ? 'scale-[1.02]'
                     : isMe
                       ? 'bg-amber-500/10 border-amber-500/35 shadow-[0_0_15px_rgba(245,158,11,0.06)]'
-                      : 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60'
+                      : isDark
+                        ? 'bg-slate-900/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/60'
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
                 }`}
                 style={isSelected ? {
                   borderColor: color,
