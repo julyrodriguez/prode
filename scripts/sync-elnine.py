@@ -6,66 +6,126 @@ import os
 import sys
 
 TRANSLATIONS = {
+    # CONMEBOL - Sudamérica
     'Brazil': 'Brasil',
+    'Argentina': 'Argentina',
+    'Colombia': 'Colombia',
+    'Ecuador': 'Ecuador',
+    'Uruguay': 'Uruguay',
+    'Paraguay': 'Paraguay',
+    'Peru': 'Perú',
+    'Perú': 'Perú',
+    'Venezuela': 'Venezuela',
+    'Bolivia': 'Bolivia',
+    'Chile': 'Chile',
+
+    # UEFA - Europa
     'France': 'Francia',
     'Germany': 'Alemania',
     'Spain': 'España',
     'England': 'Inglaterra',
     'Belgium': 'Bélgica',
     'Croatia': 'Croacia',
-    'Netherlands': 'Países Bajos',
+    'Netherlands': 'Holanda',
     'Holland': 'Holanda',
-    'Japan': 'Japón',
-    'Saudi Arabia': 'Arabia Saudita',
-    'South Korea': 'Corea del Sur',
-    'Switzerland': 'Suiza',
-    'Denmark': 'Dinamarca',
-    'Poland': 'Polonia',
-    'Mexico': 'México',
-    'Morocco': 'Marruecos',
-    'United States': 'Estados Unidos',
-    'USA': 'Estados Unidos',
-    'Cameroon': 'Camerún',
-    'Canada': 'Canadá',
-    'Ecuador': 'Ecuador',
-    'Senegal': 'Senegal',
-    'Tunisia': 'Túnez',
-    'Wales': 'Gales',
-    'Qatar': 'Qatar',
-    'Serbia': 'Serbia',
-    'Ghana': 'Ghana',
-    'Uruguay': 'Uruguay',
-    'Argentina': 'Argentina',
     'Portugal': 'Portugal',
-    'Italy': 'Italia',
-    'Colombia': 'Colombia',
-    'Chile': 'Chile',
-    'Peru': 'Perú',
-    'Paraguay': 'Paraguay',
-    'Venezuela': 'Venezuela',
-    'Bolivia': 'Bolivia',
-    'Algeria': 'Argelia',
+    'Switzerland': 'Suiza',
     'Austria': 'Austria',
-    'Egypt': 'Egipto',
-    'Sweden': 'Suecia',
     'Norway': 'Noruega',
+    'Sweden': 'Suecia',
     'Scotland': 'Escocia',
-    'Ireland': 'Irlanda',
-    'Greece': 'Grecia',
     'Turkey': 'Turquía',
-    'Ukraine': 'Ucrania',
+    'Türkiye': 'Turquía',               # nombre oficial FIFA
     'Czech Republic': 'República Checa',
     'Czechia': 'República Checa',
+    'Bosnia and Herzegovina': 'Bosnia-Herzegovina',
+    'Bosnia & Herzegovina': 'Bosnia-Herzegovina',
+    'Bosnia-Herzegovina': 'Bosnia-Herzegovina',
+    'Bosnia': 'Bosnia-Herzegovina',     # sinónimo abreviado
+    'Ukraine': 'Ucrania',
     'Romania': 'Rumania',
     'Russia': 'Rusia',
-    'New Zealand': 'Nueva Zelanda',
+    'Greece': 'Grecia',
+    'Ireland': 'Irlanda',
+    'Northern Ireland': 'Irlanda del Norte',
+    'Hungary': 'Hungría',
+    'Denmark': 'Dinamarca',
+    'Poland': 'Polonia',
+    'Serbia': 'Serbia',
+    'Wales': 'Gales',
+    'Italy': 'Italia',
+
+    # AFC - Asia
+    'Japan': 'Japón',
+    'Saudi Arabia': 'Arabia Saudita',
+    'KSA': 'Arabia Saudita',            # sinónimo abreviado
+    'South Korea': 'Corea del Sur',
+    'Korea Republic': 'Corea del Sur',  # nombre FIFA oficial
+    'Republic of Korea': 'Corea del Sur',
+    'Korea': 'Corea del Sur',
+    'Iran': 'Irán',
+    'IR Iran': 'Irán',                  # nombre FIFA oficial
+    'Islamic Republic of Iran': 'Irán',
+    'Iraq': 'Irak',
+    'Irak': 'Irak',
+    'Jordan': 'Jordania',
+    'Jordania': 'Jordania',
+    'Australia': 'Australia',
+    'Qatar': 'Qatar',
+    'Uzbekistan': 'Uzbekistán',
+    'Uzbekistán': 'Uzbekistán',
+
+    # CAF - África
+    'Morocco': 'Marruecos',
+    'Marruecos': 'Marruecos',
+    'Senegal': 'Senegal',
+    'Algeria': 'Argelia',
+    'Egypt': 'Egipto',
+    'Ghana': 'Ghana',
+    'Tunisia': 'Túnez',
+    'Cameroon': 'Camerún',
     'South Africa': 'Sudáfrica',
+    'Cape Verde': 'Islas Cabo Verde',
+    'Cabo Verde': 'Islas Cabo Verde',
+    'Cape Verde Islands': 'Islas Cabo Verde',
+    'Côte d\'Ivoire': 'Costa de Marfil',
+    'Cote d\'Ivoire': 'Costa de Marfil',
+    'Ivory Coast': 'Costa de Marfil',
+    'DR Congo': 'RD Congo',
+    'Democratic Republic of Congo': 'RD Congo',
+    'Congo DR': 'RD Congo',
+    'RD Congo': 'RD Congo',
+    'DRC': 'RD Congo',                  # sigla en inglés
+
+    # CONCACAF - Norte y Centroamérica
+    'United States': 'Estados Unidos',
+    'USA': 'Estados Unidos',
+    'US': 'Estados Unidos',
+    'USMNT': 'Estados Unidos',          # sigla popular
+    'Canada': 'Canadá',
+    'Mexico': 'México',
+    'México': 'México',
     'Panama': 'Panamá',
+    'Panamá': 'Panamá',
+    'Haiti': 'Haití',
+    'Haïti': 'Haití',                   # con diéresis
+    'Haití': 'Haití',
+    'Curacao': 'Curazao',
+    'Curaçao': 'Curazao',               # con cedilla
+    'Curazao': 'Curazao',
     'Costa Rica': 'Costa Rica',
     'Honduras': 'Honduras',
     'El Salvador': 'El Salvador',
     'Jamaica': 'Jamaica',
-    'Hungary': 'Hungría'
+
+    # OFC - Oceanía
+    'New Zealand': 'Nueva Zelanda',
+    'New Zealand All Whites': 'Nueva Zelanda', # apodo
+    'NZ': 'Nueva Zelanda',
+
+    # Otros
+    'Israel': 'Israel',
+    'Wales': 'Gales',
 }
 
 def translate_team(name):
@@ -136,7 +196,7 @@ def main():
     elnine_matches = [] # lista de diccionarios: { slug, url, home_slug, away_slug, date_str }
     
     # regex para capturar enlaces de partidos: /partido/home-vs-away-yyyy-mm-dd-id
-    match_pattern = re.compile(r'/partido/([a-z0-9\-]+-vs-[a-z0-9\-]+-(\d{4}-\d{2}-\d{2})-[a-zA-Z0-9]+)')
+    match_pattern = re.compile(r'/partido/([a-z0-9\-]+-vs-[a-z0-9\-]+-(\d{4}-\d{2}-\d{2})-[a-zA-Z0-9\-]+)')
     
     for i, date_str in enumerate(sorted_dates):
         print(f"[{i+1}/{len(sorted_dates)}] Buscando partidos en fecha: {date_str}...")
@@ -155,7 +215,7 @@ def main():
             if len(parts) == 2:
                 home_part = parts[0]
                 away_part_full = parts[1]
-                away_part = re.sub(r'-\d{4}-\d{2}-\d{2}-[a-zA-Z0-9]+$', '', away_part_full)
+                away_part = re.split(r'-\d{4}-\d{2}-\d{2}', away_part_full)[0]
                 
                 match_entry = {
                     "slug": slug,

@@ -190,6 +190,7 @@ const GENERAL_TABS = [
   { id: 'minijuegos', label: 'Juegos', path: '/liga/mundial/minijuegos', icon: '🎮' },
   { id: 'ranking', label: 'Ranking', path: '/ranking', icon: '🏅' },
   { id: 'estadisticas', label: 'Estadísticas', path: '/stats', icon: '📊' },
+  { id: 'jugadores', label: 'Jugadores', path: '/jugadores', icon: '🏃‍♂️' },
 ] as const;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -278,7 +279,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const generalTabActive = isGeneralSection
     ? (pathname === '/ranking' ? 'ranking'
       : pathname === '/stats' ? 'estadisticas'
-        : 'partidos')
+        : pathname === '/jugadores' ? 'jugadores'
+          : 'partidos')
     : null;
 
   return (
