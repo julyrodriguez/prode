@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
 import TeamHoverCard from '../components/TeamHoverCard';
 import { elnineMappings } from '../lib/elnineMappings';
@@ -179,6 +179,74 @@ const formatTabName = (key: string) => {
   return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
 };
 
+const getPositionBadgeColor = (pos: string) => {
+  switch (pos) {
+    case 'Arquero':
+    case 'Goalkeeper':
+      return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+    case 'Defensa':
+    case 'Defensor':
+    case 'Defender':
+      return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+    case 'Centrocampista':
+    case 'Mediocampista':
+    case 'Volante Central':
+    case 'Midfielder':
+      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    case 'Delantero':
+    case 'Enganche':
+    case 'Forward':
+    case 'Striker':
+      return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    default:
+      return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+  }
+};
+
+const resolvePlayerCountry = async (matches: any[], name: string): Promise<string | null> => {
+  if (!matches || matches.length === 0) return null;
+
+  if (matches.length > 1) {
+    const counts: Record<string, number> = {};
+    matches.forEach(m => {
+      if (m.homeTeam?.name) counts[m.homeTeam.name] = (counts[m.homeTeam.name] || 0) + 1;
+      if (m.awayTeam?.name) counts[m.awayTeam.name] = (counts[m.awayTeam.name] || 0) + 1;
+    });
+    const common = Object.keys(counts).find(team => counts[team] === matches.length);
+    if (common) return common;
+  }
+
+  // Single match fallback lookup
+  const singleMatch = matches[0];
+  try {
+    const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/detail/${singleMatch.matchId}`);
+    if (res.ok) {
+      const matchDetail = await res.json();
+      const lineups = matchDetail.lineups;
+      if (lineups) {
+        const matchName = (p: any) => {
+          const pName = p.player?.name?.toLowerCase() || '';
+          const pShort = p.player?.shortName?.toLowerCase() || '';
+          const search = name.toLowerCase();
+          return pName.includes(search) || search.includes(pName) || pShort.includes(search) || search.includes(pShort);
+        };
+
+        const homePlayers = lineups.home?.players || [];
+        const inHome = homePlayers.some(matchName);
+        if (inHome) return singleMatch.homeTeam?.name || null;
+
+        const awayPlayers = lineups.away?.players || [];
+        const inAway = awayPlayers.some(matchName);
+        if (inAway) return singleMatch.awayTeam?.name || null;
+      }
+    }
+  } catch (e) {
+    console.error('Error resolving country', e);
+  }
+
+  return singleMatch.homeTeam?.name || null;
+};
+
 export default function MatchDetailView() {
   const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
@@ -198,6 +266,11 @@ export default function MatchDetailView() {
   const [elninePlayers, setElninePlayers] = useState<any[] | null>(null);
   const [loadingElnine, setLoadingElnine] = useState<boolean>(false);
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+  const [selectedPrePlayerName, setSelectedPrePlayerName] = useState<string | null>(null);
+  const [prePlayerMatches, setPrePlayerMatches] = useState<any[]>([]);
+  const [loadingPrePlayerDetail, setLoadingPrePlayerDetail] = useState(false);
+  const [prePlayerCountry, setPrePlayerCountry] = useState<string | null>(null);
+  const [visiblePreMatchesLimit, setVisiblePreMatchesLimit] = useState(5);
   const [mounted, setMounted] = useState(false);
 
   const [sortField, setSortField] = useState<'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon' | 'tackles'>('shots');
@@ -217,7 +290,7 @@ export default function MatchDetailView() {
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
-    if (selectedPlayer) {
+    if (selectedPlayer || selectedPrePlayerName) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -225,7 +298,7 @@ export default function MatchDetailView() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selectedPlayer]);
+  }, [selectedPlayer, selectedPrePlayerName]);
 
   // Manejar el gesto de "ir para atrás" para cerrar el modal de jugador sin salir de la página
   useEffect(() => {
@@ -247,6 +320,65 @@ export default function MatchDetailView() {
       }
     };
   }, [selectedPlayer]);
+
+  // Fetch details for the pre-match tapped player
+  useEffect(() => {
+    if (!selectedPrePlayerName) {
+      setPrePlayerMatches([]);
+      setPrePlayerCountry(null);
+      setVisiblePreMatchesLimit(5);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchPrePlayerDetail = async () => {
+      try {
+        setLoadingPrePlayerDetail(true);
+        const encodedName = encodeURIComponent(selectedPrePlayerName);
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/mundial/players/detail?name=${encodedName}`);
+        if (!res.ok) throw new Error('Error al obtener el detalle del jugador');
+        const json = await res.json();
+        if (json.success && json.data && isMounted) {
+          const matches = json.data || [];
+          setPrePlayerMatches(matches);
+          
+          // Resolver el país
+          const country = await resolvePlayerCountry(matches, selectedPrePlayerName);
+          if (isMounted) {
+            setPrePlayerCountry(country);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (isMounted) setLoadingPrePlayerDetail(false);
+      }
+    };
+
+    fetchPrePlayerDetail();
+    return () => { isMounted = false; };
+  }, [selectedPrePlayerName]);
+
+  // Manejar el gesto de "ir para atrás" para cerrar el modal de pre-jugador sin salir de la página
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!selectedPrePlayerName) return;
+
+    window.history.pushState({ modalOpen: 'prePlayerStats' }, '');
+
+    const handlePopState = () => {
+      setSelectedPrePlayerName(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (window.history.state?.modalOpen === 'prePlayerStats') {
+        window.history.back();
+      }
+    };
+  }, [selectedPrePlayerName]);
 
 
   const [mundialStandings, setMundialStandings] = useState<Record<string, any[]> | null>(null);
@@ -778,6 +910,118 @@ export default function MatchDetailView() {
     'PEN': 'Penales',
   } as Record<string, string>)[text] ?? text;
   // ─────────────────────────────────────────────────────────────────────────────
+  const selectedPrePlayerAggInfo = globalPlayers.find(p => p.nameFull === selectedPrePlayerName);
+
+  // Compute minutes and aggregated stats for pre player modal
+  const totalMinPre = prePlayerMatches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
+  const playedMatchesCountPre = prePlayerMatches.filter(m => (m.stats?.minutesPlayed || 0) > 0).length || 1;
+  const avgMinutesPre = totalMinPre / playedMatchesCountPre;
+
+  const aggregatedPre = prePlayerMatches.reduce((acc, m) => {
+    const s = m.stats || {};
+    acc.minutesPlayed += s.minutesPlayed || 0;
+    acc.goals += s.goals || 0;
+    acc.assists += s.assists || 0;
+    acc.shots += s.shots || 0;
+    acc.shotsOnTarget += s.shotsOnTarget || 0;
+    acc.foulsCommitted += s.foulsCommitted || 0;
+    acc.foulsWon += s.foulsWon || 0;
+    acc.saves += s.saves || 0;
+    if (s.passes) {
+      acc.passesOk += s.passes.ok || 0;
+      acc.passesTotal += s.passes.total || 0;
+    }
+    acc.touches += s.touches || 0;
+    if (s.tackles) {
+      acc.tacklesOk += s.tackles.ok || 0;
+      acc.tacklesTotal += s.tackles.total || 0;
+    }
+    acc.recoveries += s.recoveries || 0;
+    acc.interceptions += s.interceptions || 0;
+    acc.clearances += s.clearances || 0;
+    acc.possessionLost += s.possessionLost || 0;
+    acc.dispossessed += s.dispossessed || 0;
+    if (s.dribbles) {
+      acc.dribblesOk += s.dribbles.ok || 0;
+      acc.dribblesTotal += s.dribbles.total || 0;
+    }
+    if (s.groundDuels) {
+      acc.groundDuelsOk += s.groundDuels.ok || 0;
+      acc.groundDuelsTotal += s.groundDuels.total || 0;
+    }
+    if (s.aerialDuels) {
+      acc.aerialDuelsOk += s.aerialDuels.ok || 0;
+      acc.aerialDuelsTotal += s.aerialDuels.total || 0;
+    }
+    return acc;
+  }, {
+    minutesPlayed: 0,
+    goals: 0,
+    assists: 0,
+    shots: 0,
+    shotsOnTarget: 0,
+    foulsCommitted: 0,
+    foulsWon: 0,
+    saves: 0,
+    passesOk: 0,
+    passesTotal: 0,
+    touches: 0,
+    tacklesOk: 0,
+    tacklesTotal: 0,
+    recoveries: 0,
+    interceptions: 0,
+    clearances: 0,
+    possessionLost: 0,
+    dispossessed: 0,
+    dribblesOk: 0,
+    dribblesTotal: 0,
+    groundDuelsOk: 0,
+    groundDuelsTotal: 0,
+    aerialDuelsOk: 0,
+    aerialDuelsTotal: 0
+  });
+
+  const statsListPre = [
+    { label: 'Goles', value: aggregatedPre.goals },
+    { label: 'Asistencias', value: aggregatedPre.assists },
+    { label: 'Goles + Asistencias', value: aggregatedPre.goals + aggregatedPre.assists },
+    { label: 'Tiros', value: aggregatedPre.shots },
+    { label: 'Tiros al Arco', value: aggregatedPre.shotsOnTarget },
+    { label: 'Faltas Cometidas', value: aggregatedPre.foulsCommitted },
+    { label: 'Faltas Recibidas', value: aggregatedPre.foulsWon },
+    { label: 'Atajadas', value: aggregatedPre.saves, show: (selectedPrePlayerAggInfo?.position === 'Arquero' || selectedPrePlayerAggInfo?.position === 'Goalkeeper' || aggregatedPre.saves > 0) },
+    { label: 'Recuperaciones', value: aggregatedPre.recoveries },
+    { label: 'Intercepciones', value: aggregatedPre.interceptions },
+    { label: 'Despejes', value: aggregatedPre.clearances },
+    { label: 'Toques', value: aggregatedPre.touches },
+    { label: 'Pérdidas', value: aggregatedPre.possessionLost },
+    { label: 'Quitado/Robado', value: aggregatedPre.dispossessed },
+    { 
+      label: 'Pases', 
+      value: aggregatedPre.passesOk, 
+      extra: aggregatedPre.passesTotal ? `${aggregatedPre.passesOk}/${aggregatedPre.passesTotal} (${Math.round((aggregatedPre.passesOk/aggregatedPre.passesTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Regates', 
+      value: aggregatedPre.dribblesOk, 
+      extra: aggregatedPre.dribblesTotal ? `${aggregatedPre.dribblesOk}/${aggregatedPre.dribblesTotal} (${Math.round((aggregatedPre.dribblesOk/aggregatedPre.dribblesTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Entradas', 
+      value: aggregatedPre.tacklesOk, 
+      extra: aggregatedPre.tacklesTotal ? `${aggregatedPre.tacklesOk}/${aggregatedPre.tacklesTotal} (${Math.round((aggregatedPre.tacklesOk/aggregatedPre.tacklesTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Duelos Suelo', 
+      value: aggregatedPre.groundDuelsOk, 
+      extra: aggregatedPre.groundDuelsTotal ? `${aggregatedPre.groundDuelsOk}/${aggregatedPre.groundDuelsTotal} (${Math.round((aggregatedPre.groundDuelsOk/aggregatedPre.groundDuelsTotal)*100)}%)` : null 
+    },
+    { 
+      label: 'Duelos Aéreos', 
+      value: aggregatedPre.aerialDuelsOk, 
+      extra: aggregatedPre.aerialDuelsTotal ? `${aggregatedPre.aerialDuelsOk}/${aggregatedPre.aerialDuelsTotal} (${Math.round((aggregatedPre.aerialDuelsOk/aggregatedPre.aerialDuelsTotal)*100)}%)` : null 
+    },
+  ];
 
   return (
     <>
@@ -1509,7 +1753,8 @@ export default function MatchDetailView() {
                             return (
                               <tr 
                                 key={pIdx}
-                                className="hover:bg-white/[0.01] transition-colors group"
+                                onClick={() => setSelectedPrePlayerName(player.nameFull || player.name)}
+                                className="hover:bg-white/[0.02] active:scale-[0.99] transition-all cursor-pointer group"
                               >
                                 <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
                                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${player.isHome ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
@@ -2253,6 +2498,309 @@ export default function MatchDetailView() {
               <button 
                 onClick={() => setSelectedPlayer(null)}
                 className={`px-5 py-1.5 ${isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200 hover:border-slate-350' : 'bg-white/5 hover:bg-white/10 text-white border-white/10'} rounded-lg text-xs font-bold transition-all border`}
+              >
+                Cerrar
+              </button>
+            </div>
+
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {mounted && selectedPrePlayerName && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          {/* Dismiss overlay */}
+          <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPrePlayerName(null)} />
+          
+          <div className="relative w-full max-w-sm sm:max-w-md max-h-[85vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
+            {/* Modal Header */}
+            <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-black text-xs border border-emerald-500/20 shrink-0">
+                  {selectedPrePlayerAggInfo?.number || '#'}
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-slate-100">{selectedPrePlayerName}</h2>
+                  <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                    <span className={`text-[6px] uppercase font-black tracking-wider px-1 py-0.2 border rounded-full ${getPositionBadgeColor(selectedPrePlayerAggInfo?.position || '')}`}>
+                      {selectedPrePlayerAggInfo?.position || 'Jugador'}
+                    </span>
+                    {prePlayerCountry && (
+                      <span className="text-[9px] text-emerald-400 font-bold">• {prePlayerCountry}</span>
+                    )}
+                    {selectedPrePlayerAggInfo?.age && (
+                      <span className="text-[9px] text-slate-500">• {selectedPrePlayerAggInfo.age} años</span>
+                    )}
+                    {selectedPrePlayerAggInfo?.height && (
+                      <span className="text-[9px] text-slate-500">• {selectedPrePlayerAggInfo.height}m</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedPrePlayerName(null)}
+                className="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 p-1 rounded-full border border-white/10 transition-all flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 no-scrollbar">
+              {/* Aggregated Quick Info */}
+              <div className="grid grid-cols-5 gap-1 bg-black/20 rounded-lg p-1.5 border border-white/5 text-[9px]">
+                <div className="text-center border-r border-white/10">
+                  <Calendar className="w-3 h-3 mx-auto mb-0.5 text-slate-400" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
+                  <span className="text-xs font-black text-slate-200">
+                    {prePlayerMatches.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length}
+                  </span>
+                </div>
+                <div className="text-center border-r border-white/10">
+                  <Activity className="w-3 h-3 mx-auto mb-0.5 text-teal-400" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Min. Totales</span>
+                  <span className="text-xs font-black text-slate-200">{totalMinPre}</span>
+                </div>
+                <div className="text-center border-r border-white/10">
+                  <Activity className="w-3 h-3 mx-auto mb-0.5 text-indigo-400" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Min. Promedio</span>
+                  <span className="text-xs font-black text-slate-200">{avgMinutesPre.toFixed(1)}'</span>
+                </div>
+                <div className="text-center border-r border-white/10">
+                  <Award className="w-3 h-3 mx-auto mb-0.5 text-emerald-400" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Goles</span>
+                  <span className="text-xs font-black text-emerald-400">{selectedPrePlayerAggInfo?.goals || 0}</span>
+                </div>
+                <div className="text-center">
+                  <Sparkles className="w-3 h-3 mx-auto mb-0.5 text-amber-500" />
+                  <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Asistencias</span>
+                  <span className="text-xs font-black text-amber-500">{selectedPrePlayerAggInfo?.assists || 0}</span>
+                </div>
+              </div>
+
+              {/* Aggregated Stats Table */}
+              <div className="bg-black/20 border border-white/5 rounded-xl p-2.5">
+                <h3 className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+                  <Activity className="w-3 h-3 text-emerald-400" /> Estadísticas Acumuladas
+                </h3>
+                
+                <div className="overflow-x-auto -mx-2.5 px-2.5">
+                  <table className="w-full text-left text-[9px] text-slate-350 border-collapse">
+                    <thead>
+                      <tr className="border-b border-white/10 text-[8px] uppercase tracking-wider text-slate-500">
+                        <th className="py-1 font-bold">Estadística</th>
+                        <th className="py-1 text-right font-bold">Total</th>
+                        <th className="py-1 text-right font-bold">x Part</th>
+                        <th className="py-1 text-right font-bold">x Prom</th>
+                        <th className="py-1 text-right font-bold">x 90'</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {statsListPre.map((st, i) => {
+                        if (st.show === false) return null;
+                        const matchesCount = prePlayerMatches.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length || 1;
+                        const perMatch = (st.value / matchesCount).toFixed(2);
+                        const perProm = totalMinPre > 0 ? ((st.value / totalMinPre) * avgMinutesPre).toFixed(2) : '0.00';
+                        const per90 = totalMinPre > 0 ? ((st.value / totalMinPre) * 90).toFixed(2) : '0.00';
+                        return (
+                          <tr key={i} className="hover:bg-white/5 transition-colors">
+                            <td className="py-1 pr-1.5 text-slate-300 font-medium whitespace-nowrap">
+                              {st.label}
+                              {st.extra && <span className="block text-[7px] text-slate-500 font-normal mt-0.5">{st.extra}</span>}
+                            </td>
+                            <td className="py-1 text-right text-slate-100 font-semibold">{st.value}</td>
+                            <td className="py-1 text-right text-emerald-400 font-semibold">{perMatch}</td>
+                            <td className="py-1 text-right text-amber-500 font-semibold">{perProm}</td>
+                            <td className="py-1 text-right text-teal-400 font-semibold">{per90}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Match History Details */}
+              <div>
+                <h3 className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-emerald-400" /> Historial de Partidos
+                </h3>
+
+                {loadingPrePlayerDetail ? (
+                  <div className="flex justify-center p-6">
+                    <div className="animate-spin w-5 h-5 rounded-full border-t-2 border-emerald-400 border-r-2 border-transparent"></div>
+                  </div>
+                ) : prePlayerMatches.length === 0 ? (
+                  <p className="text-slate-500 text-[10px] text-center py-4">No se encontraron detalles de partidos.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {[...prePlayerMatches]
+                      .sort((a, b) => b.startTimestamp - a.startTimestamp)
+                      .slice(0, visiblePreMatchesLimit)
+                      .map((m, idx) => {
+                        const date = m.startTimestamp ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-AR', {
+                          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        }) : 'Fecha no disp.';
+                        return (
+                          <div key={idx} className="bg-black/20 border border-white/5 rounded-lg p-2 hover:border-white/10 transition-all">
+                            {/* Match Header */}
+                            <div className="flex justify-between items-start gap-2 mb-1.5 pb-1.5 border-b border-white/5">
+                              <div>
+                                <div className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-slate-300">
+                                  <span>{m.homeTeam.name}</span>
+                                  <span className="bg-white/5 text-slate-400 px-1 py-0.2 rounded text-[8px] border border-white/5">
+                                    {m.homeTeam.score} - {m.awayTeam.score}
+                                  </span>
+                                  <span>{m.awayTeam.name}</span>
+                                </div>
+                                <span className="text-[8px] text-slate-500 block mt-0.5">{date}</span>
+
+                                {m.events && (
+                                  <div className="flex flex-wrap gap-1 mt-1.5">
+                                    {m.events.yellowCard && (
+                                      <span className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
+                                        🟨 Amarilla
+                                      </span>
+                                    )}
+                                    {m.events.redCard && (
+                                      <span className="bg-red-500/10 text-red-500 border border-red-500/20 text-[7px] px-1 py-0.1 rounded font-black tracking-wider">
+                                        🟥 Roja
+                                      </span>
+                                    )}
+                                    {m.events.subInMinute !== undefined && (
+                                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
+                                        🔄 Entró {m.events.subInMinute}'
+                                      </span>
+                                    )}
+                                    {m.events.subOutMinute !== undefined && (
+                                      <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 text-[7px] px-1 py-0.1 rounded font-bold">
+                                        🔄 Salió {m.events.subOutMinute}'
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              {m.status.type === 'inprogress' ? (
+                                <span className="bg-emerald-500/10 text-emerald-400 text-[8px] px-1 py-0.1 border border-emerald-500/20 rounded-full font-bold">
+                                  EN VIVO
+                                </span>
+                              ) : (
+                                <span className="bg-white/5 text-slate-500 text-[8px] px-1 py-0.1 rounded-full border border-white/5">
+                                  Finalizado
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Individual Stats in Match */}
+                            {m.stats ? (
+                              <div className="grid grid-cols-2 gap-1 text-[9px]">
+                                {m.stats.minutesPlayed !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Minutos</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.minutesPlayed}'</span>
+                                  </div>
+                                )}
+                                
+                                {m.stats.goals !== undefined && m.stats.goals > 0 && (
+                                  <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Goles</span>
+                                    <span className="font-extrabold text-[10px]">{m.stats.goals}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.assists !== undefined && m.stats.assists > 0 && (
+                                  <div className="bg-amber-500/10 p-1 rounded border border-amber-500/20 text-amber-500">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Asistencias</span>
+                                    <span className="font-extrabold text-[10px]">{m.stats.assists}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.shots !== undefined && m.stats.shots > 0 && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Tiros (Al arco)</span>
+                                    <span className="font-extrabold text-slate-200">
+                                      {m.stats.shots}
+                                      {m.stats.shotsOnTarget !== undefined && ` (${m.stats.shotsOnTarget})`}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {m.stats.foulsCommitted !== undefined && m.stats.foulsCommitted > 0 && (
+                                  <div className="bg-rose-500/10 p-1 rounded border border-rose-500/20 text-rose-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Cometidas</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.foulsCommitted}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.foulsWon !== undefined && m.stats.foulsWon > 0 && (
+                                  <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Faltas Recibidas</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.foulsWon}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.saves !== undefined && (m.position === 'Arquero' || m.stats.saves > 0) && (
+                                  <div className="bg-emerald-500/10 p-1 rounded border border-emerald-500/20 text-emerald-400">
+                                    <span className="block text-[7px] uppercase font-bold tracking-wider opacity-85">Atajadas</span>
+                                    <span className="font-extrabold text-[10px]">{m.stats.saves}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.passes && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Pases</span>
+                                    <span className="font-extrabold text-slate-200">
+                                      {m.stats.passes.ok}/{m.stats.passes.total} 
+                                      <small className="text-slate-500 font-normal ml-0.5">({m.stats.passes.total ? Math.round((m.stats.passes.ok / m.stats.passes.total) * 100) : 0}%)</small>
+                                    </span>
+                                  </div>
+                                )}
+
+                                {m.stats.touches !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Toques</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.touches}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.tackles && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Entradas</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.tackles.ok}/{m.stats.tackles.total}</span>
+                                  </div>
+                                )}
+
+                                {m.stats.recoveries !== undefined && (
+                                  <div className="bg-black/40 p-1 rounded border border-white/5">
+                                    <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Recuperaciones</span>
+                                    <span className="font-extrabold text-slate-200">{m.stats.recoveries}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
+
+                {prePlayerMatches.length > visiblePreMatchesLimit && visiblePreMatchesLimit < 20 && (
+                  <button
+                    onClick={() => setVisiblePreMatchesLimit(prev => prev === 5 ? 10 : 20)}
+                    className="w-full text-center py-2 text-[10px] font-bold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all cursor-pointer mt-2"
+                  >
+                    Ver más partidos ({prePlayerMatches.length - visiblePreMatchesLimit} más)
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Modal */}
+            <div className="flex items-center justify-end p-3 border-t border-white/10 bg-[#0b0e14]/50">
+              <button 
+                onClick={() => setSelectedPrePlayerName(null)}
+                className="px-4 py-1.5 bg-white/5 hover:bg-white/10 text-white border-white/10 rounded-xl text-[10px] font-bold transition-all border cursor-pointer"
               >
                 Cerrar
               </button>
