@@ -22,6 +22,15 @@ const parseStatValue = (val: string | number | undefined): number => {
   return parseFloat(cleaned) || 0;
 };
 
+const formatPlayerNameMobile = (fullName: string): string => {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length <= 1) return fullName;
+  const firstNameLetter = parts[0].charAt(0).toUpperCase();
+  const lastName = parts.slice(1).join(' ');
+  return `${firstNameLetter}. ${lastName}`;
+};
+
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
   const translations: Record<string, string> = {
@@ -2544,7 +2553,10 @@ export default function MatchDetailView() {
                       >
                         <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isHomeTeam ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
-                          <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[80px] xs:max-w-[120px] sm:max-w-xs">
+                          <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate sm:hidden max-w-[80px] xs:max-w-[120px]">
+                            {formatPlayerNameMobile(player.nameFull || player.name)}
+                          </span>
+                          <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate hidden sm:inline max-w-xs">
                             {player.nameFull || player.name}
                           </span>
                           <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
@@ -3248,7 +3260,10 @@ export default function MatchDetailView() {
                               >
                                 <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
                                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${player.isHome ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
-                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[80px] xs:max-w-[120px] sm:max-w-xs">
+                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate sm:hidden max-w-[80px] xs:max-w-[120px]">
+                                    {formatPlayerNameMobile(player.nameFull || player.name)}
+                                  </span>
+                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate hidden sm:inline max-w-xs">
                                     {player.nameFull || player.name}
                                   </span>
                                   <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
