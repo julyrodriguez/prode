@@ -933,7 +933,7 @@ export default function PlayersView() {
           {/* Dismiss overlay */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPlayerName(null)} />
           
-          <div className="relative w-full max-w-sm sm:max-w-md max-h-[85vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
+          <div className="relative w-full max-w-sm sm:max-w-md md:max-w-3xl lg:max-w-5xl max-h-[85vh] sm:max-h-[90vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
             {/* Modal Header */}
             <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
               <div className="flex items-center gap-2">
@@ -999,8 +999,9 @@ export default function PlayersView() {
                 </div>
               </div>
 
-              {/* Aggregated Stats Table */}
-              <div className="bg-black/20 border border-white/5 rounded-xl p-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start space-y-3 md:space-y-0">
+                {/* Aggregated Stats Table */}
+                <div className="bg-black/20 border border-white/5 rounded-xl p-2.5">
                 <h3 className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
                   <Activity className="w-3 h-3 text-emerald-400" /> Estadísticas Acumuladas
                 </h3>
@@ -1268,6 +1269,7 @@ export default function PlayersView() {
                   </div>
                 )}
               </div>
+            </div>
             </div>
           </div>
         </div>,

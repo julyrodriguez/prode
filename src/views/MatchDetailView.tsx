@@ -2265,7 +2265,7 @@ export default function MatchDetailView() {
       {mounted && selectedPlayer && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-md animate-fade-in">
           {/* Contenedor del Modal */}
-          <div className={`relative w-full max-w-2xl ${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0f141c] border-white/10 text-slate-200'} border rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col`}>
+          <div className={`relative w-full max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl ${isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-[#0f141c] border-white/10 text-slate-200'} border rounded-2xl shadow-2xl overflow-hidden max-h-[95vh] sm:max-h-[90vh] flex flex-col`}>
             
             {/* Header Modal */}
             <div className={`flex items-center justify-between p-4 md:p-6 border-b ${isLight ? 'border-slate-100 bg-slate-50' : 'border-white/5 bg-gradient-to-r from-emerald-500/10 to-indigo-500/10'}`}>
@@ -2316,7 +2316,7 @@ export default function MatchDetailView() {
               ) : (
                 <>
                   {/* Grid de Estadísticas */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     
                     {/* ATAQUE */}
                     {selectedPlayer.position !== "Arquero" && (
@@ -2459,9 +2459,9 @@ export default function MatchDetailView() {
 
                     {/* ARQUERO */}
                     {selectedPlayer.position === "Arquero" && (
-                      <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5 col-span-1 md:col-span-2`}>
+                      <div className={`${isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-white/[0.02] border-white/5'} border rounded-xl p-3 flex flex-col gap-2.5 col-span-1 md:col-span-2 lg:col-span-1`}>
                         <h4 className={`text-[9px] font-black ${isLight ? 'text-amber-600' : 'text-amber-400'} uppercase tracking-wider border-b ${isLight ? 'border-slate-100' : 'border-white/5'} pb-1`}>Estadísticas de Portería</h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-0 sm:gap-y-2 text-[11px]">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-2 gap-x-4 gap-y-0 sm:gap-y-2 lg:gap-y-1 text-[11px]">
                           <div className={`flex justify-between py-0.5 border-b border-dashed ${isLight ? 'border-slate-100' : 'border-white/5'}`}>
                             <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Atajadas</span>
                             <span className={`${isLight ? 'text-slate-800' : 'text-white'} font-bold`}>{selectedPlayer.stats.saves || 0}</span>
@@ -2511,7 +2511,7 @@ export default function MatchDetailView() {
           {/* Dismiss overlay */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPrePlayerName(null)} />
           
-          <div className="relative w-full max-w-sm sm:max-w-md max-h-[85vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
+          <div className="relative w-full max-w-sm sm:max-w-md md:max-w-3xl lg:max-w-5xl max-h-[85vh] sm:max-h-[90vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
             {/* Modal Header */}
             <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
               <div className="flex items-center gap-2">
@@ -2577,8 +2577,9 @@ export default function MatchDetailView() {
                 </div>
               </div>
 
-              {/* Aggregated Stats Table */}
-              <div className="bg-black/20 border border-white/5 rounded-xl p-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start space-y-3 md:space-y-0">
+                {/* Aggregated Stats Table */}
+                <div className="bg-black/20 border border-white/5 rounded-xl p-2.5">
                 <h3 className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1">
                   <Activity className="w-3 h-3 text-emerald-400" /> Estadísticas Acumuladas
                 </h3>
@@ -2792,6 +2793,7 @@ export default function MatchDetailView() {
                   </button>
                 )}
               </div>
+            </div>
             </div>
 
             {/* Footer Modal */}
