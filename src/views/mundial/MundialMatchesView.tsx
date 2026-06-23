@@ -1153,7 +1153,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
       {/* Date Navigator Header - Compact Centered Pill */}
       {selectedDate && (
-        <div className="flex justify-center w-full my-1">
+        <div className="flex justify-center w-full my-1 relative z-40">
           <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center justify-center gap-3 shadow-lg shadow-black/30 w-fit">
             
             <button

@@ -561,7 +561,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
       )}
 
       {/* Cabecera Principal y Navegador de Días */}
-      <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+      <div className="relative z-30 bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 lg:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
         <div className="flex flex-col text-center md:text-left">
           <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-indigo-400">
             Central de Partidos
