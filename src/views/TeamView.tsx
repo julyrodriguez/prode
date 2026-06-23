@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
-import { ArrowLeft, MapPin, Users, Calendar } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, Calendar, ChevronDown } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 function getReadableColor(hex: string): string {
@@ -28,6 +28,8 @@ export default function TeamView() {
   const [team, setTeam] = useState<any>(null);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
+  const [visibleUpcoming, setVisibleUpcoming] = useState(5);
+  const [visibleRecent, setVisibleRecent] = useState(5);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'matches' | 'squad'>('matches');
@@ -54,6 +56,8 @@ export default function TeamView() {
     const fetchTeam = async () => {
       try {
         setLoading(true);
+        setVisibleUpcoming(5);
+        setVisibleRecent(5);
         const res = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}`);
         if (!res.ok) throw new Error('No se pudo cargar el equipo');
         const data = await res.json();
@@ -61,7 +65,7 @@ export default function TeamView() {
 
         // Obtener historial de partidos
         try {
-          const mRes = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}/all-matches?limit=15`);
+          const mRes = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}/all-matches?limit=100`);
           if (mRes.ok) {
             const allMatches = await mRes.json();
             const now = Math.floor(Date.now() / 1000);
@@ -289,7 +293,7 @@ export default function TeamView() {
                 <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">Próximos Partidos</h3>
               </div>
               <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
-                {upcomingMatches.map((match, idx) => {
+                {upcomingMatches.slice(0, visibleUpcoming).map((match, idx) => {
                   const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
                   const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
                   const hId = match.homeTeam?.id || match.home_team?.id;
@@ -334,6 +338,15 @@ export default function TeamView() {
                   );
                 })}
               </div>
+              {upcomingMatches.length > visibleUpcoming && (
+                <button
+                  onClick={() => setVisibleUpcoming(prev => prev + 5)}
+                  className="w-full mt-3 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-white/5 shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Ver más
+                </button>
+              )}
             </div>
           )}
 
@@ -345,7 +358,7 @@ export default function TeamView() {
                 <h3 className="text-xs font-black text-slate-300 uppercase tracking-wider">Últimos Resultados</h3>
               </div>
               <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md">
-                {recentMatches.map((match, idx) => {
+                {recentMatches.slice(0, visibleRecent).map((match, idx) => {
                   const hScore = match.homeScore?.current ?? match.homeTeam?.score ?? match.home_team?.score;
                   const aScore = match.awayScore?.current ?? match.awayTeam?.score ?? match.away_team?.score;
                   const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
@@ -416,6 +429,15 @@ export default function TeamView() {
                   );
                 })}
               </div>
+              {recentMatches.length > visibleRecent && (
+                <button
+                  onClick={() => setVisibleRecent(prev => prev + 5)}
+                  className="w-full mt-3 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all border border-white/5 shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  Ver más
+                </button>
+              )}
             </div>
           )}
 
