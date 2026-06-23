@@ -299,6 +299,12 @@ export default function MatchDetailView() {
   const [showAllPlayerStats, setShowAllPlayerStats] = useState(false);
   const [showSubstitutes, setShowSubstitutes] = useState(false);
 
+  const [h2hMatches, setH2hMatches] = useState<any[]>([]);
+  const [h2hLoading, setH2hLoading] = useState(false);
+  const [h2hLimit, setH2hLimit] = useState<5 | 10>(10);
+  const [h2hFilter, setH2hFilter] = useState<'all' | 'local'>('all');
+  const [isH2hCollapsed, setIsH2hCollapsed] = useState(false);
+
   // Pre-match stats averages state
   const [globalPlayers, setGlobalPlayers] = useState<any[]>([]);
   const [preSortField, setPreSortField] = useState<'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon'>('shots');
@@ -541,6 +547,115 @@ export default function MatchDetailView() {
       .then(d => setMatchPredictions(Array.isArray(d) ? d : []))
       .catch(() => setMatchPredictions([]));
   }, [id]);
+
+  // Fetch H2H statistics
+  useEffect(() => {
+    if (!match) return;
+    const hId = match.homeTeam?.id || match.home_team?.id;
+    const aId = match.awayTeam?.id || match.away_team?.id;
+    if (!hId || !aId) return;
+
+    const isWorldCup = match.tournament?.id === 16 || 
+                       match.tournament?.name?.toLowerCase().includes('copa mundial') || 
+                       match.tournament?.name?.toLowerCase().includes('world cup') || 
+                       match.tournament_name?.toLowerCase().includes('mundial');
+    
+    if (isWorldCup) return;
+
+    const fetchH2H = async () => {
+      setH2hLoading(true);
+      try {
+        const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/h2h?teamA=${hId}&teamB=${aId}&limit=50`);
+        if (res.ok) {
+          const data = await res.json();
+          setH2hMatches(data);
+        }
+      } catch (e) {
+        console.error("Error fetching H2H matches:", e);
+      } finally {
+        setH2hLoading(false);
+      }
+    };
+
+    fetchH2H();
+  }, [match]);
+
+  const processedH2H = useMemo(() => {
+    if (!match || h2hMatches.length === 0) return [];
+    const hId = Number(match.homeTeam?.id || match.home_team?.id);
+    const aId = Number(match.awayTeam?.id || match.away_team?.id);
+
+    let filtered = h2hMatches.filter(m => {
+      const homeScore = m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score;
+      const awayScore = m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score;
+      if (homeScore === undefined || awayScore === undefined) return false;
+
+      if (h2hFilter === 'local') {
+        const mHomeId = Number(m.homeTeam?.id || m.home_team?.id);
+        const mAwayId = Number(m.awayTeam?.id || m.away_team?.id);
+        return mHomeId === hId && mAwayId === aId;
+      }
+      return true;
+    });
+
+    filtered = [...filtered].sort((a, b) => (b.startTimestamp || 0) - (a.startTimestamp || 0));
+    return filtered.slice(0, h2hLimit);
+  }, [h2hMatches, h2hFilter, h2hLimit, match]);
+
+  const h2hStats = useMemo(() => {
+    if (!match || processedH2H.length === 0) return null;
+    const hId = Number(match.homeTeam?.id || match.home_team?.id);
+
+    let homeWins = 0;
+    let awayWins = 0;
+    let draws = 0;
+
+    let homeGoals = 0;
+    let awayGoals = 0;
+    
+    let bttsCount = 0;
+    let homeCleanSheets = 0;
+    let awayCleanSheets = 0;
+
+    processedH2H.forEach(m => {
+      const mHomeId = Number(m.homeTeam?.id || m.home_team?.id);
+      
+      const hScore = Number(m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score ?? 0);
+      const aScore = Number(m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score ?? 0);
+
+      const isHomeTeamThisMatch = mHomeId === hId;
+      const ourHomeGoals = isHomeTeamThisMatch ? hScore : aScore;
+      const ourAwayGoals = isHomeTeamThisMatch ? aScore : hScore;
+
+      homeGoals += ourHomeGoals;
+      awayGoals += ourAwayGoals;
+
+      if (ourHomeGoals > ourAwayGoals) homeWins++;
+      else if (ourHomeGoals < ourAwayGoals) awayWins++;
+      else draws++;
+
+      if (ourHomeGoals > 0 && ourAwayGoals > 0) bttsCount++;
+      if (ourHomeGoals === 0) awayCleanSheets++;
+      if (ourAwayGoals === 0) homeCleanSheets++;
+    });
+
+    const total = processedH2H.length;
+    return {
+      total,
+      homeWins,
+      awayWins,
+      draws,
+      homeWinPct: Math.round((homeWins / total) * 100),
+      awayWinPct: Math.round((awayWins / total) * 100),
+      drawPct: Math.round((draws / total) * 100),
+      avgHomeGoals: (homeGoals / total).toFixed(1),
+      avgAwayGoals: (awayGoals / total).toFixed(1),
+      avgTotalGoals: ((homeGoals + awayGoals) / total).toFixed(1),
+      bttsPct: Math.round((bttsCount / total) * 100),
+      homeCleanSheetPct: Math.round((homeCleanSheets / total) * 100),
+      awayCleanSheetPct: Math.round((awayCleanSheets / total) * 100),
+    };
+  }, [processedH2H, match]);
 
   // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos con actualización automática en vivo
   useEffect(() => {
@@ -1292,6 +1407,230 @@ export default function MatchDetailView() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* H2H Historial de enfrentamientos (Solo ligas) */}
+      {!h2hLoading && h2hMatches.length > 0 && h2hStats && (
+        <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 shadow-lg">
+          
+          {/* Cabecera */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 text-xs">⚔️</span>
+              <h3 className="text-sm font-bold text-white">Historial de Enfrentamientos (H2H)</h3>
+              <span className="text-[10px] bg-white/5 border border-white/5 text-slate-400 px-2 py-0.5 rounded-full font-bold">
+                {h2hMatches.length} partidos
+              </span>
+            </div>
+            
+            {/* Controles del H2H */}
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              {/* Selector de Límite */}
+              <div className="flex items-center bg-black/40 p-0.5 rounded-xl border border-white/5 text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setH2hLimit(5)}
+                  className={`px-2.5 py-1 rounded-lg transition-all border-0 cursor-pointer ${
+                    h2hLimit === 5
+                      ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Últimos 5
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setH2hLimit(10)}
+                  className={`px-2.5 py-1 rounded-lg transition-all border-0 cursor-pointer ${
+                    h2hLimit === 10
+                      ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Últimos 10
+                </button>
+              </div>
+
+              {/* Selector de Condición (Localía) */}
+              <div className="flex items-center bg-black/40 p-0.5 rounded-xl border border-white/5 text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setH2hFilter('all')}
+                  className={`px-2.5 py-1 rounded-lg transition-all border-0 cursor-pointer ${
+                    h2hFilter === 'all'
+                      ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setH2hFilter('local')}
+                  className={`px-2.5 py-1 rounded-lg transition-all border-0 cursor-pointer ${
+                    h2hFilter === 'local'
+                      ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 border border-emerald-500/20 text-white'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Local vs Visita
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid de Estadísticas */}
+          {processedH2H.length === 0 ? (
+            <div className="text-center py-6 text-slate-500 text-xs">
+              No hay partidos que coincidan con los filtros seleccionados.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              
+              {/* Tarjetas Principales */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                {/* Tarjeta 1: Resultados */}
+                <div className="bg-[#0b1015]/60 border border-white/5 rounded-xl p-3 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Historial (Últimos {processedH2H.length})</span>
+                    <span className="text-[10px] text-emerald-400 font-bold">W-D-L</span>
+                  </div>
+                  <div className="flex flex-col justify-center flex-1 gap-2">
+                    <div className="flex justify-between text-xs font-semibold px-0.5">
+                      <span className="text-emerald-400">{h2hStats.homeWins} L</span>
+                      <span className="text-slate-400">{h2hStats.draws} E</span>
+                      <span className="text-indigo-400">{h2hStats.awayWins} V</span>
+                    </div>
+                    {/* Barra de progreso de 3 segmentos */}
+                    <div className="w-full h-3 rounded-full overflow-hidden bg-white/5 flex">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                        style={{ width: `${h2hStats.homeWinPct}%` }}
+                        title={`Local: ${h2hStats.homeWinPct}%`}
+                      />
+                      <div
+                        className="h-full bg-slate-600"
+                        style={{ width: `${h2hStats.drawPct}%` }}
+                        title={`Empate: ${h2hStats.drawPct}%`}
+                      />
+                      <div
+                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 shadow-[0_0_8px_rgba(99,102,241,0.3)]"
+                        style={{ width: `${h2hStats.awayWinPct}%` }}
+                        title={`Visitante: ${h2hStats.awayWinPct}%`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tarjeta 2: Goles */}
+                <div className="bg-[#0b1015]/60 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Promedio de Goles</span>
+                  <div className="flex flex-col justify-center flex-1 gap-1.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-semibold">{h2hStats.avgHomeGoals} gol{Number(h2hStats.avgHomeGoals) !== 1 ? 'es' : ''}</span>
+                      <span className="text-[9px] text-slate-500 font-bold uppercase">Local</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-300 font-semibold">{h2hStats.avgAwayGoals} gol{Number(h2hStats.avgAwayGoals) !== 1 ? 'es' : ''}</span>
+                      <span className="text-[9px] text-slate-500 font-bold uppercase">Visita</span>
+                    </div>
+                    <div className="h-px bg-white/5 my-0.5" />
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-emerald-400 font-black">{h2hStats.avgTotalGoals}</span>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase">Total x Partido</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tarjeta 3: Métricas Clave */}
+                <div className="bg-[#0b1015]/60 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Datos Clave</span>
+                  <div className="flex flex-col justify-center flex-1 gap-2">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-medium">Ambos anotan (BTTS):</span>
+                      <span className="text-emerald-400 font-extrabold">{h2hStats.bttsPct}%</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-medium">Valla Invicta Local:</span>
+                      <span className="text-slate-200 font-extrabold">{h2hStats.homeCleanSheetPct}%</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-slate-400 font-medium">Valla Invicta Visita:</span>
+                      <span className="text-slate-200 font-extrabold">{h2hStats.awayCleanSheetPct}%</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Desglose de Partidos Plegable */}
+              <div className="border border-white/5 rounded-xl overflow-hidden bg-black/10">
+                <button
+                  type="button"
+                  onClick={() => setIsH2hCollapsed(!isH2hCollapsed)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-[10px] md:text-xs font-bold text-slate-400 hover:text-white transition-colors bg-white/[0.01] hover:bg-white/[0.03] select-none cursor-pointer border-0"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span>📋</span>
+                    <span>Ver enfrentamientos incluidos ({processedH2H.length})</span>
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isH2hCollapsed ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isH2hCollapsed && (
+                  <div className="flex flex-col divide-y divide-white/5 bg-[#080d12]/50 border-t border-white/5">
+                    {processedH2H.map((m: any, idx: number) => {
+                      const mhScore = m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score ?? 0;
+                      const maScore = m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score ?? 0;
+                      const mhName = m.homeTeam?.name || m.home_team?.name || 'Local';
+                      const maName = m.awayTeam?.name || m.away_team?.name || 'Visitante';
+                      const mhId = m.homeTeam?.id || m.home_team?.id;
+                      const maId = m.awayTeam?.id || m.away_team?.id;
+                      
+                      const isCurrentLocal = Number(mhId) === Number(match.homeTeam?.id || match.home_team?.id);
+
+                      const dateText = m.startTimestamp 
+                        ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '';
+
+                      return (
+                        <div key={idx} className="grid grid-cols-[80px_1fr_auto_1fr] items-center px-3 py-2 hover:bg-white/[0.02] transition-colors text-xs font-semibold">
+                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{dateText}</span>
+                          <div className={`flex items-center justify-end gap-1.5 text-right min-w-0 ${isCurrentLocal ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
+                            <span className="truncate">{mhName}</span>
+                            <img
+                              src={`/escudos/${mhId}.png`}
+                              alt={mhName}
+                              className="w-4 h-4 object-contain shrink-0"
+                              onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 mx-2 rounded bg-black/40 border border-white/5 font-black shrink-0">
+                            <span className={isCurrentLocal ? 'text-emerald-400' : 'text-slate-300'}>{mhScore}</span>
+                            <span className="text-slate-600 text-[10px] font-sans">-</span>
+                            <span className={!isCurrentLocal ? 'text-emerald-400' : 'text-slate-300'}>{maScore}</span>
+                          </div>
+                          <div className={`flex items-center gap-1.5 text-left min-w-0 ${!isCurrentLocal ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
+                            <img
+                              src={`/escudos/${maId}.png`}
+                              alt={maName}
+                              className="w-4 h-4 object-contain shrink-0"
+                              onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                            />
+                            <span className="truncate">{maName}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
         </div>
       )}
 
