@@ -950,11 +950,11 @@ export default function PlayersView() {
 
       {/* DETAIL MODAL PANEL */}
       {mounted && selectedPlayerName && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 animate-fade-in">
           {/* Dismiss overlay */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPlayerName(null)} />
           
-          <div className="relative w-full max-w-sm sm:max-w-md md:max-w-3xl lg:max-w-5xl max-h-[85vh] sm:max-h-[90vh] bg-[#0b1015]/95 border border-white/10 rounded-2xl shadow-2xl flex flex-col backdrop-blur-2xl overflow-hidden shadow-emerald-500/5">
+          <div className="relative w-full max-w-sm sm:max-w-md md:max-w-3xl lg:max-w-5xl max-h-[85vh] sm:max-h-[90vh] bg-[#0b1015] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden shadow-emerald-500/5">
             {/* Modal Header */}
             <div className="p-3 border-b border-white/10 flex justify-between items-center bg-black/20">
               <div className="flex items-center gap-2">
