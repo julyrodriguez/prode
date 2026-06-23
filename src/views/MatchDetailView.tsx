@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { getMatch as getCachedMatch, setMatch as setCachedMatch, TTL_LIVE_MS } from '../lib/matchCache';
 import { useParams, useRouter } from 'next/navigation';
