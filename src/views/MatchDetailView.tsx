@@ -1163,15 +1163,16 @@ export default function MatchDetailView() {
     const homeTeamName = match.homeTeam?.name || match.home_team?.name || 'Local';
     const awayTeamName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
 
-    const isPreloaded = match.elnine_players && match.elnine_players.length > 0;
+    const isPreloaded = (elninePlayers && elninePlayers.length > 0) || (match.elnine_players && match.elnine_players.length > 0);
     const isNotStarted = match.status?.type === 'notstarted';
     const statusType = typeof match.status === 'object' ? match.status?.type : null;
     const isLive = statusType === 'inprogress';
     const shouldSubtract = (isNotStarted && isPreloaded) || isLive;
 
     const findElninePlayer = (gp: any) => {
-      if (!match.elnine_players) return null;
-      return match.elnine_players.find((ep: any) => {
+      const list = elninePlayers || match.elnine_players;
+      if (!list) return null;
+      return list.find((ep: any) => {
         const epName = (ep.nameFull || ep.name || '').toLowerCase();
         const gpName = (gp.nameFull || gp.name || '').toLowerCase();
         return ep.number === gp.number || epName.includes(gpName) || gpName.includes(epName);
@@ -1323,7 +1324,7 @@ export default function MatchDetailView() {
     });
 
     return sorted;
-  }, [match, globalPlayers, preSortField, preSortDirection]);
+  }, [match, globalPlayers, elninePlayers, preSortField, preSortDirection]);
 
   const teamStatsSection = useMemo(() => {
     if (!match || !match.live_statistics || match.live_statistics.length === 0) return null;
