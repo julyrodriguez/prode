@@ -14,6 +14,7 @@ import TeamRedCards from '../../components/TeamRedCards';
 import MatchGoalsCollapsible from '../../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../../components/MatchSkeleton';
 import TeamLogo from '../../components/TeamLogo';
+import DatePicker from '../../components/DatePicker';
 
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
@@ -1180,39 +1181,15 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
                 <span>{'<'}</span>
               </button>
 
-              <div className="relative flex flex-col items-center min-w-[95px] select-none cursor-pointer hover:bg-white/5 px-2 py-0.5 rounded-full transition-all">
-                <span className="text-[7px] text-emerald-400 font-black uppercase tracking-widest leading-none mb-0.5">
-                  {viewMode === 'week' ? 'SEMANA' : 'FECHA'}
-                </span>
-                <span className="text-[11px] font-black text-white/90 capitalize text-center leading-none flex items-center gap-1">
-                  {viewMode === 'week' ? (
-                    (() => {
-                      const startD = new Date(selectedDate + 'T12:00:00');
-                      const endD = new Date(selectedDate + 'T12:00:00');
-                      endD.setDate(endD.getDate() + 6);
-                      const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
-                      return `${startD.toLocaleDateString('es-ES', options)} - ${endD.toLocaleDateString('es-ES', options)}`;
-                    })()
-                  ) : (
-                    new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-ES', {
-                      weekday: 'short', day: '2-digit', month: 'short'
-                    })
-                  )}
-                  <span className="text-[9px] opacity-75">📅</span>
-                </span>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setSelectedDate(e.target.value);
-                      setAllMatches([]);
-                      setLoading(true);
-                    }
-                  }}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-              </div>
+              <DatePicker
+                selectedDate={selectedDate}
+                viewMode={viewMode}
+                onChange={(date) => {
+                  setSelectedDate(date);
+                  setAllMatches([]);
+                  setLoading(true);
+                }}
+              />
 
               <button
                 onClick={handleNextDay}

@@ -9,6 +9,7 @@ import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../components/MatchSkeleton';
 import TeamLogo from '../components/TeamLogo';
+import DatePicker from '../components/DatePicker';
 
 interface MatchOdds {
   full_time?: { home?: number; draw?: number; away?: number };
@@ -595,38 +596,15 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
               <span>&lt;</span>
             </button>
 
-            {/* Selector de fecha interactivo con input oculto */}
-            <div className="relative flex flex-col items-center min-w-[100px] md:min-w-[110px] cursor-pointer hover:bg-white/5 px-2 py-1 rounded-xl transition-all select-none">
-              <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest mb-0.5 shadow-sm leading-none">
-                {viewMode === 'week' ? 'SEMANA' : 'FECHA'}
-              </span>
-              <span className="text-xs font-black text-white capitalize shadow-sm leading-none flex items-center gap-1">
-                {viewMode === 'week' ? (
-                  (() => {
-                    const startD = new Date(selectedDate + 'T12:00:00');
-                    const endD = new Date(selectedDate + 'T12:00:00');
-                    endD.setDate(endD.getDate() + 6);
-                    const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
-                    return `${startD.toLocaleDateString('es-ES', options)} - ${endD.toLocaleDateString('es-ES', options)}`;
-                  })()
-                ) : (
-                  new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
-                )}
-                <span className="text-[10px] opacity-75">📅</span>
-              </span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    setSelectedDate(e.target.value);
-                    setAllMatches([]);
-                    setLoading(true);
-                  }
-                }}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
-            </div>
+            <DatePicker
+              selectedDate={selectedDate}
+              viewMode={viewMode}
+              onChange={(date) => {
+                setSelectedDate(date);
+                setAllMatches([]);
+                setLoading(true);
+              }}
+            />
 
             <button
               onClick={handleNextDay}
