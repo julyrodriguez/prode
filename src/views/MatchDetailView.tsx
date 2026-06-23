@@ -1334,7 +1334,12 @@ export default function MatchDetailView() {
     'PEN': 'Penales',
   } as Record<string, string>)[text] ?? text;
   // ─────────────────────────────────────────────────────────────────────────────
-  const selectedPrePlayerAggInfo = globalPlayers.find(p => p.nameFull === selectedPrePlayerName);
+  const selectedPrePlayerAggInfo = globalPlayers.find(p => {
+    if (!selectedPrePlayerName) return false;
+    const nameA = (p.nameFull || p.name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const nameB = selectedPrePlayerName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    return nameA === nameB || p.nameFull === selectedPrePlayerName || p.name === selectedPrePlayerName;
+  });
 
   // Compute minutes and aggregated stats for pre player modal
   const totalMinPre = prePlayerMatches.reduce((acc, m) => acc + getPlayerHistoryMinutes(m), 0);
@@ -3002,6 +3007,15 @@ export default function MatchDetailView() {
                   });
                 };
 
+                const findElninePlayer = (gp: any) => {
+                  if (!match.elnine_players) return null;
+                  return match.elnine_players.find((ep: any) => {
+                    const epName = (ep.nameFull || ep.name || '').toLowerCase();
+                    const gpName = (gp.nameFull || gp.name || '').toLowerCase();
+                    return ep.number === gp.number || epName.includes(gpName) || gpName.includes(epName);
+                  });
+                };
+
                 let combined: any[] = [];
 
                 if (match.lineups && (match.lineups.home?.players?.length > 0 || match.lineups.away?.players?.length > 0)) {
@@ -3014,8 +3028,22 @@ export default function MatchDetailView() {
                     if (!gp) return null;
 
                     let actualMatches = gp.totalMatches || 0;
-                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
-                      actualMatches -= 1;
+                    let liveShots = 0;
+                    let liveShotsOnTarget = 0;
+                    let liveFoulsCommitted = 0;
+                    let liveFoulsWon = 0;
+
+                    if (shouldSubtract) {
+                      const ep = findElninePlayer(gp);
+                      if (ep) {
+                        if (actualMatches > 0) {
+                          actualMatches -= 1;
+                        }
+                        liveShots = ep.stats?.shots || 0;
+                        liveShotsOnTarget = ep.stats?.shotsOnTarget || 0;
+                        liveFoulsCommitted = ep.stats?.foulsCommitted || 0;
+                        liveFoulsWon = ep.stats?.foulsWon || 0;
+                      }
                     }
 
                     return {
@@ -3026,18 +3054,32 @@ export default function MatchDetailView() {
                       isHome: lp.isHome,
                       totalMatches: actualMatches,
                       stats: {
-                        shots: gp.shots || 0,
-                        shotsOnTarget: gp.shotsOnTarget || 0,
-                        foulsCommitted: gp.foulsCommitted || 0,
-                        foulsWon: gp.foulsWon || 0,
+                        shots: Math.max(0, (gp.shots || 0) - liveShots),
+                        shotsOnTarget: Math.max(0, (gp.shotsOnTarget || 0) - liveShotsOnTarget),
+                        foulsCommitted: Math.max(0, (gp.foulsCommitted || 0) - liveFoulsCommitted),
+                        foulsWon: Math.max(0, (gp.foulsWon || 0) - liveFoulsWon),
                       }
                     };
                   }).filter(Boolean);
                 } else {
                   const homeList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, homeTeamName)).map(gp => {
                     let actualMatches = gp.totalMatches || 0;
-                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
-                      actualMatches -= 1;
+                    let liveShots = 0;
+                    let liveShotsOnTarget = 0;
+                    let liveFoulsCommitted = 0;
+                    let liveFoulsWon = 0;
+
+                    if (shouldSubtract) {
+                      const ep = findElninePlayer(gp);
+                      if (ep) {
+                        if (actualMatches > 0) {
+                          actualMatches -= 1;
+                        }
+                        liveShots = ep.stats?.shots || 0;
+                        liveShotsOnTarget = ep.stats?.shotsOnTarget || 0;
+                        liveFoulsCommitted = ep.stats?.foulsCommitted || 0;
+                        liveFoulsWon = ep.stats?.foulsWon || 0;
+                      }
                     }
                     return {
                       nameFull: gp.nameFull,
@@ -3047,18 +3089,32 @@ export default function MatchDetailView() {
                       isHome: true,
                       totalMatches: actualMatches,
                       stats: {
-                        shots: gp.shots || 0,
-                        shotsOnTarget: gp.shotsOnTarget || 0,
-                        foulsCommitted: gp.foulsCommitted || 0,
-                        foulsWon: gp.foulsWon || 0,
+                        shots: Math.max(0, (gp.shots || 0) - liveShots),
+                        shotsOnTarget: Math.max(0, (gp.shotsOnTarget || 0) - liveShotsOnTarget),
+                        foulsCommitted: Math.max(0, (gp.foulsCommitted || 0) - liveFoulsCommitted),
+                        foulsWon: Math.max(0, (gp.foulsWon || 0) - liveFoulsWon),
                       }
                     };
                   });
 
                   const awayList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, awayTeamName)).map(gp => {
                     let actualMatches = gp.totalMatches || 0;
-                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
-                      actualMatches -= 1;
+                    let liveShots = 0;
+                    let liveShotsOnTarget = 0;
+                    let liveFoulsCommitted = 0;
+                    let liveFoulsWon = 0;
+
+                    if (shouldSubtract) {
+                      const ep = findElninePlayer(gp);
+                      if (ep) {
+                        if (actualMatches > 0) {
+                          actualMatches -= 1;
+                        }
+                        liveShots = ep.stats?.shots || 0;
+                        liveShotsOnTarget = ep.stats?.shotsOnTarget || 0;
+                        liveFoulsCommitted = ep.stats?.foulsCommitted || 0;
+                        liveFoulsWon = ep.stats?.foulsWon || 0;
+                      }
                     }
                     return {
                       nameFull: gp.nameFull,
@@ -3068,10 +3124,10 @@ export default function MatchDetailView() {
                       isHome: false,
                       totalMatches: actualMatches,
                       stats: {
-                        shots: gp.shots || 0,
-                        shotsOnTarget: gp.shotsOnTarget || 0,
-                        foulsCommitted: gp.foulsCommitted || 0,
-                        foulsWon: gp.foulsWon || 0,
+                        shots: Math.max(0, (gp.shots || 0) - liveShots),
+                        shotsOnTarget: Math.max(0, (gp.shotsOnTarget || 0) - liveShotsOnTarget),
+                        foulsCommitted: Math.max(0, (gp.foulsCommitted || 0) - liveFoulsCommitted),
+                        foulsWon: Math.max(0, (gp.foulsWon || 0) - liveFoulsWon),
                       }
                     };
                   });
