@@ -1375,10 +1375,10 @@ export default function MatchDetailView() {
                   const awayVal = parseStatValue(stat.away);
                   const total = homeVal + awayVal || 1;
                   const hPct = (homeVal / total) * 100;
-                  const aPct = (awayVal / total) * 100;
 
                   const isHomeWinner = homeVal > awayVal;
                   const isAwayWinner = awayVal > homeVal;
+                  const isZero = homeVal === 0 && awayVal === 0;
 
                   return (
                     <div key={idx} className="flex flex-col gap-1">
@@ -1387,21 +1387,13 @@ export default function MatchDetailView() {
                         <span className="text-slate-400 text-[8px] md:text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
                         <span className={`text-[10px] md:text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
                       </div>
-                      <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
-                        {/* Barra local: crece hacia la izquierda */}
-                        <div className="flex-1 h-full bg-white/[0.03] rounded-full flex justify-end border border-white/5">
+                      <div className={`w-full h-1.5 md:h-2 mt-0.5 rounded-full overflow-hidden flex ${isZero ? 'bg-white/5 border border-white/5' : 'bg-indigo-500/80'}`}>
+                        {!isZero && (
                           <div
-                            className="h-full bg-emerald-500/90 rounded-full"
+                            className="h-full bg-emerald-500/90"
                             style={{ width: `${hPct}%` }}
                           />
-                        </div>
-                        {/* Barra visitante: crece hacia la derecha */}
-                        <div className="flex-1 h-full bg-white/[0.03] rounded-full flex justify-start border border-white/5">
-                          <div
-                            className="h-full bg-indigo-500/90 rounded-full"
-                            style={{ width: `${aPct}%` }}
-                          />
-                        </div>
+                        )}
                       </div>
                     </div>
                   )
