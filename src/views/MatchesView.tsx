@@ -59,22 +59,22 @@ function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
   );
 }
 
-const getMatchesListCache = (date: string, direction: number, isPredictionMode: boolean): any[] | null => {
+const getMatchesListCache = (date: string, direction: number, viewMode: 'day' | 'week', isPredictionMode: boolean): any[] | null => {
   if (typeof window === 'undefined') return null;
   const w = window as any;
   if (!w.__matchesListCache) w.__matchesListCache = {};
-  const cacheKey = `${date}_${direction}_${isPredictionMode}`;
+  const cacheKey = `${date}_${direction}_${viewMode}_${isPredictionMode}`;
   const entry = w.__matchesListCache[cacheKey];
   if (!entry) return null;
   if (Date.now() - entry.at > 30000) return null; // 30s TTL
   return entry.data;
 };
 
-const setMatchesListCache = (date: string, direction: number, isPredictionMode: boolean, data: any[]) => {
+const setMatchesListCache = (date: string, direction: number, viewMode: 'day' | 'week', isPredictionMode: boolean, data: any[]) => {
   if (typeof window === 'undefined') return;
   const w = window as any;
   if (!w.__matchesListCache) w.__matchesListCache = {};
-  const cacheKey = `${date}_${direction}_${isPredictionMode}`;
+  const cacheKey = `${date}_${direction}_${viewMode}_${isPredictionMode}`;
   w.__matchesListCache[cacheKey] = { data, at: Date.now() };
 };
 
@@ -105,13 +105,14 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [searchDirection, setSearchDirection] = useState<1 | -1>(1);
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
 
   const [allMatches, setAllMatches] = useState<Match[]>(() => {
-    const cached = getMatchesListCache(selectedDate, searchDirection, isPredictionMode);
+    const cached = getMatchesListCache(selectedDate, searchDirection, 'day', isPredictionMode);
     return cached || [];
   });
   const [loading, setLoading] = useState(() => {
-    const cached = getMatchesListCache(selectedDate, searchDirection, isPredictionMode);
+    const cached = getMatchesListCache(selectedDate, searchDirection, 'day', isPredictionMode);
     return !cached;
   });
   const [error, setError] = useState<string | null>(null);
@@ -154,30 +155,77 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
         setAllMatches([]); // Clear matches to trigger skeleton immediately
       }
       try {
-        const url = new URL('https://apivacas.jariel.com.ar/api/matches/optimized');
-        url.searchParams.append('date', selectedDate);
-        url.searchParams.append('direction', String(searchDirection));
-
-        const response = await fetch(url.toString());
-        if (!response.ok) {
-          throw new Error('No se pudieron obtener los partidos.');
-        }
-
-        const data = await response.json();
         let events: Match[] = [];
 
-        if (data && data.matches !== undefined) {
-          events = data.matches;
-          if (data.metadata?.jumpedToFuture && data.metadata?.newDate) {
-            if (selectedDate !== data.metadata.newDate) {
-              setJumpMsg(searchDirection === -1 ? "No había partidos, saltamos a la fecha anterior disponible." : "No había partidos, te mostramos la próxima fecha disponible.");
-              setSelectedDate(data.metadata.newDate);
-              setTimeout(() => setJumpMsg(null), 8000);
-              return;
+        if (viewMode === 'day') {
+          const url = new URL('https://apivacas.jariel.com.ar/api/matches/optimized');
+          url.searchParams.append('date', selectedDate);
+          url.searchParams.append('direction', String(searchDirection));
+
+          const response = await fetch(url.toString());
+          if (!response.ok) {
+            throw new Error('No se pudieron obtener los partidos.');
+          }
+
+          const data = await response.json();
+          if (data && data.matches !== undefined) {
+            events = data.matches;
+            if (data.metadata?.jumpedToFuture && data.metadata?.newDate) {
+              if (selectedDate !== data.metadata.newDate) {
+                setJumpMsg(searchDirection === -1 ? "No había partidos, saltamos a la fecha anterior disponible." : "No había partidos, te mostramos la próxima fecha disponible.");
+                setSelectedDate(data.metadata.newDate);
+                setTimeout(() => setJumpMsg(null), 8000);
+                return;
+              }
             }
+          } else {
+            events = Array.isArray(data) ? data : (data.events || data.data || []);
           }
         } else {
-          events = Array.isArray(data) ? data : (data.events || data.data || []);
+          // viewMode === 'week'
+          const fetchPromises = [];
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(selectedDate + 'T12:00:00');
+            d.setDate(d.getDate() + i);
+            const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            
+            const url = new URL('https://apivacas.jariel.com.ar/api/matches/optimized');
+            url.searchParams.append('date', dateStr);
+            url.searchParams.append('direction', '1');
+            fetchPromises.push(
+              fetch(url.toString())
+                .then(async r => {
+                  if (!r.ok) return { dateStr, data: null };
+                  const data = await r.json();
+                  return { dateStr, data };
+                })
+                .catch(() => ({ dateStr, data: null }))
+            );
+          }
+          const results = await Promise.all(fetchPromises);
+          const allWeekMatchesMap = new Map<number, Match>();
+          results.forEach(({ dateStr, data }) => {
+            if (!data) return;
+            const dayMatches: Match[] = data.matches !== undefined
+              ? data.matches
+              : (Array.isArray(data) ? data : (data.events || data.data || []));
+            
+            dayMatches.forEach(m => {
+              const id = m.id || (m as any)._id;
+              if (id != null) {
+                if (m.startTimestamp) {
+                  const matchDate = new Date(m.startTimestamp * 1000);
+                  const matchDateStr = `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, '0')}-${String(matchDate.getDate()).padStart(2, '0')}`;
+                  if (matchDateStr !== dateStr) {
+                    return;
+                  }
+                }
+                allWeekMatchesMap.set(Number(id), m);
+              }
+            });
+          });
+          events = Array.from(allWeekMatchesMap.values());
+          events.sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
         }
 
         events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
@@ -193,7 +241,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
         });
 
         setAllMatches(events);
-        setMatchesListCache(selectedDate, searchDirection, isPredictionMode, events);
+        setMatchesListCache(selectedDate, searchDirection, viewMode, isPredictionMode, events);
 
         if (user) {
           try {
@@ -242,7 +290,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
       }
     };
 
-    const cached = getMatchesListCache(selectedDate, searchDirection, isPredictionMode);
+    const cached = getMatchesListCache(selectedDate, searchDirection, viewMode, isPredictionMode);
     const hasCache = !!cached;
     if (cached) {
       setAllMatches(cached);
@@ -258,7 +306,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     fetchMatchesAndPredictions(!hasCache);
     const interval = setInterval(() => fetchMatchesAndPredictions(false), 30000); // 30 segundos
     return () => clearInterval(interval);
-  }, [user, selectedDate, searchDirection]);
+  }, [user, selectedDate, searchDirection, viewMode]);
 
   // Prefetch de detalles: apenas cargan los partidos, los bajamos en background
   useEffect(() => {
@@ -376,7 +424,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const handlePrevDay = () => {
     setSearchDirection(-1);
     const d = new Date(selectedDate + 'T12:00:00');
-    d.setDate(d.getDate() - 1);
+    d.setDate(d.getDate() - (viewMode === 'week' ? 7 : 1));
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     setAllMatches([]); // Clear matches immediately to trigger skeleton
     setLoading(true); // Set loading synchronously to prevent flashing empty message
@@ -385,7 +433,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const handleNextDay = () => {
     setSearchDirection(1);
     const d = new Date(selectedDate + 'T12:00:00');
-    d.setDate(d.getDate() + 1);
+    d.setDate(d.getDate() + (viewMode === 'week' ? 7 : 1));
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     setAllMatches([]); // Clear matches immediately to trigger skeleton
     setLoading(true); // Set loading synchronously to prevent flashing empty message
@@ -522,24 +570,67 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
 
         {/* Navegador de Fecha */}
         {selectedDate && (
-          <div className="flex items-center gap-4 bg-black/40 px-3 py-2 rounded-2xl border border-white/5">
+          <div className="flex items-center gap-2 md:gap-3 bg-black/40 px-3 py-2 rounded-2xl border border-white/5 relative">
+            <button
+              onClick={() => {
+                setAllMatches([]);
+                setLoading(true);
+                setViewMode(prev => prev === 'day' ? 'week' : 'day');
+              }}
+              className="px-3 py-1.5 rounded-xl text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 hover:border-emerald-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
+            >
+              {viewMode === 'day' ? (
+                <>📅 Semana</>
+              ) : (
+                <>📆 Día</>
+              )}
+            </button>
+
+            <div className="w-px h-6 bg-white/10 shrink-0" />
+
             <button
               onClick={handlePrevDay}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold"
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold cursor-pointer"
             >
               <span>&lt;</span>
             </button>
 
-            <div className="flex flex-col items-center min-w-[120px]">
-              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-0.5 shadow-sm">FECHA</span>
-              <span className="text-sm font-black text-white capitalize shadow-sm">
-                {new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}
+            {/* Selector de fecha interactivo con input oculto */}
+            <div className="relative flex flex-col items-center min-w-[100px] md:min-w-[110px] cursor-pointer hover:bg-white/5 px-2 py-1 rounded-xl transition-all select-none">
+              <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest mb-0.5 shadow-sm leading-none">
+                {viewMode === 'week' ? 'SEMANA' : 'FECHA'}
               </span>
+              <span className="text-xs font-black text-white capitalize shadow-sm leading-none flex items-center gap-1">
+                {viewMode === 'week' ? (
+                  (() => {
+                    const startD = new Date(selectedDate + 'T12:00:00');
+                    const endD = new Date(selectedDate + 'T12:00:00');
+                    endD.setDate(endD.getDate() + 6);
+                    const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' };
+                    return `${startD.toLocaleDateString('es-ES', options)} - ${endD.toLocaleDateString('es-ES', options)}`;
+                  })()
+                ) : (
+                  new Date(selectedDate + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
+                )}
+                <span className="text-[10px] opacity-75">📅</span>
+              </span>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setSelectedDate(e.target.value);
+                    setAllMatches([]);
+                    setLoading(true);
+                  }
+                }}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
             </div>
 
             <button
               onClick={handleNextDay}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold"
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold cursor-pointer"
             >
               <span>&gt;</span>
             </button>
@@ -701,6 +792,13 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                               />
                             )}
                           </div>
+                          {viewMode === 'week' && match.startTimestamp && (
+                            <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
+                              {new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', {
+                                weekday: 'short', day: '2-digit'
+                              }).replace('.', '')}
+                            </span>
+                          )}
                           {status.isLive ? (
                             <span className="text-red-500 text-[9px] md:text-[11px] font-black animate-pulse drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] text-center leading-tight break-words">
                               {liveTime || "VIVO"}
