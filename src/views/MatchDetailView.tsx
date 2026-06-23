@@ -550,20 +550,22 @@ export default function MatchDetailView() {
 
   // Fetch H2H statistics
   useEffect(() => {
-    if (!match) return;
-    const hId = match.homeTeam?.id || match.home_team?.id;
-    const aId = match.awayTeam?.id || match.away_team?.id;
+    const hId = match?.homeTeam?.id || match?.home_team?.id;
+    const aId = match?.awayTeam?.id || match?.away_team?.id;
     if (!hId || !aId) return;
 
-    const isWorldCup = match.tournament?.id === 16 || 
-                       match.tournament?.name?.toLowerCase().includes('copa mundial') || 
-                       match.tournament?.name?.toLowerCase().includes('world cup') || 
-                       match.tournament_name?.toLowerCase().includes('mundial');
+    const isWorldCup = match?.tournament?.id === 16 || 
+                       match?.tournament?.name?.toLowerCase().includes('copa mundial') || 
+                       match?.tournament?.name?.toLowerCase().includes('world cup') || 
+                       match?.tournament_name?.toLowerCase().includes('mundial');
     
     if (isWorldCup) return;
 
     const fetchH2H = async () => {
-      setH2hLoading(true);
+      // Solo mostramos loading si no tenemos los partidos en memoria (evita parpadeos)
+      if (h2hMatches.length === 0) {
+        setH2hLoading(true);
+      }
       try {
         const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/h2h?teamA=${hId}&teamB=${aId}&limit=50`);
         if (res.ok) {
@@ -578,7 +580,7 @@ export default function MatchDetailView() {
     };
 
     fetchH2H();
-  }, [match]);
+  }, [match?.homeTeam?.id, match?.home_team?.id, match?.awayTeam?.id, match?.away_team?.id]);
 
   const processedH2H = useMemo(() => {
     if (!match || h2hMatches.length === 0) return [];
@@ -1411,7 +1413,7 @@ export default function MatchDetailView() {
       )}
 
       {/* H2H Historial de enfrentamientos (Solo ligas) */}
-      {!h2hLoading && h2hMatches.length > 0 && h2hStats && (
+      {!h2hLoading && h2hMatches.length > 1 && h2hStats && (
         <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 shadow-lg">
           
           {/* Cabecera */}
