@@ -478,16 +478,20 @@ export default function MatchDetailView() {
     return () => { isMounted = false; };
   }, [isMundialMatch]);
 
-  // Cuenta regresiva del partido
+  // Cuenta regresiva del partido / entretiempo
   useEffect(() => {
     const start = match?.startTimestamp ? (match.startTimestamp * 1000) : 0;
-    if (!start || start <= Date.now()) return;
+    const desc = typeof match?.status === 'object' ? match.status?.description?.toLowerCase() : '';
+    const isHalftime = desc?.includes('halftime') || desc === 'ht' || desc === 'pause' || desc?.includes('entretiempo') || desc?.includes('descanso');
+
+    const needsCountdown = (start > 0 && start > Date.now()) || isHalftime;
+    if (!needsCountdown) return;
 
     const interval = setInterval(() => {
       setNow(Date.now());
     }, 1000);
     return () => clearInterval(interval);
-  }, [match?.startTimestamp]);
+  }, [match?.startTimestamp, match?.status]);
 
   useEffect(() => {
     if (!id) return;
@@ -1219,7 +1223,25 @@ export default function MatchDetailView() {
 
     // Si está en juego, parseamos el description
     const desc = statusDesc?.toLowerCase();
-    if (desc?.includes('halftime') || desc === 'ht' || desc === 'pause') return 'ENTRETIEMPO';
+    if (desc?.includes('halftime') || desc === 'ht' || desc === 'pause' || desc?.includes('entretiempo') || desc?.includes('descanso')) {
+      if (match.status?.halftimeStart) {
+        const halftimeStartMs = new Date(match.status.halftimeStart).getTime();
+        const totalHalftimeMs = 15 * 60 * 1000;
+        const elapsedMs = now - halftimeStartMs;
+        const remainingMs = totalHalftimeMs - elapsedMs;
+
+        const isNegative = remainingMs < 0;
+        const absRemainingMs = Math.abs(remainingMs);
+        const totalSecs = Math.floor(absRemainingMs / 1000);
+        const m = Math.floor(totalSecs / 60);
+        const s = totalSecs % 60;
+
+        const formattedMinutes = String(m).padStart(2, '0');
+        const formattedSeconds = String(s).padStart(2, '0');
+        return `ENTRETIEMPO (${isNegative ? '-' : ''}${formattedMinutes}:${formattedSeconds})`;
+      }
+      return 'ENTRETIEMPO';
+    }
     if (desc?.includes('1st') || desc?.includes('first')) return 'PRIMER TIEMPO';
     if (desc?.includes('2nd') || desc?.includes('second')) return 'SEGUNDO TIEMPO';
     if (desc === 'aet' || desc?.includes('extra')) return 'TIEMPO EXTRA';
@@ -2479,33 +2501,33 @@ export default function MatchDetailView() {
                     <th className="py-1.5 pl-1 font-bold text-slate-400">Jugador</th>
                     <th 
                       onClick={() => handleSort('shots')}
-                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
+                      className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
                     >
                       Tiros {sortField === 'shots' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
                     </th>
                     <th 
                       onClick={() => handleSort('shotsOnTarget')}
-                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
+                      className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
                     >
-                      Al Arco {sortField === 'shotsOnTarget' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                      <span className="block sm:hidden">Arco</span><span className="hidden sm:block">Al Arco</span> {sortField === 'shotsOnTarget' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
                     </th>
                     <th 
                       onClick={() => handleSort('foulsCommitted')}
-                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
+                      className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
                     >
                       Faltas {sortField === 'foulsCommitted' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
                     </th>
                     <th 
                       onClick={() => handleSort('foulsWon')}
-                      className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'foulsWon' ? 'text-emerald-400 font-black' : ''}`}
+                      className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'foulsWon' ? 'text-emerald-400 font-black' : ''}`}
                     >
-                      Recibidas {sortField === 'foulsWon' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                      <span className="block sm:hidden">Rec.</span><span className="hidden sm:block">Recibidas</span> {sortField === 'foulsWon' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
                     </th>
                     <th 
                       onClick={() => handleSort('tackles')}
                       className={`py-1.5 pr-1 text-center cursor-pointer hover:text-white transition-colors select-none ${sortField === 'tackles' ? 'text-emerald-400 font-black' : ''}`}
                     >
-                      Entradas {sortField === 'tackles' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
+                      <span className="block sm:hidden">Ent.</span><span className="hidden sm:block">Entradas</span> {sortField === 'tackles' ? (sortDirection === 'desc' ? '↓' : '↑') : ''}
                     </th>
                   </tr>
                 </thead>
@@ -2522,15 +2544,15 @@ export default function MatchDetailView() {
                       >
                         <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
                           <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isHomeTeam ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
-                          <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[120px] sm:max-w-xs">
+                          <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[80px] xs:max-w-[120px] sm:max-w-xs">
                             {player.nameFull || player.name}
                           </span>
                           <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
                         </td>
-                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.shots || 0}</td>
-                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.shotsOnTarget || 0}</td>
-                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.foulsCommitted || 0}</td>
-                        <td className="py-2 px-2 text-center font-bold text-slate-300">{player.stats.foulsWon || 0}</td>
+                        <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-300">{player.stats.shots || 0}</td>
+                        <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-300">{player.stats.shotsOnTarget || 0}</td>
+                        <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-300">{player.stats.foulsCommitted || 0}</td>
+                        <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-300">{player.stats.foulsWon || 0}</td>
                         <td className="py-2 pr-1 text-center font-bold text-slate-300">
                           {player.stats.tackles?.ok || 0}/{player.stats.tackles?.total || 0}
                         </td>
@@ -3192,19 +3214,19 @@ export default function MatchDetailView() {
                             <th className="py-1.5 pl-1 font-bold text-slate-400">Jugador</th>
                             <th 
                               onClick={() => handlePreSort('shots')}
-                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
+                              className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
                             >
                               Tiros {preSortField === 'shots' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
                             </th>
                             <th 
                               onClick={() => handlePreSort('shotsOnTarget')}
-                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
+                              className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
                             >
-                              Al Arco {preSortField === 'shotsOnTarget' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                              <span className="block sm:hidden">Arco</span><span className="hidden sm:block">Al Arco</span> {preSortField === 'shotsOnTarget' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
                             </th>
                             <th 
                               onClick={() => handlePreSort('foulsCommitted')}
-                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
+                              className={`py-1.5 px-1 md:px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
                             >
                               Faltas {preSortField === 'foulsCommitted' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
                             </th>
@@ -3212,7 +3234,7 @@ export default function MatchDetailView() {
                               onClick={() => handlePreSort('foulsWon')}
                               className={`py-1.5 pr-1 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}`}
                             >
-                              Recibidas {preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                              <span className="block sm:hidden">Rec.</span><span className="hidden sm:block">Recibidas</span> {preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
                             </th>
                           </tr>
                         </thead>
@@ -3226,14 +3248,14 @@ export default function MatchDetailView() {
                               >
                                 <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
                                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${player.isHome ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
-                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[120px] sm:max-w-xs">
+                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[80px] xs:max-w-[120px] sm:max-w-xs">
                                     {player.nameFull || player.name}
                                   </span>
                                   <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
                                 </td>
-                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shots.toFixed(2)}</td>
-                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shotsOnTarget.toFixed(2)}</td>
-                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.foulsCommitted.toFixed(2)}</td>
+                                <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-350">{player.avgStats.shots.toFixed(2)}</td>
+                                <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-350">{player.avgStats.shotsOnTarget.toFixed(2)}</td>
+                                <td className="py-2 px-1 md:px-2 text-center font-bold text-slate-350">{player.avgStats.foulsCommitted.toFixed(2)}</td>
                                 <td className="py-2 pr-1 text-center font-bold text-slate-350">{player.avgStats.foulsWon.toFixed(2)}</td>
                               </tr>
                             );
