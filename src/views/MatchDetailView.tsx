@@ -304,6 +304,10 @@ export default function MatchDetailView() {
   const [h2hLimit, setH2hLimit] = useState<5 | 10>(10);
   const [h2hFilter, setH2hFilter] = useState<'all' | 'local'>('all');
   const [isH2hCollapsed, setIsH2hCollapsed] = useState(false);
+  const [showH2hExtended, setShowH2hExtended] = useState(false);
+  const [homeTeamMatches, setHomeTeamMatches] = useState<any[]>([]);
+  const [awayTeamMatches, setAwayTeamMatches] = useState<any[]>([]);
+  const [teamMatchesLoading, setTeamMatchesLoading] = useState(false);
 
   // Pre-match stats averages state
   const [globalPlayers, setGlobalPlayers] = useState<any[]>([]);
@@ -582,6 +586,44 @@ export default function MatchDetailView() {
     fetchH2H();
   }, [match?.homeTeam?.id, match?.home_team?.id, match?.awayTeam?.id, match?.away_team?.id]);
 
+  // Fetch home and away team matches for recent condition form/stats
+  useEffect(() => {
+    const hId = match?.homeTeam?.id || match?.home_team?.id;
+    const aId = match?.awayTeam?.id || match?.away_team?.id;
+    if (!hId || !aId || isMundialMatch) return;
+
+    let isMounted = true;
+    const fetchTeamMatches = async () => {
+      setTeamMatchesLoading(true);
+      try {
+        const [homeRes, awayRes] = await Promise.all([
+          fetch(`https://apivacas.jariel.com.ar/api/teams/${hId}/all-matches?limit=40`),
+          fetch(`https://apivacas.jariel.com.ar/api/teams/${aId}/all-matches?limit=40`)
+        ]);
+        
+        if (homeRes.ok && awayRes.ok) {
+          const homeData = await homeRes.json();
+          const awayData = await awayRes.json();
+          if (isMounted) {
+            setHomeTeamMatches(homeData);
+            setAwayTeamMatches(awayData);
+          }
+        }
+      } catch (e) {
+        console.error("Error fetching team matches:", e);
+      } finally {
+        if (isMounted) {
+          setTeamMatchesLoading(false);
+        }
+      }
+    };
+
+    fetchTeamMatches();
+    return () => {
+      isMounted = false;
+    };
+  }, [match?.homeTeam?.id, match?.home_team?.id, match?.awayTeam?.id, match?.away_team?.id, isMundialMatch]);
+
   const processedH2H = useMemo(() => {
     if (!match || h2hMatches.length === 0) return [];
     const hId = Number(match.homeTeam?.id || match.home_team?.id);
@@ -658,6 +700,198 @@ export default function MatchDetailView() {
       awayCleanSheetPct: Math.round((awayCleanSheets / total) * 100),
     };
   }, [processedH2H, match]);
+
+  // Helper to extract a statistic value from a match's live_statistics array
+  const getMatchStatValue = (m: any, statName: string, getForHome: boolean): number => {
+    if (!m.live_statistics || !Array.isArray(m.live_statistics)) return 0;
+    for (const group of m.live_statistics) {
+      if (group.statisticsItems && Array.isArray(group.statisticsItems)) {
+        const item = group.statisticsItems.find(
+          (i: any) => i.name && i.name.toLowerCase() === statName.toLowerCase()
+        );
+        if (item) {
+          const val = getForHome ? item.home : item.away;
+          return parseStatValue(val);
+        }
+      }
+    }
+    return 0;
+  };
+
+  // Helper to determine match outcome (Win/Loss/Draw) for a specific team in a match
+  const getTeamMatchOutcome = (m: any, teamId: number): 'V' | 'D' | 'E' | null => {
+    const hScoreVal = m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score;
+    const aScoreVal = m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score;
+    if (hScoreVal === undefined || hScoreVal === null || aScoreVal === undefined || aScoreVal === null) return null;
+
+    const hScore = Number(hScoreVal);
+    const aScore = Number(aScoreVal);
+    const mHomeId = Number(m.homeTeam?.id || m.home_team?.id);
+    const mAwayId = Number(m.awayTeam?.id || m.away_team?.id);
+
+    if (mHomeId === Number(teamId)) {
+      if (hScore > aScore) return 'V';
+      if (hScore < aScore) return 'D';
+      return 'E';
+    } else if (mAwayId === Number(teamId)) {
+      if (aScore > hScore) return 'V';
+      if (aScore < hScore) return 'D';
+      return 'E';
+    }
+    return null;
+  };
+
+  const h2hExtendedStats = useMemo(() => {
+    if (!match || processedH2H.length === 0) return null;
+    const hId = Number(match.homeTeam?.id || match.home_team?.id);
+
+    let homeCorners = 0;
+    let homeFouls = 0;
+    let homeYellowCards = 0;
+    let homeShots = 0;
+
+    let awayCorners = 0;
+    let awayFouls = 0;
+    let awayYellowCards = 0;
+    let awayShots = 0;
+
+    let matchesWithStats = 0;
+
+    processedH2H.forEach(m => {
+      if (!m.live_statistics || !Array.isArray(m.live_statistics) || m.live_statistics.length === 0) return;
+
+      matchesWithStats++;
+
+      const isCurrentHomeTeamHome = Number(m.homeTeam?.id || m.home_team?.id) === hId;
+
+      const homeCornersVal = getMatchStatValue(m, "Corner kicks", true);
+      const homeFoulsVal = getMatchStatValue(m, "Fouls", true);
+      const homeYellowCardsVal = getMatchStatValue(m, "Yellow cards", true);
+      const homeShotsVal = getMatchStatValue(m, "Total shots", true);
+
+      const awayCornersVal = getMatchStatValue(m, "Corner kicks", false);
+      const awayFoulsVal = getMatchStatValue(m, "Fouls", false);
+      const awayYellowCardsVal = getMatchStatValue(m, "Yellow cards", false);
+      const awayShotsVal = getMatchStatValue(m, "Total shots", false);
+
+      if (isCurrentHomeTeamHome) {
+        homeCorners += homeCornersVal;
+        homeFouls += homeFoulsVal;
+        homeYellowCards += homeYellowCardsVal;
+        homeShots += homeShotsVal;
+
+        awayCorners += awayCornersVal;
+        awayFouls += awayFoulsVal;
+        awayYellowCards += awayYellowCardsVal;
+        awayShots += awayShotsVal;
+      } else {
+        homeCorners += awayCornersVal;
+        homeFouls += awayFoulsVal;
+        homeYellowCards += awayYellowCardsVal;
+        homeShots += awayShotsVal;
+
+        awayCorners += homeCornersVal;
+        awayFouls += homeFoulsVal;
+        awayYellowCards += homeYellowCardsVal;
+        awayShots += homeShotsVal;
+      }
+    });
+
+    if (matchesWithStats === 0) return null;
+
+    return {
+      matchesWithStats,
+      homeCornersAvg: (homeCorners / matchesWithStats).toFixed(1),
+      homeFoulsAvg: (homeFouls / matchesWithStats).toFixed(1),
+      homeYellowCardsAvg: (homeYellowCards / matchesWithStats).toFixed(1),
+      homeShotsAvg: (homeShots / matchesWithStats).toFixed(1),
+
+      awayCornersAvg: (awayCorners / matchesWithStats).toFixed(1),
+      awayFoulsAvg: (awayFouls / matchesWithStats).toFixed(1),
+      awayYellowCardsAvg: (awayYellowCards / matchesWithStats).toFixed(1),
+      awayShotsAvg: (awayShots / matchesWithStats).toFixed(1),
+    };
+  }, [processedH2H, match]);
+
+  const processedHomeTeamMatches = useMemo(() => {
+    if (!match || homeTeamMatches.length === 0) return [];
+    const hId = Number(match.homeTeam?.id || match.home_team?.id);
+    const now = Math.floor(Date.now() / 1000);
+
+    const filtered = homeTeamMatches.filter((m: any) => {
+      const mHomeId = Number(m.homeTeam?.id || m.home_team?.id);
+      const isHome = mHomeId === hId;
+      const isPlayed = m.startTimestamp && m.startTimestamp < now;
+      const notWorldCup = m.tournament?.id !== 16 && m.tournament_id !== 16;
+      return isHome && isPlayed && notWorldCup;
+    });
+
+    return [...filtered].sort((a, b) => (b.startTimestamp || 0) - (a.startTimestamp || 0)).slice(0, 5);
+  }, [homeTeamMatches, match]);
+
+  const processedAwayTeamMatches = useMemo(() => {
+    if (!match || awayTeamMatches.length === 0) return [];
+    const aId = Number(match.awayTeam?.id || match.away_team?.id);
+    const now = Math.floor(Date.now() / 1000);
+
+    const filtered = awayTeamMatches.filter((m: any) => {
+      const mAwayId = Number(m.awayTeam?.id || m.away_team?.id);
+      const isAway = mAwayId === aId;
+      const isPlayed = m.startTimestamp && m.startTimestamp < now;
+      const notWorldCup = m.tournament?.id !== 16 && m.tournament_id !== 16;
+      return isAway && isPlayed && notWorldCup;
+    });
+
+    return [...filtered].sort((a, b) => (b.startTimestamp || 0) - (a.startTimestamp || 0)).slice(0, 5);
+  }, [awayTeamMatches, match]);
+
+  const homeTeamAverages = useMemo(() => {
+    if (processedHomeTeamMatches.length === 0) return null;
+
+    let totalShots = 0;
+    let totalCorners = 0;
+    let totalFouls = 0;
+    let matchesWithStats = 0;
+
+    processedHomeTeamMatches.forEach(m => {
+      if (!m.live_statistics || !Array.isArray(m.live_statistics) || m.live_statistics.length === 0) return;
+      matchesWithStats++;
+      totalShots += getMatchStatValue(m, "Total shots", true);
+      totalCorners += getMatchStatValue(m, "Corner kicks", true);
+      totalFouls += getMatchStatValue(m, "Fouls", true);
+    });
+
+    return {
+      matchesWithStats,
+      shotsAvg: matchesWithStats > 0 ? (totalShots / matchesWithStats).toFixed(1) : '-',
+      cornersAvg: matchesWithStats > 0 ? (totalCorners / matchesWithStats).toFixed(1) : '-',
+      foulsAvg: matchesWithStats > 0 ? (totalFouls / matchesWithStats).toFixed(1) : '-',
+    };
+  }, [processedHomeTeamMatches]);
+
+  const awayTeamAverages = useMemo(() => {
+    if (processedAwayTeamMatches.length === 0) return null;
+
+    let totalShots = 0;
+    let totalCorners = 0;
+    let totalFouls = 0;
+    let matchesWithStats = 0;
+
+    processedAwayTeamMatches.forEach(m => {
+      if (!m.live_statistics || !Array.isArray(m.live_statistics) || m.live_statistics.length === 0) return;
+      matchesWithStats++;
+      totalShots += getMatchStatValue(m, "Total shots", false);
+      totalCorners += getMatchStatValue(m, "Corner kicks", false);
+      totalFouls += getMatchStatValue(m, "Fouls", false);
+    });
+
+    return {
+      matchesWithStats,
+      shotsAvg: matchesWithStats > 0 ? (totalShots / matchesWithStats).toFixed(1) : '-',
+      cornersAvg: matchesWithStats > 0 ? (totalCorners / matchesWithStats).toFixed(1) : '-',
+      foulsAvg: matchesWithStats > 0 ? (totalFouls / matchesWithStats).toFixed(1) : '-',
+    };
+  }, [processedAwayTeamMatches]);
 
   // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos con actualización automática en vivo
   useEffect(() => {
@@ -1567,6 +1801,62 @@ export default function MatchDetailView() {
 
               </div>
 
+              {/* Estadísticas Promedio H2H Plegable */}
+              {h2hExtendedStats && (
+                <div className="border border-white/5 rounded-xl overflow-hidden bg-black/10 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowH2hExtended(!showH2hExtended)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-[10px] md:text-xs font-bold text-slate-400 hover:text-white transition-colors bg-white/[0.01] hover:bg-white/[0.03] select-none cursor-pointer border-0"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span>📊</span>
+                      <span>Ver estadísticas promedio H2H</span>
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${showH2hExtended ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showH2hExtended && (
+                    <div className="p-3 bg-[#080d12]/50 border-t border-white/5 flex flex-col gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners Promedio</span>
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
+                            <span className="text-emerald-400">{h2hExtendedStats.homeCornersAvg}</span>
+                            <span className="text-slate-600 font-sans">-</span>
+                            <span className="text-indigo-400">{h2hExtendedStats.awayCornersAvg}</span>
+                          </div>
+                        </div>
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas Promedio</span>
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
+                            <span className="text-emerald-400">{h2hExtendedStats.homeFoulsAvg}</span>
+                            <span className="text-slate-600 font-sans">-</span>
+                            <span className="text-indigo-400">{h2hExtendedStats.awayFoulsAvg}</span>
+                          </div>
+                        </div>
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tarjetas Amarillas</span>
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
+                            <span className="text-emerald-400">{h2hExtendedStats.homeYellowCardsAvg}</span>
+                            <span className="text-slate-600 font-sans">-</span>
+                            <span className="text-indigo-400">{h2hExtendedStats.awayYellowCardsAvg}</span>
+                          </div>
+                        </div>
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Remates Promedio</span>
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
+                            <span className="text-emerald-400">{h2hExtendedStats.homeShotsAvg}</span>
+                            <span className="text-slate-600 font-sans">-</span>
+                            <span className="text-indigo-400">{h2hExtendedStats.awayShotsAvg}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Desglose de Partidos Plegable */}
               <div className="border border-white/5 rounded-xl overflow-hidden bg-black/10">
                 <button
@@ -1633,6 +1923,213 @@ export default function MatchDetailView() {
             </div>
           )}
 
+        </div>
+      )}
+
+      {/* Forma Reciente y Promedios (Solo ligas, excluyendo mundial) */}
+      {!isMundialMatch && !teamMatchesLoading && (processedHomeTeamMatches.length > 0 || processedAwayTeamMatches.length > 0) && (
+        <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 shadow-lg animate-fade-in">
+          {/* Cabecera */}
+          <div className="flex items-center gap-2 pb-3 border-b border-white/5">
+            <span className="w-6 h-6 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20 text-xs">📈</span>
+            <h3 className="text-sm font-bold text-white">Rendimiento en Condición</h3>
+            <span className="text-[10px] bg-white/5 border border-white/5 text-slate-400 px-2 py-0.5 rounded-full font-bold">
+              Últimos 5 partidos ({hName} de Local / {aName} de Visita)
+            </span>
+          </div>
+
+          {/* Grid de 2 Columnas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 divide-y md:divide-y-0 md:divide-x divide-white/5">
+            
+            {/* COLUMNA LOCAL */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2">
+                <img
+                  src={`/escudos/${hId}.png`}
+                  alt={hName}
+                  className="w-6 h-6 object-contain shrink-0"
+                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                />
+                <div className="flex flex-col">
+                  <h4 className="text-xs font-black text-emerald-400 uppercase tracking-wider">{hName}</h4>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase">Como Local</span>
+                </div>
+              </div>
+
+              {/* Racha / Form badges */}
+              <div className="flex flex-col gap-2 bg-black/20 p-3 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Historial Reciente (Local)</span>
+                <div className="flex items-center gap-2">
+                  {processedHomeTeamMatches.map((m, idx) => {
+                    const outcome = getTeamMatchOutcome(m, hId);
+                    if (!outcome) return null;
+                    const badgeColors = {
+                      V: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.2)]',
+                      D: 'bg-red-500/20 text-red-400 border-red-500/30',
+                      E: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                    };
+                    return (
+                      <span
+                        key={idx}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border ${badgeColors[outcome]}`}
+                        title={outcome === 'V' ? 'Victoria' : outcome === 'D' ? 'Derrota' : 'Empate'}
+                      >
+                        {outcome}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Promedios Local */}
+              {homeTeamAverages && (
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tiros</span>
+                    <span className="text-sm font-black text-slate-200">{homeTeamAverages.shotsAvg}</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners</span>
+                    <span className="text-sm font-black text-slate-200">{homeTeamAverages.cornersAvg}</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas</span>
+                    <span className="text-sm font-black text-slate-200">{homeTeamAverages.foulsAvg}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Desglose Partidos Local */}
+              <div className="flex flex-col divide-y divide-white/[0.03] bg-[#0b1015]/40 rounded-xl border border-white/5 overflow-hidden">
+                {processedHomeTeamMatches.map((m, idx) => {
+                  const outcome = getTeamMatchOutcome(m, hId);
+                  const opponentName = m.awayTeam?.name || m.away_team?.name || 'Visitante';
+                  const mhScore = m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score ?? 0;
+                  const maScore = m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score ?? 0;
+                  const dateText = m.startTimestamp 
+                    ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+                    : '';
+                  
+                  return (
+                    <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs font-semibold hover:bg-white/[0.01]">
+                      <span className="text-[9px] text-slate-500 font-bold uppercase">{dateText}</span>
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center px-2">
+                        <span className="text-slate-400 truncate max-w-[80px] text-right">{hName}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-[10px] font-black font-mono shrink-0">
+                          {mhScore} - {maScore}
+                        </span>
+                        <span className="text-slate-350 truncate max-w-[80px] font-bold">{opponentName}</span>
+                      </div>
+                      {outcome && (
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border ${
+                          outcome === 'V' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                          outcome === 'D' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                          'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                        }`}>
+                          {outcome}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* COLUMNA VISITANTE */}
+            <div className="flex flex-col gap-4 pt-6 md:pt-0 md:pl-6">
+              <div className="flex items-center gap-2">
+                <img
+                  src={`/escudos/${aId}.png`}
+                  alt={aName}
+                  className="w-6 h-6 object-contain shrink-0"
+                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                />
+                <div className="flex flex-col">
+                  <h4 className="text-xs font-black text-indigo-400 uppercase tracking-wider">{aName}</h4>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase">Como Visitante</span>
+                </div>
+              </div>
+
+              {/* Racha / Form badges */}
+              <div className="flex flex-col gap-2 bg-black/20 p-3 rounded-xl border border-white/5">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Historial Reciente (Visita)</span>
+                <div className="flex items-center gap-2">
+                  {processedAwayTeamMatches.map((m, idx) => {
+                    const outcome = getTeamMatchOutcome(m, aId);
+                    if (!outcome) return null;
+                    const badgeColors = {
+                      V: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.2)]',
+                      D: 'bg-red-500/20 text-red-400 border-red-500/30',
+                      E: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                    };
+                    return (
+                      <span
+                        key={idx}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border ${badgeColors[outcome]}`}
+                        title={outcome === 'V' ? 'Victoria' : outcome === 'D' ? 'Derrota' : 'Empate'}
+                      >
+                        {outcome}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Promedios Visitante */}
+              {awayTeamAverages && (
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tiros</span>
+                    <span className="text-sm font-black text-slate-200">{awayTeamAverages.shotsAvg}</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners</span>
+                    <span className="text-sm font-black text-slate-200">{awayTeamAverages.cornersAvg}</span>
+                  </div>
+                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas</span>
+                    <span className="text-sm font-black text-slate-200">{awayTeamAverages.foulsAvg}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Desglose Partidos Visitante */}
+              <div className="flex flex-col divide-y divide-white/[0.03] bg-[#0b1015]/40 rounded-xl border border-white/5 overflow-hidden">
+                {processedAwayTeamMatches.map((m, idx) => {
+                  const outcome = getTeamMatchOutcome(m, aId);
+                  const opponentName = m.homeTeam?.name || m.home_team?.name || 'Local';
+                  const mhScore = m.homeScore?.current ?? m.homeTeam?.score ?? m.home_team?.score ?? 0;
+                  const maScore = m.awayScore?.current ?? m.awayTeam?.score ?? m.away_team?.score ?? 0;
+                  const dateText = m.startTimestamp 
+                    ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+                    : '';
+                  
+                  return (
+                    <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs font-semibold hover:bg-white/[0.01]">
+                      <span className="text-[9px] text-slate-500 font-bold uppercase">{dateText}</span>
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center px-2">
+                        <span className="text-slate-350 truncate max-w-[80px] text-right font-bold">{opponentName}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-[10px] font-black font-mono shrink-0">
+                          {mhScore} - {maScore}
+                        </span>
+                        <span className="text-slate-400 truncate max-w-[80px]">{aName}</span>
+                      </div>
+                      {outcome && (
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border ${
+                          outcome === 'V' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                          outcome === 'D' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                          'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                        }`}>
+                          {outcome}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
         </div>
       )}
 
