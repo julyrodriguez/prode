@@ -308,6 +308,7 @@ export default function MatchDetailView() {
   const [homeTeamMatches, setHomeTeamMatches] = useState<any[]>([]);
   const [awayTeamMatches, setAwayTeamMatches] = useState<any[]>([]);
   const [teamMatchesLoading, setTeamMatchesLoading] = useState(false);
+  const [showTeamStatsExtended, setShowTeamStatsExtended] = useState(false);
 
   // Pre-match stats averages state
   const [globalPlayers, setGlobalPlayers] = useState<any[]>([]);
@@ -701,13 +702,25 @@ export default function MatchDetailView() {
     };
   }, [processedH2H, match]);
 
+  const STAT_MAPPINGS: Record<string, string[]> = {
+    corners: ['saques de esquina', 'corner kicks', 'córners', 'saques de esquina'],
+    fouls: ['faltas', 'fouls'],
+    yellowCards: ['tarjetas amarillas', 'yellow cards'],
+    shots: ['total remates', 'total shots', 'tiros totales', 'remates', 'tiros'],
+    shotsOnTarget: ['remates al arco', 'shots on target', 'tiros al arco'],
+    possession: ['posesión', 'ball possession', 'posesión del balón', 'posesion']
+  };
+
   // Helper to extract a statistic value from a match's live_statistics array
-  const getMatchStatValue = (m: any, statName: string, getForHome: boolean): number => {
+  const getMatchStatValue = (m: any, statKey: string, getForHome: boolean): number => {
     if (!m.live_statistics || !Array.isArray(m.live_statistics)) return 0;
+    
+    const possibleNames = STAT_MAPPINGS[statKey] || [statKey.toLowerCase()];
+
     for (const group of m.live_statistics) {
       if (group.statisticsItems && Array.isArray(group.statisticsItems)) {
         const item = group.statisticsItems.find(
-          (i: any) => i.name && i.name.toLowerCase() === statName.toLowerCase()
+          (i: any) => i.name && possibleNames.includes(i.name.toLowerCase())
         );
         if (item) {
           const val = getForHome ? item.home : item.away;
@@ -749,11 +762,15 @@ export default function MatchDetailView() {
     let homeFouls = 0;
     let homeYellowCards = 0;
     let homeShots = 0;
+    let homeShotsOnTarget = 0;
+    let homePossession = 0;
 
     let awayCorners = 0;
     let awayFouls = 0;
     let awayYellowCards = 0;
     let awayShots = 0;
+    let awayShotsOnTarget = 0;
+    let awayPossession = 0;
 
     let matchesWithStats = 0;
 
@@ -764,36 +781,48 @@ export default function MatchDetailView() {
 
       const isCurrentHomeTeamHome = Number(m.homeTeam?.id || m.home_team?.id) === hId;
 
-      const homeCornersVal = getMatchStatValue(m, "Corner kicks", true);
-      const homeFoulsVal = getMatchStatValue(m, "Fouls", true);
-      const homeYellowCardsVal = getMatchStatValue(m, "Yellow cards", true);
-      const homeShotsVal = getMatchStatValue(m, "Total shots", true);
+      const homeCornersVal = getMatchStatValue(m, "corners", true);
+      const homeFoulsVal = getMatchStatValue(m, "fouls", true);
+      const homeYellowCardsVal = getMatchStatValue(m, "yellowCards", true);
+      const homeShotsVal = getMatchStatValue(m, "shots", true);
+      const homeShotsOnTargetVal = getMatchStatValue(m, "shotsOnTarget", true);
+      const homePossessionVal = getMatchStatValue(m, "possession", true);
 
-      const awayCornersVal = getMatchStatValue(m, "Corner kicks", false);
-      const awayFoulsVal = getMatchStatValue(m, "Fouls", false);
-      const awayYellowCardsVal = getMatchStatValue(m, "Yellow cards", false);
-      const awayShotsVal = getMatchStatValue(m, "Total shots", false);
+      const awayCornersVal = getMatchStatValue(m, "corners", false);
+      const awayFoulsVal = getMatchStatValue(m, "fouls", false);
+      const awayYellowCardsVal = getMatchStatValue(m, "yellowCards", false);
+      const awayShotsVal = getMatchStatValue(m, "shots", false);
+      const awayShotsOnTargetVal = getMatchStatValue(m, "shotsOnTarget", false);
+      const awayPossessionVal = getMatchStatValue(m, "possession", false);
 
       if (isCurrentHomeTeamHome) {
         homeCorners += homeCornersVal;
         homeFouls += homeFoulsVal;
         homeYellowCards += homeYellowCardsVal;
         homeShots += homeShotsVal;
+        homeShotsOnTarget += homeShotsOnTargetVal;
+        homePossession += homePossessionVal;
 
         awayCorners += awayCornersVal;
         awayFouls += awayFoulsVal;
         awayYellowCards += awayYellowCardsVal;
         awayShots += awayShotsVal;
+        awayShotsOnTarget += awayShotsOnTargetVal;
+        awayPossession += awayPossessionVal;
       } else {
         homeCorners += awayCornersVal;
         homeFouls += awayFoulsVal;
         homeYellowCards += awayYellowCardsVal;
         homeShots += awayShotsVal;
+        homeShotsOnTarget += awayShotsOnTargetVal;
+        homePossession += awayPossessionVal;
 
         awayCorners += homeCornersVal;
         awayFouls += homeFoulsVal;
         awayYellowCards += homeYellowCardsVal;
         awayShots += homeShotsVal;
+        awayShotsOnTarget += homeShotsOnTargetVal;
+        awayPossession += homePossessionVal;
       }
     });
 
@@ -805,11 +834,15 @@ export default function MatchDetailView() {
       homeFoulsAvg: (homeFouls / matchesWithStats).toFixed(1),
       homeYellowCardsAvg: (homeYellowCards / matchesWithStats).toFixed(1),
       homeShotsAvg: (homeShots / matchesWithStats).toFixed(1),
+      homeShotsOnTargetAvg: (homeShotsOnTarget / matchesWithStats).toFixed(1),
+      homePossessionAvg: `${Math.round(homePossession / matchesWithStats)}%`,
 
       awayCornersAvg: (awayCorners / matchesWithStats).toFixed(1),
       awayFoulsAvg: (awayFouls / matchesWithStats).toFixed(1),
       awayYellowCardsAvg: (awayYellowCards / matchesWithStats).toFixed(1),
       awayShotsAvg: (awayShots / matchesWithStats).toFixed(1),
+      awayShotsOnTargetAvg: (awayShotsOnTarget / matchesWithStats).toFixed(1),
+      awayPossessionAvg: `${Math.round(awayPossession / matchesWithStats)}%`,
     };
   }, [processedH2H, match]);
 
@@ -851,14 +884,20 @@ export default function MatchDetailView() {
     let totalShots = 0;
     let totalCorners = 0;
     let totalFouls = 0;
+    let totalShotsOnTarget = 0;
+    let totalYellowCards = 0;
+    let totalPossession = 0;
     let matchesWithStats = 0;
 
     processedHomeTeamMatches.forEach(m => {
       if (!m.live_statistics || !Array.isArray(m.live_statistics) || m.live_statistics.length === 0) return;
       matchesWithStats++;
-      totalShots += getMatchStatValue(m, "Total shots", true);
-      totalCorners += getMatchStatValue(m, "Corner kicks", true);
-      totalFouls += getMatchStatValue(m, "Fouls", true);
+      totalShots += getMatchStatValue(m, "shots", true);
+      totalCorners += getMatchStatValue(m, "corners", true);
+      totalFouls += getMatchStatValue(m, "fouls", true);
+      totalShotsOnTarget += getMatchStatValue(m, "shotsOnTarget", true);
+      totalYellowCards += getMatchStatValue(m, "yellowCards", true);
+      totalPossession += getMatchStatValue(m, "possession", true);
     });
 
     return {
@@ -866,6 +905,9 @@ export default function MatchDetailView() {
       shotsAvg: matchesWithStats > 0 ? (totalShots / matchesWithStats).toFixed(1) : '-',
       cornersAvg: matchesWithStats > 0 ? (totalCorners / matchesWithStats).toFixed(1) : '-',
       foulsAvg: matchesWithStats > 0 ? (totalFouls / matchesWithStats).toFixed(1) : '-',
+      shotsOnTargetAvg: matchesWithStats > 0 ? (totalShotsOnTarget / matchesWithStats).toFixed(1) : '-',
+      yellowCardsAvg: matchesWithStats > 0 ? (totalYellowCards / matchesWithStats).toFixed(1) : '-',
+      possessionAvg: matchesWithStats > 0 ? `${Math.round(totalPossession / matchesWithStats)}%` : '-',
     };
   }, [processedHomeTeamMatches]);
 
@@ -875,14 +917,20 @@ export default function MatchDetailView() {
     let totalShots = 0;
     let totalCorners = 0;
     let totalFouls = 0;
+    let totalShotsOnTarget = 0;
+    let totalYellowCards = 0;
+    let totalPossession = 0;
     let matchesWithStats = 0;
 
     processedAwayTeamMatches.forEach(m => {
       if (!m.live_statistics || !Array.isArray(m.live_statistics) || m.live_statistics.length === 0) return;
       matchesWithStats++;
-      totalShots += getMatchStatValue(m, "Total shots", false);
-      totalCorners += getMatchStatValue(m, "Corner kicks", false);
-      totalFouls += getMatchStatValue(m, "Fouls", false);
+      totalShots += getMatchStatValue(m, "shots", false);
+      totalCorners += getMatchStatValue(m, "corners", false);
+      totalFouls += getMatchStatValue(m, "fouls", false);
+      totalShotsOnTarget += getMatchStatValue(m, "shotsOnTarget", false);
+      totalYellowCards += getMatchStatValue(m, "yellowCards", false);
+      totalPossession += getMatchStatValue(m, "possession", false);
     });
 
     return {
@@ -890,6 +938,9 @@ export default function MatchDetailView() {
       shotsAvg: matchesWithStats > 0 ? (totalShots / matchesWithStats).toFixed(1) : '-',
       cornersAvg: matchesWithStats > 0 ? (totalCorners / matchesWithStats).toFixed(1) : '-',
       foulsAvg: matchesWithStats > 0 ? (totalFouls / matchesWithStats).toFixed(1) : '-',
+      shotsOnTargetAvg: matchesWithStats > 0 ? (totalShotsOnTarget / matchesWithStats).toFixed(1) : '-',
+      yellowCardsAvg: matchesWithStats > 0 ? (totalYellowCards / matchesWithStats).toFixed(1) : '-',
+      possessionAvg: matchesWithStats > 0 ? `${Math.round(totalPossession / matchesWithStats)}%` : '-',
     };
   }, [processedAwayTeamMatches]);
 
@@ -1818,7 +1869,7 @@ export default function MatchDetailView() {
 
                   {showH2hExtended && (
                     <div className="p-3 bg-[#080d12]/50 border-t border-white/5 flex flex-col gap-3">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
                         <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
                           <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners Promedio</span>
                           <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
@@ -1849,6 +1900,22 @@ export default function MatchDetailView() {
                             <span className="text-emerald-400">{h2hExtendedStats.homeShotsAvg}</span>
                             <span className="text-slate-600 font-sans">-</span>
                             <span className="text-indigo-400">{h2hExtendedStats.awayShotsAvg}</span>
+                          </div>
+                        </div>
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Al Arco Promedio</span>
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
+                            <span className="text-emerald-400">{h2hExtendedStats.homeShotsOnTargetAvg}</span>
+                            <span className="text-slate-600 font-sans">-</span>
+                            <span className="text-indigo-400">{h2hExtendedStats.awayShotsOnTargetAvg}</span>
+                          </div>
+                        </div>
+                        <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                          <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Posesión Promedio</span>
+                          <div className="flex justify-center items-center gap-1 text-[11px] font-bold text-slate-200">
+                            <span className="text-emerald-400">{h2hExtendedStats.homePossessionAvg}</span>
+                            <span className="text-slate-600 font-sans">-</span>
+                            <span className="text-indigo-400">{h2hExtendedStats.awayPossessionAvg}</span>
                           </div>
                         </div>
                       </div>
@@ -1983,19 +2050,38 @@ export default function MatchDetailView() {
 
               {/* Promedios Local */}
               {homeTeamAverages && (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tiros</span>
-                    <span className="text-sm font-black text-slate-200">{homeTeamAverages.shotsAvg}</span>
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tiros</span>
+                      <span className="text-sm font-black text-slate-200">{homeTeamAverages.shotsAvg}</span>
+                    </div>
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners</span>
+                      <span className="text-sm font-black text-slate-200">{homeTeamAverages.cornersAvg}</span>
+                    </div>
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas</span>
+                      <span className="text-sm font-black text-slate-200">{homeTeamAverages.foulsAvg}</span>
+                    </div>
                   </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners</span>
-                    <span className="text-sm font-black text-slate-200">{homeTeamAverages.cornersAvg}</span>
-                  </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas</span>
-                    <span className="text-sm font-black text-slate-200">{homeTeamAverages.foulsAvg}</span>
-                  </div>
+
+                  {showTeamStatsExtended && (
+                    <div className="grid grid-cols-3 gap-2 animate-fade-in border-t border-white/5 pt-2 mt-1">
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Al Arco</span>
+                        <span className="text-sm font-black text-emerald-400">{homeTeamAverages.shotsOnTargetAvg}</span>
+                      </div>
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Amarillas</span>
+                        <span className="text-sm font-black text-yellow-400">{homeTeamAverages.yellowCardsAvg}</span>
+                      </div>
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Posesión</span>
+                        <span className="text-sm font-black text-teal-400">{homeTeamAverages.possessionAvg}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2018,7 +2104,7 @@ export default function MatchDetailView() {
                         <span className="px-1.5 py-0.5 rounded bg-black/40 border border-white/5 text-[10px] font-black font-mono shrink-0">
                           {mhScore} - {maScore}
                         </span>
-                        <span className="text-slate-350 truncate max-w-[80px] font-bold">{opponentName}</span>
+                        <span className="text-slate-355 truncate max-w-[80px] font-bold">{opponentName}</span>
                       </div>
                       {outcome && (
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border ${
@@ -2077,19 +2163,38 @@ export default function MatchDetailView() {
 
               {/* Promedios Visitante */}
               {awayTeamAverages && (
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tiros</span>
-                    <span className="text-sm font-black text-slate-200">{awayTeamAverages.shotsAvg}</span>
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Tiros</span>
+                      <span className="text-sm font-black text-slate-200">{awayTeamAverages.shotsAvg}</span>
+                    </div>
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners</span>
+                      <span className="text-sm font-black text-slate-200">{awayTeamAverages.cornersAvg}</span>
+                    </div>
+                    <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                      <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas</span>
+                      <span className="text-sm font-black text-slate-200">{awayTeamAverages.foulsAvg}</span>
+                    </div>
                   </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Córners</span>
-                    <span className="text-sm font-black text-slate-200">{awayTeamAverages.cornersAvg}</span>
-                  </div>
-                  <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Faltas</span>
-                    <span className="text-sm font-black text-slate-200">{awayTeamAverages.foulsAvg}</span>
-                  </div>
+
+                  {showTeamStatsExtended && (
+                    <div className="grid grid-cols-3 gap-2 animate-fade-in border-t border-white/5 pt-2 mt-1">
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Al Arco</span>
+                        <span className="text-sm font-black text-emerald-400">{awayTeamAverages.shotsOnTargetAvg}</span>
+                      </div>
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Amarillas</span>
+                        <span className="text-sm font-black text-yellow-400">{awayTeamAverages.yellowCardsAvg}</span>
+                      </div>
+                      <div className="bg-black/20 p-2 rounded-lg border border-white/5 text-center">
+                        <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mb-0.5">Posesión</span>
+                        <span className="text-sm font-black text-teal-400">{awayTeamAverages.possessionAvg}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2130,6 +2235,17 @@ export default function MatchDetailView() {
             </div>
 
           </div>
+
+          {/* Botón Ver Más Estadísticas de Promedios */}
+          {(homeTeamAverages || awayTeamAverages) && (
+            <button
+              type="button"
+              onClick={() => setShowTeamStatsExtended(!showTeamStatsExtended)}
+              className="w-full flex items-center justify-center gap-1.5 py-1.5 border border-white/5 rounded-xl bg-black/20 hover:bg-black/40 hover:text-white text-[10px] md:text-xs font-bold text-slate-400 transition-colors select-none cursor-pointer"
+            >
+              <span>{showTeamStatsExtended ? 'Ver menos estadísticas ↑' : 'Ver más estadísticas (Remates al arco, Amarillas, Posesión) ↓'}</span>
+            </button>
+          )}
         </div>
       )}
 
