@@ -283,7 +283,7 @@ export default function TeamView() {
         <>
           {/* ─── Próximos Partidos ─── */}
           {upcomingMatches.length > 0 && (
-            <div className="flex flex-col gap-6 w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
+            <div className="flex flex-col gap-4 w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 md:p-6 shadow-sm">
               <div className="flex items-center gap-3 border-b border-white/5 pb-3">
                 <span className="text-xl">📅</span>
                 <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Próximos Partidos</h3>
@@ -303,14 +303,14 @@ export default function TeamView() {
                     <div
                       key={match.id || match._id || idx}
                       onClick={() => router.push(`/match/${match.id || match._id}`)}
-                      className="grid grid-cols-[60px_1fr_auto_1fr] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-3"
+                      className="grid grid-cols-[60px_1fr_auto_1fr] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-2.5"
                     >
-                      <div className="flex flex-col items-center justify-center border-r border-white/5 pr-2 md:pr-4 mr-1 md:mr-2">
+                      <div className="flex flex-col items-center justify-center border-r border-white/5 pr-1.5 md:pr-3 mr-1 md:mr-1.5">
                         <span className="text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1 text-center">{startDate}</span>
                         <span className="text-xs text-slate-300 font-semibold leading-none">{startHour}</span>
                       </div>
-                      <div className={`text-right text-xs md:text-sm font-bold truncate flex-1 flex items-center justify-end gap-2 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
-                        {hName}
+                      <div className={`text-right text-xs md:text-sm font-bold flex-1 flex items-center justify-end gap-2 min-w-0 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                        <span className="truncate">{hName}</span>
                         <img
                           src={`/escudos/${hId}.png`}
                           alt={hName}
@@ -321,14 +321,14 @@ export default function TeamView() {
                       <div className="flex items-center gap-1.5 md:gap-3 px-3 mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-1">
                         <span className="text-xs text-slate-400 font-bold">vs</span>
                       </div>
-                      <div className={`text-left text-xs md:text-sm font-bold truncate flex-1 flex items-center gap-2 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                      <div className={`text-left text-xs md:text-sm font-bold flex-1 flex items-center gap-2 min-w-0 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
                         <img
                           src={`/escudos/${aId}.png`}
                           alt={aName}
                           className="w-5 h-5 object-contain shrink-0"
                           onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
                         />
-                        {aName}
+                        <span className="truncate">{aName}</span>
                       </div>
                     </div>
                   );
@@ -339,7 +339,7 @@ export default function TeamView() {
 
           {/* ─── Últimos Resultados ─── */}
           {recentMatches.length > 0 && (
-            <div className="flex flex-col gap-6 w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
+            <div className="flex flex-col gap-4 w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 md:p-6 shadow-sm">
               <div className="flex items-center gap-3 border-b border-white/5 pb-3">
                 <span className="text-xl">🏆</span>
                 <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Últimos Resultados</h3>
@@ -380,14 +380,14 @@ export default function TeamView() {
                     <div 
                       key={match.id || match._id || idx} 
                       onClick={() => router.push(`/match/${match.id || match._id}`)}
-                      className="grid grid-cols-[60px_1fr_auto_1fr_30px] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-3"
+                      className="grid grid-cols-[60px_1fr_auto_1fr_30px] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-2.5"
                     >
-                      <div className="flex flex-col items-center justify-center border-r border-white/5 pr-2 md:pr-4 mr-1 md:mr-2">
+                      <div className="flex flex-col items-center justify-center border-r border-white/5 pr-1.5 md:pr-3 mr-1 md:mr-1.5">
                         <span className="text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1 text-center">{startDate}</span>
                         <span className="text-xs text-slate-300 font-semibold leading-none">{startHour}</span>
                       </div>
-                      <div className={`text-right text-xs md:text-sm font-bold truncate flex-1 flex items-center justify-end gap-2 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
-                        {hName}
+                      <div className={`text-right text-xs md:text-sm font-bold flex-1 flex items-center justify-end gap-2 min-w-0 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                        <span className="truncate">{hName}</span>
                         <img
                           src={`/escudos/${hId}.png`}
                           alt={hName}
@@ -400,14 +400,14 @@ export default function TeamView() {
                         <span className="text-xs text-slate-500">-</span>
                         <span className={`text-sm md:text-base font-black ${!isHome ? 'text-emerald-400' : 'text-white'}`}>{aScore ?? '-'}</span>
                       </div>
-                      <div className={`text-left text-xs md:text-sm font-bold truncate flex-1 flex items-center gap-2 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                      <div className={`text-left text-xs md:text-sm font-bold flex-1 flex items-center gap-2 min-w-0 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
                         <img
                           src={`/escudos/${aId}.png`}
                           alt={aName}
                           className="w-5 h-5 object-contain shrink-0"
                           onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
                         />
-                        {aName}
+                        <span className="truncate">{aName}</span>
                       </div>
                       <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[10px] md:text-xs tracking-wider shrink-0 ml-1 md:ml-3 ${resultColor}`}>
                         {resultLetter}
@@ -420,7 +420,7 @@ export default function TeamView() {
           )}
 
           {recentMatches.length === 0 && upcomingMatches.length === 0 && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col items-center gap-4 text-slate-400">
+            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 md:p-8 flex flex-col items-center gap-4 text-slate-400">
               <div className="text-5xl opacity-30">⚽</div>
               <p className="text-sm font-medium">No hay partidos disponibles para este equipo.</p>
             </div>
