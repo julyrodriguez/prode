@@ -181,7 +181,7 @@ export default function TeamHoverCard({ teamId, teamName, children, className }:
             src={`/escudos/${teamId}.png`}
             alt={teamName}
             className="w-full h-full object-contain"
-            onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+            onError={(e) => { (e.target as HTMLImageElement).src = '/football2.png' }}
           />
         </div>
         <span className="font-extrabold text-white text-sm whitespace-nowrap">{teamName}</span>

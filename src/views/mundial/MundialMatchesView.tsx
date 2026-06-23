@@ -299,10 +299,10 @@ const MatchRow = memo(({
             <div className="animate-spin w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent" />
           ) : (
             <img
-              src={match.tournament?.category?.flag === 'world' ? 'https://img.icons8.com/color/48/000000/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : 'https://img.icons8.com/color/48/000000/football2.png'}
+              src={match.tournament?.category?.flag === 'world' ? '/football2.png' : match.tournament?.category?.flag ? `https://img.icons8.com/color/48/000000/${match.tournament.category.flag}.png` : '/football2.png'}
               alt="torneo"
               className="w-full h-full object-contain"
-              onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+              onError={(e) => { (e.target as HTMLImageElement).src = '/football2.png' }}
             />
           )}
         </div>

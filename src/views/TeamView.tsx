@@ -166,7 +166,7 @@ export default function TeamView() {
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.onerror = null;
-                target.src = 'https://img.icons8.com/color/48/000000/football2.png';
+                target.src = '/football2.png';
               }}
             />
           </div>
@@ -319,7 +319,7 @@ export default function TeamView() {
                           src={`/escudos/${hId}.png`}
                           alt={hName}
                           className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
-                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                         />
                       </div>
                       <div className="flex items-center gap-1 md:gap-2 px-2 md:px-3 mx-1 md:mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-0.5 md:py-1">
@@ -330,7 +330,7 @@ export default function TeamView() {
                           src={`/escudos/${aId}.png`}
                           alt={aName}
                           className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
-                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                         />
                         <span className="truncate">{aName}</span>
                       </div>
@@ -405,7 +405,7 @@ export default function TeamView() {
                           src={`/escudos/${hId}.png`}
                           alt={hName}
                           className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
-                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                         />
                       </div>
                       <div className="flex items-center gap-1 md:gap-2.5 px-2 md:px-3 mx-1 md:mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-0.5 md:py-1">
@@ -418,7 +418,7 @@ export default function TeamView() {
                           src={`/escudos/${aId}.png`}
                           alt={aName}
                           className="w-4 h-4 md:w-5 md:h-5 object-contain shrink-0"
-                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                         />
                         <span className="truncate">{aName}</span>
                       </div>

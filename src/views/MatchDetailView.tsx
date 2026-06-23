@@ -1975,7 +1975,7 @@ export default function MatchDetailView() {
                               src={`/escudos/${mhId}.png`}
                               alt={mhName}
                               className="w-4 h-4 object-contain shrink-0"
-                              onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                              onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                             />
                           </div>
                           <div className="flex items-center gap-1.5 px-2 py-0.5 mx-2 rounded bg-black/40 border border-white/5 font-black shrink-0">
@@ -1988,7 +1988,7 @@ export default function MatchDetailView() {
                               src={`/escudos/${maId}.png`}
                               alt={maName}
                               className="w-4 h-4 object-contain shrink-0"
-                              onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                              onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                             />
                             <span className="truncate">{maName}</span>
                           </div>
@@ -2027,7 +2027,7 @@ export default function MatchDetailView() {
                   src={`/escudos/${hId}.png`}
                   alt={hName}
                   className="w-6 h-6 object-contain shrink-0"
-                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                 />
                 <div className="flex flex-col">
                   <h4 className="text-xs font-black text-emerald-400 uppercase tracking-wider">{hName}</h4>
@@ -2159,7 +2159,7 @@ export default function MatchDetailView() {
                   src={`/escudos/${aId}.png`}
                   alt={aName}
                   className="w-6 h-6 object-contain shrink-0"
-                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                  onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = '/football2.png'; }}
                 />
                 <div className="flex flex-col">
                   <h4 className="text-xs font-black text-indigo-400 uppercase tracking-wider">{aName}</h4>
@@ -2787,7 +2787,7 @@ export default function MatchDetailView() {
                                           src={`/escudos/${row.equipoId}.png`}
                                           alt={row.nombre}
                                           className="w-full h-full object-contain"
-                                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://img.icons8.com/color/48/000000/football2.png' }}
+                                          onError={(e) => { (e.target as HTMLImageElement).src = '/football2.png' }}
                                         />
                                       </div>
                                       <span className={`truncate max-w-[90px] ${teamNameClass}`}>
