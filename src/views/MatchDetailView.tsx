@@ -1369,16 +1369,16 @@ export default function MatchDetailView() {
                       </div>
                       <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
                         {/* Barra local: crece hacia la izquierda */}
-                        <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
+                        <div className="flex-1 h-full bg-white/[0.03] rounded-full flex justify-end border border-white/5">
                           <div
-                            className="h-full bg-emerald-500/90 shadow-[0_0_6px_rgba(16,185,129,0.4)] rounded-full transition-all duration-300 ease-out"
+                            className="h-full bg-emerald-500/90 rounded-full transition-[width] duration-300 ease-out will-change-[width]"
                             style={{ width: `${hPct}%` }}
                           />
                         </div>
                         {/* Barra visitante: crece hacia la derecha */}
-                        <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-start border border-white/5">
+                        <div className="flex-1 h-full bg-white/[0.03] rounded-full flex justify-start border border-white/5">
                           <div
-                            className="h-full bg-indigo-500/90 shadow-[0_0_6px_rgba(99,102,241,0.4)] rounded-full transition-all duration-300 ease-out"
+                            className="h-full bg-indigo-500/90 rounded-full transition-[width] duration-300 ease-out will-change-[width]"
                             style={{ width: `${aPct}%` }}
                           />
                         </div>
