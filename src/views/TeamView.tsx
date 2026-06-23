@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, MapPin, Users, Calendar, Trophy } from 'lucide-react';
+import { ArrowLeft, MapPin, Users, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 function getReadableColor(hex: string): string {
@@ -18,112 +18,6 @@ function getReadableColor(hex: string): string {
   return luminance < 70 ? '#ffffff' : `#${hex}`;
 }
 
-// ─── Traducción de estadísticas ────────────────────────────────────────────────
-const statLabels: Record<string, string> = {
-  goalsScored: 'Goles a favor',
-  goalsConceded: 'Goles en contra',
-  assists: 'Asistencias',
-  shots: 'Tiros totales',
-  shotsOnTarget: 'Tiros al arco',
-  shotsOffTarget: 'Tiros afuera',
-  bigChances: 'Ocasiones claras',
-  bigChancesCreated: 'Ocasiones creadas',
-  bigChancesMissed: 'Ocasiones perdidas',
-  corners: 'Córners',
-  hitWoodwork: 'Al palo/travesaño',
-  goalsFromInsideTheBox: 'Goles dentro del área',
-  goalsFromOutsideTheBox: 'Goles fuera del área',
-  headedGoals: 'Goles de cabeza',
-  penaltyGoals: 'Goles de penal',
-  freeKickGoals: 'Goles de tiro libre',
-  fastBreaks: 'Contraataques',
-  fastBreakGoals: 'Goles de contragolpe',
-  averageBallPossession: 'Posesión promedio (%)',
-  totalPasses: 'Pases totales',
-  accuratePasses: 'Pases precisos',
-  accuratePassesPercentage: 'Precisión de pases (%)',
-  totalLongBalls: 'Pelotas largas',
-  accurateLongBalls: 'Long balls precisas',
-  accurateLongBallsPercentage: 'Precisión pelotas largas (%)',
-  totalCrosses: 'Centros totales',
-  accurateCrosses: 'Centros precisos',
-  accurateCrossesPercentage: 'Precisión centros (%)',
-  successfulDribbles: 'Regates exitosos',
-  dribbleAttempts: 'Intentos de regate',
-  cleanSheets: 'Vallas invictas',
-  tackles: 'Entradas',
-  interceptions: 'Interceptaciones',
-  saves: 'Atajadas',
-  clearances: 'Despejes',
-  totalDuels: 'Duelos totales',
-  duelsWon: 'Duelos ganados',
-  duelsWonPercentage: 'Duelos ganados (%)',
-  totalAerialDuels: 'Duelos aéreos',
-  aerialDuelsWon: 'Duelos aéreos ganados',
-  aerialDuelsWonPercentage: 'Duelos aéreos ganados (%)',
-  totalGroundDuels: 'Duelos en tierra',
-  groundDuelsWon: 'Duelos en tierra ganados',
-  fouls: 'Faltas cometidas',
-  yellowCards: 'Tarjetas amarillas',
-  yellowRedCards: 'Doble amarilla',
-  redCards: 'Tarjetas rojas',
-  offsides: 'Fueras de juego',
-  errorsLeadingToGoal: 'Errores que generan gol',
-  errorsLeadingToShot: 'Errores que generan tiro',
-  avgRating: 'Rating promedio',
-  ballRecovery: 'Recuperaciones',
-  possessionLost: 'Pérdidas de balón',
-};
-
-// Grupos de estadísticas para mostrar ordenadas
-const statGroups = [
-  {
-    label: 'Ataque',
-    icon: '⚽',
-    keys: ['goalsScored', 'assists', 'shots', 'shotsOnTarget', 'shotsOffTarget',
-           'bigChances', 'bigChancesCreated', 'bigChancesMissed', 'goalsFromInsideTheBox',
-           'goalsFromOutsideTheBox', 'headedGoals', 'penaltyGoals', 'corners', 'hitWoodwork',
-           'fastBreaks', 'fastBreakGoals'],
-  },
-  {
-    label: 'Pases',
-    icon: '🎯',
-    keys: ['averageBallPossession', 'totalPasses', 'accuratePasses', 'accuratePassesPercentage',
-           'totalLongBalls', 'accurateLongBalls', 'accurateLongBallsPercentage',
-           'totalCrosses', 'accurateCrosses', 'accurateCrossesPercentage',
-           'successfulDribbles', 'dribbleAttempts'],
-  },
-  {
-    label: 'Defensa',
-    icon: '🛡️',
-    keys: ['goalsConceded', 'cleanSheets', 'saves', 'tackles', 'interceptions',
-           'clearances', 'errorsLeadingToGoal', 'errorsLeadingToShot'],
-  },
-  {
-    label: 'Duelos',
-    icon: '🤝',
-    keys: ['totalDuels', 'duelsWon', 'duelsWonPercentage',
-           'totalAerialDuels', 'aerialDuelsWon', 'aerialDuelsWonPercentage',
-           'totalGroundDuels', 'groundDuelsWon', 'ballRecovery', 'possessionLost'],
-  },
-  {
-    label: 'Disciplina',
-    icon: '🟨',
-    keys: ['fouls', 'yellowCards', 'yellowRedCards', 'redCards', 'offsides'],
-  },
-];
-
-function formatStatValue(key: string, val: number): string {
-  if (['averageBallPossession', 'accuratePassesPercentage',
-       'accurateLongBallsPercentage', 'accurateCrossesPercentage',
-       'duelsWonPercentage', 'aerialDuelsWonPercentage',
-       'groundDuelsWonPercentage'].includes(key)) {
-    return `${val.toFixed(1)}%`;
-  }
-  if (key === 'avgRating') return val.toFixed(2);
-  return String(Math.round(val));
-}
-
 export default function TeamView() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -134,10 +28,10 @@ export default function TeamView() {
   const isLight = theme === 'light';
   const [team, setTeam] = useState<any>(null);
   const [recentMatches, setRecentMatches] = useState<any[]>([]);
+  const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedComp, setSelectedComp] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'stats' | 'squad'>('stats');
+  const [activeTab, setActiveTab] = useState<'matches' | 'squad'>('matches');
 
   useEffect(() => {
     if (team && setOverriddenLeagueId) {
@@ -165,16 +59,17 @@ export default function TeamView() {
         if (!res.ok) throw new Error('No se pudo cargar el equipo');
         const data = await res.json();
         setTeam(data);
-        // Default al primer torneo
-        const keys = Object.keys(data.competitions || {});
-        if (keys.length > 0) setSelectedComp(keys[0]);
 
         // Obtener historial de partidos
         try {
-          const mRes = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}/matches?limit=10`);
+          const mRes = await fetch(`https://apivacas.jariel.com.ar/api/teams/${id}/all-matches?limit=15`);
           if (mRes.ok) {
-            const matchesData = await mRes.json();
-            setRecentMatches(matchesData);
+            const allMatches = await mRes.json();
+            const now = Math.floor(Date.now() / 1000);
+            const played = allMatches.filter((m: any) => m.startTimestamp && m.startTimestamp <= now).sort((a: any, b: any) => b.startTimestamp - a.startTimestamp);
+            const upcoming = allMatches.filter((m: any) => m.startTimestamp && m.startTimestamp > now).sort((a: any, b: any) => a.startTimestamp - b.startTimestamp);
+            setRecentMatches(played);
+            setUpcomingMatches(upcoming);
           }
         } catch(e) {
           console.error("Error fetching recent matches:", e);
@@ -210,9 +105,6 @@ export default function TeamView() {
 
   const profile = team.profile || {};
   const competitions = team.competitions || {};
-  const compKeys = Object.keys(competitions);
-  const currentComp = selectedComp ? competitions[selectedComp] : null;
-  const stats = currentComp?.estadisticas_completas || {};
 
   // Colores del equipo
   const primary = profile.colors?.primary || '#1e293b';
@@ -362,18 +254,18 @@ export default function TeamView() {
         </div>
       </div>
 
-      {/* ─── Tabs: Estadísticas vs Plantel ─── */}
+      {/* ─── Tabs: Partidos vs Plantel ─── */}
       {team.detailedProfile && (
         <div className="flex gap-4 border-b border-white/5 pb-1 mb-4 select-none">
           <button
-            onClick={() => setActiveTab('stats')}
+            onClick={() => setActiveTab('matches')}
             className={`pb-2 px-1 text-sm font-bold transition-all relative ${
-              activeTab === 'stats'
+              activeTab === 'matches'
                 ? 'text-emerald-400 border-b-2 border-emerald-400'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            📊 Estadísticas
+            ⚽ Partidos
           </button>
           <button
             onClick={() => setActiveTab('squad')}
@@ -388,103 +280,70 @@ export default function TeamView() {
         </div>
       )}
 
-      {(activeTab === 'stats' || !team.detailedProfile) && (
+      {(activeTab === 'matches' || !team.detailedProfile) && (
         <>
-          {/* ─── Selector de Competición ─── */}
-          {compKeys.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {compKeys.map((key) => {
-                const comp = competitions[key];
-                const isActive = selectedComp === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedComp(key)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
-                      isActive
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                        : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10 hover:text-white'
-                    }`}
-                  >
-                    <Trophy className="w-3.5 h-3.5" />
-                    {comp.name}
-                    <span className="text-[10px] font-semibold opacity-60 ml-0.5">
-                      {comp.partidos_jugados}PJ
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* ─── Estadísticas por Grupo ─── */}
-          {currentComp && (
-            <div className="flex flex-col gap-6">
-              {/* Resumen rápido */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { label: 'Partidos', value: currentComp.partidos_jugados, icon: '🏆' },
-                  { label: 'Goles', value: stats.goalsScored ?? '-', icon: '⚽' },
-                  { label: 'Vallas Invictas', value: stats.cleanSheets ?? '-', icon: '🧤' },
-                  { label: 'Rating Prom.', value: stats.avgRating ? stats.avgRating.toFixed(2) : '-', icon: '⭐' },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-1.5 shadow-sm"
-                  >
-                    <span className="text-2xl">{item.icon}</span>
-                    <span className="text-2xl font-black text-white">{item.value}</span>
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Grupos de stats */}
-              {statGroups.map((group) => {
-                const groupStats = group.keys
-                  .filter((k) => stats[k] !== undefined && stats[k] !== null)
-                  .map((k) => ({ key: k, label: statLabels[k] || k, value: stats[k] as number }));
-
-                if (groupStats.length === 0) return null;
-
-                return (
-                  <div key={group.label} className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 flex flex-col gap-5">
-                    <div className="flex items-center gap-3 pb-3 border-b border-white/5">
-                      <span className="text-xl">{group.icon}</span>
-                      <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">{group.label}</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {groupStats.map(({ key, label, value }) => (
-                        <div key={key} className="flex items-center justify-between gap-3 bg-black/20 rounded-xl px-4 py-2.5 border border-white/5">
-                          <span className="text-xs font-semibold text-slate-400 truncate flex-1">{label}</span>
-                          <span
-                            className="text-sm font-black shrink-0 ml-2"
-                            style={{ color: getReadableColor(secondary) || '#10b981' }}
-                          >
-                            {formatStatValue(key, value)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {compKeys.length === 0 && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col items-center gap-4 text-slate-400">
-              <div className="text-5xl opacity-30">📊</div>
-              <p className="text-sm font-medium">No hay estadísticas disponibles para este equipo.</p>
-            </div>
-          )}
-
-          {/* ─── Historial de Partidos ─── */}
-          {recentMatches.length > 0 && (
-            <div className="flex flex-col gap-6 w-full mt-4 bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
+          {/* ─── Próximos Partidos ─── */}
+          {upcomingMatches.length > 0 && (
+            <div className="flex flex-col gap-6 w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
               <div className="flex items-center gap-3 border-b border-white/5 pb-3">
                 <span className="text-xl">📅</span>
-                <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Últimos {recentMatches.length} Partidos</h3>
+                <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Próximos Partidos</h3>
+              </div>
+              <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
+                {upcomingMatches.map((match, idx) => {
+                  const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
+                  const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
+                  const hId = match.homeTeam?.id || match.home_team?.id;
+                  const aId = match.awayTeam?.id || match.away_team?.id;
+                  const isHome = Number(hId) === Number(id);
+
+                  const startDate = match.startTimestamp ? new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+                  const startHour = match.startTimestamp ? new Date(match.startTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                  return (
+                    <div
+                      key={match.id || match._id || idx}
+                      onClick={() => router.push(`/match/${match.id || match._id}`)}
+                      className="grid grid-cols-[60px_1fr_auto_1fr] items-center border-b border-white/5 last:border-0 hover:bg-white/[0.03] cursor-pointer transition-colors px-2 md:px-4 py-3"
+                    >
+                      <div className="flex flex-col items-center justify-center border-r border-white/5 pr-2 md:pr-4 mr-1 md:mr-2">
+                        <span className="text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-none mb-1 text-center">{startDate}</span>
+                        <span className="text-xs text-slate-300 font-semibold leading-none">{startHour}</span>
+                      </div>
+                      <div className={`text-right text-xs md:text-sm font-bold truncate flex-1 flex items-center justify-end gap-2 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                        {hName}
+                        <img
+                          src={`/escudos/${hId}.png`}
+                          alt={hName}
+                          className="w-5 h-5 object-contain shrink-0"
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1.5 md:gap-3 px-3 mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-1">
+                        <span className="text-xs text-slate-400 font-bold">vs</span>
+                      </div>
+                      <div className={`text-left text-xs md:text-sm font-bold truncate flex-1 flex items-center gap-2 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
+                        <img
+                          src={`/escudos/${aId}.png`}
+                          alt={aName}
+                          className="w-5 h-5 object-contain shrink-0"
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                        />
+                        {aName}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ─── Últimos Resultados ─── */}
+          {recentMatches.length > 0 && (
+            <div className="flex flex-col gap-6 w-full bg-white/[0.02] border border-white/5 rounded-[2rem] p-6 lg:p-10">
+              <div className="flex items-center gap-3 border-b border-white/5 pb-3">
+                <span className="text-xl">🏆</span>
+                <h3 className="text-base font-black text-slate-200 uppercase tracking-wider">Últimos Resultados</h3>
               </div>
               <div className="flex flex-col bg-[#0b1015]/60 border border-white/5 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
                 {recentMatches.map((match, idx) => {
@@ -492,7 +351,9 @@ export default function TeamView() {
                   const aScore = match.awayScore?.current ?? match.awayTeam?.score ?? match.away_team?.score;
                   const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
                   const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
-                  const isHome = Number(match.homeTeam?.id || match.home_team?.id) === Number(id);
+                  const hId = match.homeTeam?.id || match.home_team?.id;
+                  const aId = match.awayTeam?.id || match.away_team?.id;
+                  const isHome = Number(hId) === Number(id);
                   const weScored = isHome ? hScore : aScore;
                   const theyScored = isHome ? aScore : hScore;
                   let resultColor = 'bg-slate-500/20 text-slate-300';
@@ -527,7 +388,13 @@ export default function TeamView() {
                         <span className="text-xs text-slate-300 font-semibold leading-none">{startHour}</span>
                       </div>
                       <div className={`text-right text-xs md:text-sm font-bold truncate flex-1 flex items-center justify-end gap-2 ${isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
-                         {hName}
+                        {hName}
+                        <img
+                          src={`/escudos/${hId}.png`}
+                          alt={hName}
+                          className="w-5 h-5 object-contain shrink-0"
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                        />
                       </div>
                       <div className="flex items-center gap-1.5 md:gap-3 px-3 mx-2 rounded-lg bg-black/40 border border-white/5 shrink-0 py-1">
                         <span className={`text-sm md:text-base font-black ${isHome ? 'text-emerald-400' : 'text-white'}`}>{hScore ?? '-'}</span>
@@ -535,7 +402,13 @@ export default function TeamView() {
                         <span className={`text-sm md:text-base font-black ${!isHome ? 'text-emerald-400' : 'text-white'}`}>{aScore ?? '-'}</span>
                       </div>
                       <div className={`text-left text-xs md:text-sm font-bold truncate flex-1 flex items-center gap-2 ${!isHome ? 'text-emerald-400 drop-shadow-[0_0_2px_rgba(16,185,129,0.5)]' : 'text-slate-100'}`}>
-                         {aName}
+                        <img
+                          src={`/escudos/${aId}.png`}
+                          alt={aName}
+                          className="w-5 h-5 object-contain shrink-0"
+                          onError={(e) => { const t = e.target as HTMLImageElement; t.onerror = null; t.src = 'https://img.icons8.com/color/48/000000/football2.png'; }}
+                        />
+                        {aName}
                       </div>
                       <div className={`w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center text-[10px] md:text-xs tracking-wider shrink-0 ml-1 md:ml-3 ${resultColor}`}>
                         {resultLetter}
@@ -544,6 +417,13 @@ export default function TeamView() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {recentMatches.length === 0 && upcomingMatches.length === 0 && (
+            <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-10 flex flex-col items-center gap-4 text-slate-400">
+              <div className="text-5xl opacity-30">⚽</div>
+              <p className="text-sm font-medium">No hay partidos disponibles para este equipo.</p>
             </div>
           )}
         </>
@@ -663,7 +543,7 @@ export default function TeamView() {
                     {position}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {groupedPlayers[position].map((player, idx) => (
+                    {groupedPlayers[position].map((player: any, idx: number) => (
                       <div 
                         key={idx} 
                         className="flex items-center justify-between gap-3 bg-black/25 rounded-2xl px-4 py-3 border border-white/5 hover:border-white/15 transition-colors"
