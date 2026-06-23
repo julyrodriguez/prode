@@ -247,6 +247,27 @@ const resolvePlayerCountry = async (matches: any[], name: string): Promise<strin
   return singleMatch.homeTeam?.name || null;
 };
 
+const getPlayerHistoryMinutes = (m: any): number => {
+  if (!m) return 0;
+  if (m.stats?.minutesPlayed !== undefined) {
+    return m.stats.minutesPlayed;
+  }
+  if (m.events) {
+    if (m.events.subInMinute !== undefined) {
+      const out = m.events.subOutMinute !== undefined ? m.events.subOutMinute : 90;
+      return Math.max(0, out - m.events.subInMinute);
+    }
+    if (m.events.subOutMinute !== undefined) {
+      return m.events.subOutMinute;
+    }
+  }
+  const hasAnyStatsOrEvents = (m.stats && Object.keys(m.stats).length > 0) || (m.events && Object.keys(m.events).length > 0);
+  if (hasAnyStatsOrEvents) {
+    return 90;
+  }
+  return 0;
+};
+
 export default function MatchDetailView() {
   const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
@@ -913,8 +934,8 @@ export default function MatchDetailView() {
   const selectedPrePlayerAggInfo = globalPlayers.find(p => p.nameFull === selectedPrePlayerName);
 
   // Compute minutes and aggregated stats for pre player modal
-  const totalMinPre = prePlayerMatches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
-  const playedMatchesCountPre = prePlayerMatches.filter(m => (m.stats?.minutesPlayed || 0) > 0).length || 1;
+  const totalMinPre = prePlayerMatches.reduce((acc, m) => acc + getPlayerHistoryMinutes(m), 0);
+  const playedMatchesCountPre = prePlayerMatches.filter(m => getPlayerHistoryMinutes(m) > 0).length || 1;
   const avgMinutesPre = totalMinPre / playedMatchesCountPre;
 
   const aggregatedPre = prePlayerMatches.reduce((acc, m) => {
@@ -2552,7 +2573,7 @@ export default function MatchDetailView() {
                   <Calendar className="w-3 h-3 mx-auto mb-0.5 text-slate-400" />
                   <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
                   <span className="text-xs font-black text-slate-200">
-                    {prePlayerMatches.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length}
+                    {prePlayerMatches.filter(m => m.status?.type !== 'notstarted' && getPlayerHistoryMinutes(m) > 0).length}
                   </span>
                 </div>
                 <div className="text-center border-r border-white/10">
@@ -2598,7 +2619,7 @@ export default function MatchDetailView() {
                     <tbody className="divide-y divide-white/5">
                       {statsListPre.map((st, i) => {
                         if (st.show === false) return null;
-                        const matchesCount = prePlayerMatches.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length || 1;
+                        const matchesCount = prePlayerMatches.filter(m => m.status?.type !== 'notstarted' && getPlayerHistoryMinutes(m) > 0).length || 1;
                         const perMatch = (st.value / matchesCount).toFixed(2);
                         const perProm = totalMinPre > 0 ? ((st.value / totalMinPre) * avgMinutesPre).toFixed(2) : '0.00';
                         const per90 = totalMinPre > 0 ? ((st.value / totalMinPre) * 90).toFixed(2) : '0.00';
@@ -2694,10 +2715,10 @@ export default function MatchDetailView() {
                             {/* Individual Stats in Match */}
                             {m.stats ? (
                               <div className="grid grid-cols-2 gap-1 text-[9px]">
-                                {m.stats.minutesPlayed !== undefined && (
+                                {getPlayerHistoryMinutes(m) > 0 && (
                                   <div className="bg-black/40 p-1 rounded border border-white/5">
                                     <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Minutos</span>
-                                    <span className="font-extrabold text-slate-200">{m.stats.minutesPlayed}'</span>
+                                    <span className="font-extrabold text-slate-200">{getPlayerHistoryMinutes(m)}'</span>
                                   </div>
                                 )}
                                 

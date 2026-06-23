@@ -79,6 +79,27 @@ interface MatchDetailHistory {
   events?: Record<string, any>;
 }
 
+const getPlayerHistoryMinutes = (m: any): number => {
+  if (!m) return 0;
+  if (m.stats?.minutesPlayed !== undefined) {
+    return m.stats.minutesPlayed;
+  }
+  if (m.events) {
+    if (m.events.subInMinute !== undefined) {
+      const out = m.events.subOutMinute !== undefined ? m.events.subOutMinute : 90;
+      return Math.max(0, out - m.events.subInMinute);
+    }
+    if (m.events.subOutMinute !== undefined) {
+      return m.events.subOutMinute;
+    }
+  }
+  const hasAnyStatsOrEvents = (m.stats && Object.keys(m.stats).length > 0) || (m.events && Object.keys(m.events).length > 0);
+  if (hasAnyStatsOrEvents) {
+    return 90;
+  }
+  return 0;
+};
+
 export default function PlayersView() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -272,7 +293,7 @@ export default function PlayersView() {
         const json = await res.json();
         if (json.success && json.data) {
           const matches: MatchDetailHistory[] = json.data;
-          const totalMin = matches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
+          const totalMin = matches.reduce((acc, m) => acc + getPlayerHistoryMinutes(m), 0);
           return { name, matches, minutes: totalMin };
         }
       } catch (e) {
@@ -375,7 +396,7 @@ export default function PlayersView() {
         
         const matchesList = searchDetails[p.nameFull];
         const actualMatchesCount = matchesList
-          ? matchesList.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length || 1
+          ? matchesList.filter(m => m.status?.type !== 'notstarted' && getPlayerHistoryMinutes(m) > 0).length || 1
           : p.totalMatches;
 
         let avg = 0;
@@ -459,8 +480,8 @@ export default function PlayersView() {
   const selectedPlayerAggInfo = players.find(p => p.nameFull === selectedPlayerName);
 
   // Compute minutes and aggregated stats for modal
-  const totalMin = playerMatches.reduce((acc, m) => acc + (m.stats?.minutesPlayed || 0), 0);
-  const playedMatchesCount = playerMatches.filter(m => (m.stats?.minutesPlayed || 0) > 0).length || 1;
+  const totalMin = playerMatches.reduce((acc, m) => acc + getPlayerHistoryMinutes(m), 0);
+  const playedMatchesCount = playerMatches.filter(m => getPlayerHistoryMinutes(m) > 0).length || 1;
   const avgMinutes = totalMin / playedMatchesCount;
 
   const aggregated = playerMatches.reduce((acc, m) => {
@@ -648,7 +669,7 @@ export default function PlayersView() {
               {searchResults.map((player, idx) => {
                 const detailLoaded = searchDetails[player.nameFull] !== undefined && searchDetails[player.nameFull].length > 0;
                 const actualMatchesCount = detailLoaded
-                  ? searchDetails[player.nameFull].filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length || 1
+                  ? searchDetails[player.nameFull].filter(m => m.status?.type !== 'notstarted' && getPlayerHistoryMinutes(m) > 0).length || 1
                   : player.totalMatches;
                 return (
                   <div 
@@ -974,7 +995,7 @@ export default function PlayersView() {
                   <Calendar className="w-3 h-3 mx-auto mb-0.5 text-slate-400" />
                   <span className="text-[6.5px] text-slate-500 font-bold uppercase tracking-wider block">Partidos</span>
                   <span className="text-xs font-black text-slate-200">
-                    {playerMatches.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length}
+                    {playerMatches.filter(m => m.status?.type !== 'notstarted' && getPlayerHistoryMinutes(m) > 0).length}
                   </span>
                 </div>
                 <div className="text-center border-r border-white/10">
@@ -1020,7 +1041,7 @@ export default function PlayersView() {
                     <tbody className="divide-y divide-white/5">
                       {statsList.map((st, i) => {
                         if (st.show === false) return null;
-                        const matchesCount = playerMatches.filter(m => m.status?.type !== 'notstarted' && (m.stats?.minutesPlayed || 0) > 0).length || 1;
+                        const matchesCount = playerMatches.filter(m => m.status?.type !== 'notstarted' && getPlayerHistoryMinutes(m) > 0).length || 1;
                         const perMatch = (st.value / matchesCount).toFixed(2);
                         const perProm = totalMin > 0 ? ((st.value / totalMin) * avgMinutes).toFixed(2) : '0.00';
                         const per90 = totalMin > 0 ? ((st.value / totalMin) * 90).toFixed(2) : '0.00';
@@ -1116,10 +1137,10 @@ export default function PlayersView() {
                             {/* Individual Stats in Match */}
                             {m.stats ? (
                               <div className="grid grid-cols-2 gap-1 text-[9px]">
-                                {m.stats.minutesPlayed !== undefined && (
+                                {getPlayerHistoryMinutes(m) > 0 && (
                                   <div className="bg-black/40 p-1 rounded border border-white/5">
                                     <span className="text-slate-500 block text-[7px] uppercase font-bold tracking-wider">Minutos</span>
-                                    <span className="font-extrabold text-slate-200">{m.stats.minutesPlayed}'</span>
+                                    <span className="font-extrabold text-slate-200">{getPlayerHistoryMinutes(m)}'</span>
                                   </div>
                                 )}
                                 
