@@ -277,6 +277,7 @@ export default function MatchDetailView() {
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
+  const [subSection, setSubSection] = useState<'resumen' | 'estadisticas'>('resumen');
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1549,8 +1550,34 @@ export default function MatchDetailView() {
 
       </div>
 
+      {/* Submenu de navegación interna */}
+      <div className="w-full flex border-b border-white/5 mb-2 bg-white/[0.01] rounded-xl p-1 gap-1">
+        <button
+          type="button"
+          onClick={() => setSubSection('resumen')}
+          className={`flex-1 py-2.5 rounded-lg text-xs md:text-sm font-black tracking-wider uppercase transition-all border-0 cursor-pointer ${
+            subSection === 'resumen'
+              ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 text-white border border-emerald-500/20 font-black shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
+          }`}
+        >
+          📝 Resumen
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubSection('estadisticas')}
+          className={`flex-1 py-2.5 rounded-lg text-xs md:text-sm font-black tracking-wider uppercase transition-all border-0 cursor-pointer ${
+            subSection === 'estadisticas'
+              ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 text-white border border-emerald-500/20 font-black shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.02]'
+          }`}
+        >
+          📊 Estadísticas
+        </button>
+      </div>
+
       {/* Cronología de Eventos – Timeline compacto */}
-      {match.incidents && match.incidents.length > 0 && (
+      {subSection === 'resumen' && match.incidents && match.incidents.length > 0 && (
         <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
           {/* Cabecera */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
@@ -1698,7 +1725,7 @@ export default function MatchDetailView() {
       )}
 
       {/* H2H Historial de enfrentamientos (Solo ligas) */}
-      {!h2hLoading && h2hMatches.length > 1 && h2hStats && (
+      {subSection === 'estadisticas' && !h2hLoading && h2hMatches.length > 1 && h2hStats && (
         <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 shadow-lg">
           
           {/* Cabecera */}
@@ -2006,7 +2033,7 @@ export default function MatchDetailView() {
       )}
 
       {/* Forma Reciente y Promedios (Solo ligas, excluyendo mundial) */}
-      {!isMundialMatch && !teamMatchesLoading && (processedHomeTeamMatches.length > 0 || processedAwayTeamMatches.length > 0) && (
+      {subSection === 'estadisticas' && !isMundialMatch && !teamMatchesLoading && (processedHomeTeamMatches.length > 0 || processedAwayTeamMatches.length > 0) && (
         <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col gap-4 shadow-lg animate-fade-in">
           {/* Cabecera */}
           <div className="flex items-center gap-2 pb-3 border-b border-white/5">
@@ -2300,7 +2327,7 @@ export default function MatchDetailView() {
       )}
 
       {/* Estadísticas (Movido debajo de la Cronología de Eventos) */}
-      {match.live_statistics && match.live_statistics.length > 0 && (
+      {subSection === 'resumen' && match.live_statistics && match.live_statistics.length > 0 && (
         <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
           <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
             <div className="flex items-center gap-1.5 md:gap-2">
@@ -2366,7 +2393,7 @@ export default function MatchDetailView() {
       )}
 
       {/* Tabla Compacta de Estadísticas de Jugadores */}
-      {(() => {
+      {subSection === 'resumen' && (() => {
         if (!elninePlayers || elninePlayers.length === 0) return null;
 
         const normalizeString = (str: string) => {
@@ -2521,14 +2548,19 @@ export default function MatchDetailView() {
         );
       })()}
 
-      {/* Data Section: Detalles, Alineaciones y Pronósticos */}
-      <div className={`grid grid-cols-1 ${user ? 'xl:grid-cols-3' : 'xl:grid-cols-1'} gap-3 md:gap-4`}>
+      {/* Data Section: Detalles, Alineaciones, Tabla, Promedios y Pronósticos */}
+      <div className={`grid grid-cols-1 ${
+        user && (
+          (subSection === 'resumen') || 
+          (subSection === 'estadisticas' && statusType !== 'finished' && globalPlayers && globalPlayers.length > 0)
+        ) ? 'xl:grid-cols-3' : 'xl:grid-cols-1'
+      } gap-3 md:gap-4`}>
 
-        {/* COLUMNA IZQUIERDA: Alineaciones, Posiciones e Historial */}
+        {/* COLUMNA IZQUIERDA: Detalles, Alineaciones (Resumen) y Tabla (Estadísticas) */}
         <div className="xl:col-span-1 flex flex-col gap-3 md:gap-4">
 
           {/* Detalles (solo antes de empezar el partido) */}
-          {!hasStarted && (
+          {subSection === 'resumen' && !hasStarted && (
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
                 <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
                 <div className="flex flex-col gap-2 z-10">
@@ -2560,7 +2592,7 @@ export default function MatchDetailView() {
           )}
 
           {/* Alineaciones */}
-          {match.lineups && (
+          {subSection === 'resumen' && match.lineups && (
             <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-[10px] md:text-xs">📋</span>
@@ -2710,7 +2742,7 @@ export default function MatchDetailView() {
           )}
 
           {/* Posiciones en la tabla / Tabla de Grupos Mundial */}
-          {isMundialMatch ? (
+          {subSection === 'estadisticas' && (isMundialMatch ? (
             (() => {
               const groupData = getMatchGroupData();
               if (loadingMundialStandings && !groupData) {
@@ -2856,10 +2888,10 @@ export default function MatchDetailView() {
                 </div>
               </div>
             )
-          )}
+          ))}
 
           {/* Historial / Enfrentamientos Previos */}
-          {match.historial && (
+          {subSection === 'estadisticas' && match.historial && (
             <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center border border-rose-500/20 text-[10px] md:text-xs">⚔️</span>
@@ -2915,7 +2947,7 @@ export default function MatchDetailView() {
           <div className="xl:col-span-2 flex flex-col gap-3 md:gap-4">
 
             {/* CUADRO DE ESTADÍSTICAS PROMEDIO PRE-PARTIDO */}
-            {!hasStarted && (() => {
+            {subSection === 'estadisticas' && statusType !== 'finished' && (() => {
                 if (!globalPlayers || globalPlayers.length === 0) return null;
 
                 const findGlobalPlayer = (lineupPlayer: any) => {
@@ -2959,7 +2991,7 @@ export default function MatchDetailView() {
 
                 const isPreloaded = match.elnine_players && match.elnine_players.length > 0;
                 const isNotStarted = match.status?.type === 'notstarted';
-                const shouldSubtract = isNotStarted && isPreloaded;
+                const shouldSubtract = (isNotStarted && isPreloaded) || isLive;
 
                 const isPlayerInPreloadedLineup = (gp: any) => {
                   if (!match.elnine_players) return false;
@@ -3165,7 +3197,7 @@ export default function MatchDetailView() {
                   </div>
                 );
               })()}
-            {(() => {
+            {subSection === 'resumen' && (() => {
               const nowSec = Math.floor(Date.now() / 1000);
               const start = match.startTimestamp ?? 0;
             const isFinished = typeof match.status === 'object'
