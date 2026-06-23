@@ -1121,7 +1121,7 @@ export default function MatchDetailView() {
                 <span>{getCountdownStr()}</span>
               </div>
             ) : (
-              <div className={`flex items-center gap-1 md:gap-2 px-2 py-0.5 md:px-4 md:py-1.5 rounded-md md:rounded-lg border font-black text-[9px] md:text-xs tracking-wider md:tracking-widest shadow-lg ${isLive ? 'bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 'bg-slate-800/80 text-slate-300 border-white/10'}`}>
+              <div className={`flex items-center gap-1 md:gap-2 px-2 py-0.5 md:px-4 md:py-1.5 rounded-md md:rounded-lg border font-black text-[9px] md:text-xs tracking-wider md:tracking-widest shadow-lg ${isLive ? 'bg-red-500/20 text-red-500 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : isLight ? 'bg-slate-200 text-slate-700 border-slate-300' : 'bg-slate-800/80 text-slate-300 border-white/10'}`}>
                 {isLive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>}
                 <span>{getMatchTimeStatus()}</span>
               </div>
@@ -2191,11 +2191,21 @@ export default function MatchDetailView() {
             };
  
             const colorClasses: Record<string, string> = {
-              exact: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
-              trend: 'border-amber-500/40 bg-amber-500/10 text-amber-300',
-              wrong: 'border-red-500/40 bg-red-500/10 text-red-400',
-              grey: 'border-white/10 bg-white/5 text-slate-300',
-              '': 'border-white/10 bg-white/5 text-slate-300',
+              exact: isLight 
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700' 
+                : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+              trend: isLight 
+                ? 'border-amber-500/40 bg-amber-500/10 text-amber-800 font-extrabold' 
+                : 'border-amber-500/40 bg-amber-500/10 text-amber-300',
+              wrong: isLight 
+                ? 'border-red-500/20 bg-red-500/5 text-red-600' 
+                : 'border-red-500/40 bg-red-500/10 text-red-400',
+              grey: isLight 
+                ? 'border-slate-200 bg-slate-100 text-slate-600' 
+                : 'border-white/10 bg-white/5 text-slate-300',
+              '': isLight 
+                ? 'border-slate-200 bg-slate-100 text-slate-600' 
+                : 'border-white/10 bg-white/5 text-slate-300',
             };
  
             const visiblePredictions = showAllPredictions
