@@ -1954,8 +1954,20 @@ export default function MatchDetailView() {
                         ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
                         : '';
 
+                      const targetId = m.id || m._id || m.matchId;
+
                       return (
-                        <div key={idx} className="grid grid-cols-[80px_1fr_auto_1fr] items-center px-3 py-2 hover:bg-white/[0.02] transition-colors text-xs font-semibold">
+                        <div
+                          key={targetId || idx}
+                          onClick={() => {
+                            if (targetId) {
+                              router.push(`/match/${targetId}`);
+                            }
+                          }}
+                          className={`grid grid-cols-[80px_1fr_auto_1fr] items-center px-3 py-2 transition-colors text-xs font-semibold ${
+                            targetId ? 'cursor-pointer hover:bg-white/[0.05]' : 'hover:bg-white/[0.02]'
+                          }`}
+                        >
                           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{dateText}</span>
                           <div className={`flex items-center justify-end gap-1.5 text-right min-w-0 ${isCurrentLocal ? 'text-emerald-400 font-bold' : 'text-slate-300'}`}>
                             <span className="truncate">{mhName}</span>
@@ -2035,10 +2047,18 @@ export default function MatchDetailView() {
                       D: 'bg-red-500/20 text-red-400 border-red-500/30',
                       E: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                     };
+                    const targetId = m.id || m._id || m.matchId;
                     return (
                       <span
-                        key={idx}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border ${badgeColors[outcome]}`}
+                        key={targetId || idx}
+                        onClick={() => {
+                          if (targetId) {
+                            router.push(`/match/${targetId}`);
+                          }
+                        }}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border transition-all ${
+                          targetId ? 'cursor-pointer hover:scale-110 active:scale-95' : ''
+                        } ${badgeColors[outcome]}`}
                         title={outcome === 'V' ? 'Victoria' : outcome === 'D' ? 'Derrota' : 'Empate'}
                       >
                         {outcome}
@@ -2095,9 +2115,20 @@ export default function MatchDetailView() {
                   const dateText = m.startTimestamp 
                     ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
                     : '';
+                  const targetId = m.id || m._id || m.matchId;
                   
                   return (
-                    <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs font-semibold hover:bg-white/[0.01]">
+                    <div
+                      key={targetId || idx}
+                      onClick={() => {
+                        if (targetId) {
+                          router.push(`/match/${targetId}`);
+                        }
+                      }}
+                      className={`flex items-center justify-between px-3 py-2 text-xs font-semibold transition-colors ${
+                        targetId ? 'cursor-pointer hover:bg-white/[0.05]' : 'hover:bg-white/[0.01]'
+                      }`}
+                    >
                       <span className="text-[9px] text-slate-500 font-bold uppercase">{dateText}</span>
                       <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center px-2">
                         <span className="text-slate-400 truncate max-w-[80px] text-right">{hName}</span>
@@ -2148,10 +2179,18 @@ export default function MatchDetailView() {
                       D: 'bg-red-500/20 text-red-400 border-red-500/30',
                       E: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                     };
+                    const targetId = m.id || m._id || m.matchId;
                     return (
                       <span
-                        key={idx}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border ${badgeColors[outcome]}`}
+                        key={targetId || idx}
+                        onClick={() => {
+                          if (targetId) {
+                            router.push(`/match/${targetId}`);
+                          }
+                        }}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black border transition-all ${
+                          targetId ? 'cursor-pointer hover:scale-110 active:scale-95' : ''
+                        } ${badgeColors[outcome]}`}
                         title={outcome === 'V' ? 'Victoria' : outcome === 'D' ? 'Derrota' : 'Empate'}
                       >
                         {outcome}
@@ -2208,9 +2247,20 @@ export default function MatchDetailView() {
                   const dateText = m.startTimestamp 
                     ? new Date(m.startTimestamp * 1000).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
                     : '';
+                  const targetId = m.id || m._id || m.matchId;
                   
                   return (
-                    <div key={idx} className="flex items-center justify-between px-3 py-2 text-xs font-semibold hover:bg-white/[0.01]">
+                    <div
+                      key={targetId || idx}
+                      onClick={() => {
+                        if (targetId) {
+                          router.push(`/match/${targetId}`);
+                        }
+                      }}
+                      className={`flex items-center justify-between px-3 py-2 text-xs font-semibold transition-colors ${
+                        targetId ? 'cursor-pointer hover:bg-white/[0.05]' : 'hover:bg-white/[0.01]'
+                      }`}
+                    >
                       <span className="text-[9px] text-slate-500 font-bold uppercase">{dateText}</span>
                       <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center px-2">
                         <span className="text-slate-350 truncate max-w-[80px] text-right font-bold">{opponentName}</span>
