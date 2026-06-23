@@ -1328,15 +1328,32 @@ export default function MatchDetailView() {
   const teamStatsSection = useMemo(() => {
     if (!match || !match.live_statistics || match.live_statistics.length === 0) return null;
 
+    // Determinar si hay más estadísticas para mostrar (más de 1 grupo o el primer grupo tiene más de 5 items)
+    const hasMoreStats = match.live_statistics.length > 1 || 
+                         (match.live_statistics[0]?.statisticsItems?.length > 5);
+
+    // Filtrar los grupos e items que se muestran según el estado de showTeamStatsExtended
+    let visibleGroups = match.live_statistics;
+    if (!showTeamStatsExtended) {
+      if (match.live_statistics.length > 1) {
+        // Si hay varios grupos, solo mostramos el primero (usualmente "Match overview" o "Resumen del partido")
+        visibleGroups = [match.live_statistics[0]];
+      } else if (match.live_statistics.length === 1) {
+        // Si hay un solo grupo (ej. Promiedos), mostramos los primeros 5 items
+        const singleGroup = match.live_statistics[0];
+        visibleGroups = [{
+          ...singleGroup,
+          statisticsItems: singleGroup.statisticsItems.slice(0, 5)
+        }];
+      }
+    }
+
     return (
-      <div 
-        className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit"
-        style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}
-      >
+      <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
         <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
           <div className="flex items-center gap-1.5 md:gap-2">
             <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
-            <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas</h3>
+            <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas del Partido</h3>
           </div>
           <div className="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest bg-black/30 px-2 py-0.5 md:px-3 md:py-1 rounded-lg border border-white/5">
             <span className="text-emerald-400 truncate max-w-[70px] md:max-w-[80px]" title={hName}>{hName}</span>
@@ -1345,9 +1362,9 @@ export default function MatchDetailView() {
           </div>
         </div>
 
-        {/* Iteramos sobre los grupos de estadísticas */}
+        {/* Iteramos sobre los grupos de estadísticas visibles */}
         <div className="flex flex-col gap-4 md:gap-6">
-          {match.live_statistics.map((group: any, gIdx: number) => (
+          {visibleGroups.map((group: any, gIdx: number) => (
             <div key={gIdx} className="flex flex-col gap-2 md:gap-4">
               <h4 className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest pl-1.5 md:pl-2 border-l-2 border-slate-600">
                 {translateGroup(group.groupName)}
@@ -1393,9 +1410,24 @@ export default function MatchDetailView() {
             </div>
           ))}
         </div>
+
+        {/* Botón Ver Más para Estadísticas en Vivo */}
+        {hasMoreStats && (
+          <button
+            type="button"
+            onClick={() => setShowTeamStatsExtended(!showTeamStatsExtended)}
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 border border-white/5 rounded-xl bg-black/20 hover:bg-black/40 hover:text-white text-[10px] md:text-xs font-bold text-slate-400 transition-colors select-none cursor-pointer mt-2"
+          >
+            <span>
+              {showTeamStatsExtended 
+                ? 'Ver menos estadísticas ↑' 
+                : 'Ver más estadísticas (Remates, Córners, Posesión) ↓'}
+            </span>
+          </button>
+        )}
       </div>
     );
-  }, [match?.live_statistics, hName, aName]);
+  }, [match?.live_statistics, showTeamStatsExtended, hName, aName]);
 
   // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos con actualización automática en vivo
   useEffect(() => {
