@@ -737,14 +737,40 @@ html.lite-mode [class*="blur-"]:not([class*="backdrop-"]) {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Cache backdrop-blurred elements on the GPU as textures to prevent repaint lag during scrolling */
+/* Disable backdrop blur globally to prevent performance drops and repaint lag */
 .backdrop-blur-xl,
+.backdrop-blur-lg,
 .backdrop-blur-md,
 .backdrop-blur-sm,
+.backdrop-blur-2xl,
 [class*="backdrop-blur-"] {
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  perspective: 1000px;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Fallback: Adjust transparency of black/dark backgrounds that used to have blur */
+[class*="bg-black/"][class*="backdrop-blur-"] {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Fallback: Adjust transparent dark blue card/wrapper backgrounds */
+[class*="bg-[#0b1015]/"][class*="backdrop-blur-"] {
+  background-color: rgba(11, 16, 21, 0.85) !important;
+}
+
+/* Fallback: Adjust transparent grey-dark backgrounds */
+[class*="bg-[#09090b]/"][class*="backdrop-blur-"] {
+  background-color: rgba(9, 9, 11, 0.9) !important;
+}
+
+/* Fallback: Adjust transparent white backgrounds */
+[class*="bg-white/"][class*="backdrop-blur-"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Fallback: Adjust navigation bar bg (slate-950 or similar) */
+[class*="bg-slate-950/"][class*="backdrop-blur-"] {
+  background-color: rgba(2, 6, 23, 0.95) !important;
 }
 
 
