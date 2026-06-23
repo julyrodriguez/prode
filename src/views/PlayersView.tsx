@@ -950,7 +950,7 @@ export default function PlayersView() {
 
       {/* DETAIL MODAL PANEL */}
       {mounted && selectedPlayerName && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 animate-fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 animate-fade-in">
           {/* Dismiss overlay */}
           <div className="absolute inset-0 cursor-pointer" onClick={() => setSelectedPlayerName(null)} />
           
