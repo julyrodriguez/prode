@@ -1333,6 +1333,19 @@ export default function MatchDetailView() {
                 const homeTeamName = hName;
                 const awayTeamName = aName;
 
+                const isPreloaded = match.elnine_players && match.elnine_players.length > 0;
+                const isNotStarted = match.status?.type === 'notstarted';
+                const shouldSubtract = isNotStarted && isPreloaded;
+
+                const isPlayerInPreloadedLineup = (gp: any) => {
+                  if (!match.elnine_players) return false;
+                  return match.elnine_players.some((ep: any) => {
+                    const epName = (ep.nameFull || ep.name || '').toLowerCase();
+                    const gpName = (gp.nameFull || gp.name || '').toLowerCase();
+                    return ep.number === gp.number || epName.includes(gpName) || gpName.includes(epName);
+                  });
+                };
+
                 let combined: any[] = [];
 
                 if (match.lineups && (match.lineups.home?.players?.length > 0 || match.lineups.away?.players?.length > 0)) {
@@ -1343,13 +1356,19 @@ export default function MatchDetailView() {
                   combined = allLineup.map(lp => {
                     const gp = findGlobalPlayer(lp);
                     if (!gp) return null;
+
+                    let actualMatches = gp.totalMatches || 0;
+                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
+                      actualMatches -= 1;
+                    }
+
                     return {
                       nameFull: gp.nameFull || lp.player?.name,
                       name: gp.name || lp.player?.shortName,
                       number: lp.jerseyNumber || gp.number,
                       position: lp.position || gp.position,
                       isHome: lp.isHome,
-                      totalMatches: gp.totalMatches || 0,
+                      totalMatches: actualMatches,
                       stats: {
                         shots: gp.shots || 0,
                         shotsOnTarget: gp.shotsOnTarget || 0,
@@ -1359,35 +1378,47 @@ export default function MatchDetailView() {
                     };
                   }).filter(Boolean);
                 } else {
-                  const homeList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, homeTeamName)).map(gp => ({
-                    nameFull: gp.nameFull,
-                    name: gp.name,
-                    number: gp.number,
-                    position: gp.position,
-                    isHome: true,
-                    totalMatches: gp.totalMatches || 0,
-                    stats: {
-                      shots: gp.shots || 0,
-                      shotsOnTarget: gp.shotsOnTarget || 0,
-                      foulsCommitted: gp.foulsCommitted || 0,
-                      foulsWon: gp.foulsWon || 0,
+                  const homeList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, homeTeamName)).map(gp => {
+                    let actualMatches = gp.totalMatches || 0;
+                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
+                      actualMatches -= 1;
                     }
-                  }));
+                    return {
+                      nameFull: gp.nameFull,
+                      name: gp.name,
+                      number: gp.number,
+                      position: gp.position,
+                      isHome: true,
+                      totalMatches: actualMatches,
+                      stats: {
+                        shots: gp.shots || 0,
+                        shotsOnTarget: gp.shotsOnTarget || 0,
+                        foulsCommitted: gp.foulsCommitted || 0,
+                        foulsWon: gp.foulsWon || 0,
+                      }
+                    };
+                  });
 
-                  const awayList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, awayTeamName)).map(gp => ({
-                    nameFull: gp.nameFull,
-                    name: gp.name,
-                    number: gp.number,
-                    position: gp.position,
-                    isHome: false,
-                    totalMatches: gp.totalMatches || 0,
-                    stats: {
-                      shots: gp.shots || 0,
-                      shotsOnTarget: gp.shotsOnTarget || 0,
-                      foulsCommitted: gp.foulsCommitted || 0,
-                      foulsWon: gp.foulsWon || 0,
+                  const awayList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, awayTeamName)).map(gp => {
+                    let actualMatches = gp.totalMatches || 0;
+                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
+                      actualMatches -= 1;
                     }
-                  }));
+                    return {
+                      nameFull: gp.nameFull,
+                      name: gp.name,
+                      number: gp.number,
+                      position: gp.position,
+                      isHome: false,
+                      totalMatches: actualMatches,
+                      stats: {
+                        shots: gp.shots || 0,
+                        shotsOnTarget: gp.shotsOnTarget || 0,
+                        foulsCommitted: gp.foulsCommitted || 0,
+                        foulsWon: gp.foulsWon || 0,
+                      }
+                    };
+                  });
 
                   combined = [...homeList, ...awayList];
                 }

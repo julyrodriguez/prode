@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useContext } from 'react';
 import { DashboardContext } from '../app/(dashboard)/layout';
-import { LEAGUES } from '../components/layout/AppLayout';
 import { ArrowLeft, MapPin, Users, Calendar } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
