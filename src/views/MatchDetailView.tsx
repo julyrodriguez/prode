@@ -281,6 +281,104 @@ const getPlayerHistoryMinutes = (m: any): number => {
   return 0;
 };
 
+const GROUP_TRANSLATIONS: Record<string, string> = {
+  'Match overview': 'Resumen del partido',
+  'Shots': 'Tiros',
+  'Shots on target': 'Tiros al arco',
+  'Attack': 'Ataque',
+  'Passes': 'Pases',
+  'Duels': 'Duelos',
+  'Defending': 'Defensa',
+  'Goalkeeping': 'Arqueros',
+  'Discipline': 'Disciplina',
+  'Possession': 'Posesión',
+  'Corners': 'Córners',
+  // Promiedos groups:
+  'Match statistics': 'Estadísticas del partido'
+};
+
+const STAT_TRANSLATIONS: Record<string, string> = {
+  'Ball possession': 'Posesión del balón',
+  'Total shots': 'Tiros totales',
+  'Shots on target': 'Tiros al arco',
+  'Shots off target': 'Tiros afuera',
+  'Blocked shots': 'Tiros bloqueados',
+  'Corner kicks': 'Córners',
+  'Offsides': 'Fueras de juego',
+  'Fouls': 'Faltas',
+  'Yellow cards': 'Tarjetas amarillas',
+  'Red cards': 'Tarjetas rojas',
+  'Free kicks': 'Tiros libres',
+  'Goal kicks': 'Saques de arco',
+  'Throw-ins': 'Saques de banda',
+  'Total passes': 'Pases totales',
+  'Accurate passes': 'Pases precisos',
+  'Long balls': 'Pelota larga',
+  'Crosses': 'Centros',
+  'Dribbles': 'Regates',
+  'Tackles': 'Entradas',
+  'Interceptions': 'Interceptaciones',
+  'Clearances': 'Despejes',
+  'Total saves': 'Atajadas totales',
+  'Shots from set pieces': 'Tiros a pelota parada',
+  'Expected goals (xG)': 'xG esperados',
+  'Big chances': 'Ocasiones claras',
+  'Big chances missed': 'Ocasiones perdidas',
+  'Goalkeeper saves': 'Atajadas del arquero',
+  'Headed goals': 'Goles de cabeza',
+  'Fast breaks': 'Contraataques',
+  'Errors leading to shot': 'Errores que generan tiro',
+  'Expected goals': 'Goles esperados (xG)',
+  'Hit woodwork': 'Al palo/travesano',
+  'Shots inside box': 'Tiros dentro del area',
+  'Shots outside box': 'Tiros fuera del area',
+  'Big chances scored': 'Ocasiones claras convertidas',
+  'Through balls': 'Pases filtrados',
+  'Touches in penalty area': 'Toques en el area',
+  'Fouled in final third': 'Faltas en 3er tercio',
+  'Final third entries': 'Entradas al 3er tercio',
+  'Final third phase': 'Fase del 3er tercio',
+  'Duels': 'Duelos',
+  'Dispossessed': 'Perdidas de balon',
+  'Ground duels': 'Duelos en tierra',
+  'Aerial duels': 'Duelos aereos',
+  'Tackles won': 'Entradas ganadas',
+  'Recoveries': 'Recuperaciones',
+  'Errors lead to a shot': 'Errores que generan tiro',
+  'Errors lead to a goal': 'Errores que generan gol',
+  'Goals prevented': 'Goles evitados',
+  'Big saves': 'Atajadas clave',
+  'High claims': 'Centros atrapados',
+  'Professional foul last man': 'Falta profesional ultimo hombre',
+  'Passes': 'Pases totales',
+  
+  // Promiedos Spanish stats -> Unify with standard terms
+  'Posesión': 'Posesión del balón',
+  'Remates al arco': 'Tiros al arco',
+  'Remates al Arco': 'Tiros al arco',
+  'remates al arco': 'Tiros al arco',
+  'Total Remates': 'Tiros totales',
+  'Saques de Esquina': 'Córners',
+  'Fueras de Juego': 'Fueras de juego',
+  'Saques de falta': 'Tiros libres',
+  'Tarjetas Amarillas': 'Tarjetas amarillas',
+  'Tarjetas Rojas': 'Tarjetas rojas',
+  'Ataques': 'Ataques',
+  'Faltas': 'Faltas'
+};
+
+const PERIOD_TRANSLATIONS: Record<string, string> = {
+  '1st half': 'Primer tiempo',
+  '2nd half': 'Segundo tiempo',
+  'Halftime': 'Entretiempo',
+  'HT': 'Entretiempo',
+  'FT': 'Tiempo reglamentario',
+  'Full time': 'Tiempo reglamentario',
+  'Extra time': 'Tiempo extra',
+  'Penalty shootout': 'Penales',
+  'PEN': 'Penales',
+};
+
 export default function MatchDetailView() {
   const { user } = useAuth();
   const { id } = useParams<{ id: string }>();
@@ -288,6 +386,10 @@ export default function MatchDetailView() {
   const outletContext = useContext(DashboardContext);
   const setOverriddenLeagueId = outletContext?.setOverriddenLeagueId;
   const { theme } = useTheme();
+
+  const translateGroup = (name: string): string => GROUP_TRANSLATIONS[name] ?? name;
+  const translateStat = (name: string): string => STAT_TRANSLATIONS[name] ?? name;
+  const translatePeriod = (text: string): string => PERIOD_TRANSLATIONS[text] ?? text;
   const isLight = theme === 'light';
 
   const [subSection, setSubSection] = useState<'resumen' | 'estadisticas'>('resumen');
@@ -297,6 +399,12 @@ export default function MatchDetailView() {
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [now, setNow] = useState(Date.now());
+
+  // Helper variables for team names and IDs defined early for useMemo hooks
+  const hName = match?.homeTeam?.name || match?.home_team?.name || 'Local';
+  const aName = match?.awayTeam?.name || match?.away_team?.name || 'Visitante';
+  const hId = match?.homeTeam?.id || match?.home_team?.id;
+  const aId = match?.awayTeam?.id || match?.away_team?.id;
 
   const [elninePlayers, setElninePlayers] = useState<any[] | null>(null);
   const [loadingElnine, setLoadingElnine] = useState<boolean>(false);
@@ -738,7 +846,10 @@ export default function MatchDetailView() {
     for (const group of m.live_statistics) {
       if (group.statisticsItems && Array.isArray(group.statisticsItems)) {
         const item = group.statisticsItems.find(
-          (i: any) => i.name && possibleNames.includes(i.name.toLowerCase())
+          (i: any) => 
+            (i.name && possibleNames.includes(i.name.toLowerCase().trim())) ||
+            (i.key && (i.key.toLowerCase() === statKey.toLowerCase() || 
+                       (statKey === 'shotsOnTarget' && i.key.toLowerCase() === 'shotsongoal')))
         );
         if (item) {
           const val = getForHome ? item.home : item.away;
@@ -1214,6 +1325,75 @@ export default function MatchDetailView() {
     return sorted;
   }, [match, globalPlayers, preSortField, preSortDirection]);
 
+  const teamStatsSection = useMemo(() => {
+    if (!match || !match.live_statistics || match.live_statistics.length === 0) return null;
+
+    return (
+      <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
+        <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
+            <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas</h3>
+          </div>
+          <div className="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest bg-black/30 px-2 py-0.5 md:px-3 md:py-1 rounded-lg border border-white/5">
+            <span className="text-emerald-400 truncate max-w-[70px] md:max-w-[80px]" title={hName}>{hName}</span>
+            <span className="text-slate-600 font-sans select-none">-</span>
+            <span className="text-indigo-400 truncate max-w-[70px] md:max-w-[80px]" title={aName}>{aName}</span>
+          </div>
+        </div>
+
+        {/* Iteramos sobre los grupos de estadísticas */}
+        <div className="flex flex-col gap-4 md:gap-6">
+          {match.live_statistics.map((group: any, gIdx: number) => (
+            <div key={gIdx} className="flex flex-col gap-2 md:gap-4">
+              <h4 className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest pl-1.5 md:pl-2 border-l-2 border-slate-600">
+                {translateGroup(group.groupName)}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 md:gap-y-3">
+                {group.statisticsItems.map((stat: any, idx: number) => {
+                  const homeVal = parseStatValue(stat.home);
+                  const awayVal = parseStatValue(stat.away);
+                  const total = homeVal + awayVal || 1;
+                  const hPct = (homeVal / total) * 100;
+                  const aPct = (awayVal / total) * 100;
+
+                  const isHomeWinner = homeVal > awayVal;
+                  const isAwayWinner = awayVal > homeVal;
+
+                  return (
+                    <div key={idx} className="flex flex-col gap-1">
+                      <div className="flex justify-between items-center px-1">
+                        <span className={`text-[10px] md:text-xs ${isHomeWinner ? 'text-emerald-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.home}</span>
+                        <span className="text-slate-400 text-[8px] md:text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
+                        <span className={`text-[10px] md:text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
+                      </div>
+                      <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
+                        {/* Barra local: crece hacia la izquierda */}
+                        <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
+                          <div
+                            className="h-full bg-emerald-500/90 shadow-[0_0_6px_rgba(16,185,129,0.4)] rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${hPct}%` }}
+                          />
+                        </div>
+                        {/* Barra visitante: crece hacia la derecha */}
+                        <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-start border border-white/5">
+                          <div
+                            className="h-full bg-indigo-500/90 shadow-[0_0_6px_rgba(99,102,241,0.4)] rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${aPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }, [match?.live_statistics, hName, aName]);
+
   // Fetch estadísticas detalladas de elnine.com.ar desde la base de datos con actualización automática en vivo
   useEffect(() => {
     if (!id) return;
@@ -1413,12 +1593,7 @@ export default function MatchDetailView() {
       </div>
     );
   }
-
   // Helper functions specific to match detail to parse data safely
-  const hName = match.homeTeam?.name || match.home_team?.name || 'Local';
-  const aName = match.awayTeam?.name || match.away_team?.name || 'Visitante';
-  const hId = match.homeTeam?.id || match.home_team?.id;
-  const aId = match.awayTeam?.id || match.away_team?.id;
 
   const getMatchGroupData = () => {
     if (!mundialStandings) return null;
@@ -1538,88 +1713,7 @@ export default function MatchDetailView() {
     return parts.join(' ');
   };
 
-  // ─── Mapas de traducción ─────────────────────────────────────────────────────
-  const translateGroup = (name: string): string => ({
-    'Match overview': 'Resumen del partido',
-    'Shots': 'Tiros',
-    'Shots on target': 'Tiros al arco',
-    'Attack': 'Ataque',
-    'Passes': 'Pases',
-    'Duels': 'Duelos',
-    'Defending': 'Defensa',
-    'Goalkeeping': 'Arqueros',
-    'Discipline': 'Disciplina',
-    'Possession': 'Posesión',
-    'Corners': 'Córners',
-  } as Record<string, string>)[name] ?? name;
-
-  const translateStat = (name: string): string => ({
-    'Ball possession': 'Posesión del balón',
-    'Total shots': 'Tiros totales',
-    'Shots on target': 'Tiros al arco',
-    'Shots off target': 'Tiros afuera',
-    'Blocked shots': 'Tiros bloqueados',
-    'Corner kicks': 'Córners',
-    'Offsides': 'Fueras de juego',
-    'Fouls': 'Faltas',
-    'Yellow cards': 'Tarjetas amarillas',
-    'Red cards': 'Tarjetas rojas',
-    'Free kicks': 'Tiros libres',
-    'Goal kicks': 'Saques de arco',
-    'Throw-ins': 'Saques de banda',
-    'Total passes': 'Pases totales',
-    'Accurate passes': 'Pases precisos',
-    'Long balls': 'Pelota larga',
-    'Crosses': 'Centros',
-    'Dribbles': 'Regates',
-    'Tackles': 'Entradas',
-    'Interceptions': 'Interceptaciones',
-    'Clearances': 'Despejes',
-    'Total saves': 'Atajadas totales',
-    'Shots from set pieces': 'Tiros a pelota parada',
-    'Expected goals (xG)': 'xG esperados',
-    'Big chances': 'Ocasiones claras',
-    'Big chances missed': 'Ocasiones perdidas',
-    'Goalkeeper saves': 'Atajadas del arquero',
-    'Headed goals': 'Goles de cabeza',
-    'Fast breaks': 'Contraataques',
-    'Errors leading to shot': 'Errores que generan tiro',
-    'Expected goals': 'Goles esperados (xG)',
-    'Hit woodwork': 'Al palo/travesano',
-    'Shots inside box': 'Tiros dentro del area',
-    'Shots outside box': 'Tiros fuera del area',
-    'Big chances scored': 'Ocasiones claras convertidas',
-    'Through balls': 'Pases filtrados',
-    'Touches in penalty area': 'Toques en el area',
-    'Fouled in final third': 'Faltas en 3er tercio',
-    'Final third entries': 'Entradas al 3er tercio',
-    'Final third phase': 'Fase del 3er tercio',
-    'Duels': 'Duelos',
-    'Dispossessed': 'Perdidas de balon',
-    'Ground duels': 'Duelos en tierra',
-    'Aerial duels': 'Duelos aereos',
-    'Tackles won': 'Entradas ganadas',
-    'Recoveries': 'Recuperaciones',
-    'Errors lead to a shot': 'Errores que generan tiro',
-    'Errors lead to a goal': 'Errores que generan gol',
-    'Goals prevented': 'Goles evitados',
-    'Big saves': 'Atajadas clave',
-    'High claims': 'Centros atrapados',
-    'Professional foul last man': 'Falta profesional ultimo hombre',
-    'Passes': 'Pases totales',
-  } as Record<string, string>)[name] ?? name;
-
-  const translatePeriod = (text: string): string => ({
-    '1st half': 'Primer tiempo',
-    '2nd half': 'Segundo tiempo',
-    'Halftime': 'Entretiempo',
-    'HT': 'Entretiempo',
-    'FT': 'Tiempo reglamentario',
-    'Full time': 'Tiempo reglamentario',
-    'Extra time': 'Tiempo extra',
-    'Penalty shootout': 'Penales',
-    'PEN': 'Penales',
-  } as Record<string, string>)[text] ?? text;
+  // ─── Mapas de traducción (Optimizados y movidos a constantes estáticas fuera del componente) ─────────────────
   // ─────────────────────────────────────────────────────────────────────────────
   const selectedPrePlayerAggInfo = globalPlayers.find(p => {
     if (!selectedPrePlayerName) return false;
@@ -2619,70 +2713,7 @@ export default function MatchDetailView() {
       )}
 
       {/* Estadísticas (Movido debajo de la Cronología de Eventos) */}
-      {subSection === 'resumen' && match.live_statistics && match.live_statistics.length > 0 && (
-        <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
-          <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
-              <h3 className="text-xs md:text-sm font-bold text-white">Estadísticas</h3>
-            </div>
-            <div className="flex items-center gap-1.5 md:gap-2 text-[8px] md:text-[10px] font-bold uppercase tracking-widest bg-black/30 px-2 py-0.5 md:px-3 md:py-1 rounded-lg border border-white/5">
-              <span className="text-emerald-400 truncate max-w-[70px] md:max-w-[80px]" title={hName}>{hName}</span>
-              <span className="text-slate-600 font-sans select-none">-</span>
-              <span className="text-indigo-400 truncate max-w-[70px] md:max-w-[80px]" title={aName}>{aName}</span>
-            </div>
-          </div>
-
-          {/* Iteramos sobre los grupos de estadísticas */}
-          <div className="flex flex-col gap-4 md:gap-6">
-            {match.live_statistics.map((group: any, gIdx: number) => (
-              <div key={gIdx} className="flex flex-col gap-2 md:gap-4">
-                <h4 className="text-slate-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest pl-1.5 md:pl-2 border-l-2 border-slate-600">
-                  {translateGroup(group.groupName)}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 md:gap-y-3">
-                  {group.statisticsItems.map((stat: any, idx: number) => {
-                    const homeVal = parseStatValue(stat.home);
-                    const awayVal = parseStatValue(stat.away);
-                    const total = homeVal + awayVal || 1;
-                    const hPct = (homeVal / total) * 100;
-                    const aPct = (awayVal / total) * 100;
-
-                    const isHomeWinner = homeVal > awayVal;
-                    const isAwayWinner = awayVal > homeVal;
-
-                    return (
-                      <div key={idx} className="flex flex-col gap-1">
-                        <div className="flex justify-between items-center px-1">
-                          <span className={`text-[10px] md:text-xs ${isHomeWinner ? 'text-emerald-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.home}</span>
-                          <span className="text-slate-400 text-[8px] md:text-[9px] font-bold tracking-wider uppercase">{translateStat(stat.name)}</span>
-                          <span className={`text-[10px] md:text-xs ${isAwayWinner ? 'text-indigo-400 font-black' : 'text-slate-300 font-semibold'}`}>{stat.away}</span>
-                        </div>
-                        <div className="flex items-center gap-2 md:gap-3 w-full h-1 md:h-1.5 mt-0.5 opacity-90">
-                          {/* Barra local: crece hacia la izquierda */}
-                          <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-end border border-white/5">
-                            <div
-                              className="h-full bg-emerald-500/90 shadow-[0_0_6px_rgba(16,185,129,0.4)] rounded-full transition-all duration-300 ease-out"
-                              style={{ width: `${hPct}%` }}
-                            />
-                          </div>
-                          {/* Barra visitante: crece hacia la derecha */}
-                          <div className="flex-1 h-full bg-white/[0.03] rounded-full overflow-hidden flex justify-start border border-white/5">
-                            <div
-                              className="h-full bg-indigo-500/90 shadow-[0_0_6px_rgba(99,102,241,0.4)] rounded-full transition-all duration-300 ease-out"
-                              style={{ width: `${aPct}%` }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {subSection === 'resumen' && teamStatsSection}
 
       {/* Tabla Compacta de Estadísticas de Jugadores */}
       {subSection === 'resumen' && (() => {
