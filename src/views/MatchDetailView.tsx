@@ -1329,7 +1329,10 @@ export default function MatchDetailView() {
     if (!match || !match.live_statistics || match.live_statistics.length === 0) return null;
 
     return (
-      <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit">
+      <div 
+        className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-4 md:gap-6 shadow-lg h-fit"
+        style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' }}
+      >
         <div className="flex flex-row items-center justify-between gap-2 pb-2 md:pb-3 border-b border-white/5">
           <div className="flex items-center gap-1.5 md:gap-2">
             <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20 text-[10px] md:text-xs">📊</span>
@@ -1371,14 +1374,14 @@ export default function MatchDetailView() {
                         {/* Barra local: crece hacia la izquierda */}
                         <div className="flex-1 h-full bg-white/[0.03] rounded-full flex justify-end border border-white/5">
                           <div
-                            className="h-full bg-emerald-500/90 rounded-full transition-[width] duration-300 ease-out will-change-[width]"
+                            className="h-full bg-emerald-500/90 rounded-full"
                             style={{ width: `${hPct}%` }}
                           />
                         </div>
                         {/* Barra visitante: crece hacia la derecha */}
                         <div className="flex-1 h-full bg-white/[0.03] rounded-full flex justify-start border border-white/5">
                           <div
-                            className="h-full bg-indigo-500/90 rounded-full transition-[width] duration-300 ease-out will-change-[width]"
+                            className="h-full bg-indigo-500/90 rounded-full"
                             style={{ width: `${aPct}%` }}
                           />
                         </div>
