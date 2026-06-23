@@ -1504,7 +1504,6 @@ export default function MatchDetailView() {
 
           {/* Detalles (solo antes de empezar el partido) */}
           {!hasStarted && (
-            <>
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4 relative overflow-hidden">
                 <h3 className="text-xs md:text-sm font-bold text-slate-200">Detalles</h3>
                 <div className="flex flex-col gap-2 z-10">
@@ -1533,259 +1532,6 @@ export default function MatchDetailView() {
                   )}
                 </div>
               </div>
-
-              {/* CUADRO DE ESTADÍSTICAS PROMEDIO PRE-PARTIDO */}
-              {(() => {
-                if (!globalPlayers || globalPlayers.length === 0) return null;
-
-                const findGlobalPlayer = (lineupPlayer: any) => {
-                  const dbName = (lineupPlayer.player?.name || lineupPlayer.player?.shortName || '').toLowerCase();
-                  const dbShort = (lineupPlayer.player?.shortName || '').toLowerCase();
-                  const dbNumber = lineupPlayer.jerseyNumber;
-
-                  const normalizeString = (str: string) => {
-                    return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
-                  };
-
-                  const normDbName = normalizeString(dbName);
-                  const normDbShort = normalizeString(dbShort);
-
-                  const candidates = globalPlayers.filter((gp: any) => gp.number === dbNumber);
-                  if (candidates.length === 1) {
-                    return candidates[0];
-                  } else if (candidates.length > 1) {
-                    for (const gp of candidates) {
-                      const gpName = normalizeString(gp.nameFull || gp.name || '');
-                      if (gpName.includes(normDbShort) || normDbName.includes(gpName) || gpName.includes(normDbName)) {
-                        return gp;
-                      }
-                    }
-                  }
-
-                  return globalPlayers.find((gp: any) => {
-                    const gpName = normalizeString(gp.nameFull || gp.name || '');
-                    const gpShort = normalizeString(gp.name || '');
-                    return (
-                      gpName.includes(normDbName) || 
-                      normDbName.includes(gpName) ||
-                      gpName.includes(normDbShort) ||
-                      gpShort.includes(normDbShort)
-                    );
-                  }) || null;
-                };
-
-                const homeTeamName = hName;
-                const awayTeamName = aName;
-
-                const isPreloaded = match.elnine_players && match.elnine_players.length > 0;
-                const isNotStarted = match.status?.type === 'notstarted';
-                const shouldSubtract = isNotStarted && isPreloaded;
-
-                const isPlayerInPreloadedLineup = (gp: any) => {
-                  if (!match.elnine_players) return false;
-                  return match.elnine_players.some((ep: any) => {
-                    const epName = (ep.nameFull || ep.name || '').toLowerCase();
-                    const gpName = (gp.nameFull || gp.name || '').toLowerCase();
-                    return ep.number === gp.number || epName.includes(gpName) || gpName.includes(epName);
-                  });
-                };
-
-                let combined: any[] = [];
-
-                if (match.lineups && (match.lineups.home?.players?.length > 0 || match.lineups.away?.players?.length > 0)) {
-                  const homePlayersLineup = (match.lineups.home?.players || []).map((p: any) => ({ ...p, isHome: true }));
-                  const awayPlayersLineup = (match.lineups.away?.players || []).map((p: any) => ({ ...p, isHome: false }));
-                  const allLineup = [...homePlayersLineup, ...awayPlayersLineup];
-                  
-                  combined = allLineup.map(lp => {
-                    const gp = findGlobalPlayer(lp);
-                    if (!gp) return null;
-
-                    let actualMatches = gp.totalMatches || 0;
-                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
-                      actualMatches -= 1;
-                    }
-
-                    return {
-                      nameFull: gp.nameFull || lp.player?.name,
-                      name: gp.name || lp.player?.shortName,
-                      number: lp.jerseyNumber || gp.number,
-                      position: lp.position || gp.position,
-                      isHome: lp.isHome,
-                      totalMatches: actualMatches,
-                      stats: {
-                        shots: gp.shots || 0,
-                        shotsOnTarget: gp.shotsOnTarget || 0,
-                        foulsCommitted: gp.foulsCommitted || 0,
-                        foulsWon: gp.foulsWon || 0,
-                      }
-                    };
-                  }).filter(Boolean);
-                } else {
-                  const homeList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, homeTeamName)).map(gp => {
-                    let actualMatches = gp.totalMatches || 0;
-                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
-                      actualMatches -= 1;
-                    }
-                    return {
-                      nameFull: gp.nameFull,
-                      name: gp.name,
-                      number: gp.number,
-                      position: gp.position,
-                      isHome: true,
-                      totalMatches: actualMatches,
-                      stats: {
-                        shots: gp.shots || 0,
-                        shotsOnTarget: gp.shotsOnTarget || 0,
-                        foulsCommitted: gp.foulsCommitted || 0,
-                        foulsWon: gp.foulsWon || 0,
-                      }
-                    };
-                  });
-
-                  const awayList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, awayTeamName)).map(gp => {
-                    let actualMatches = gp.totalMatches || 0;
-                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
-                      actualMatches -= 1;
-                    }
-                    return {
-                      nameFull: gp.nameFull,
-                      name: gp.name,
-                      number: gp.number,
-                      position: gp.position,
-                      isHome: false,
-                      totalMatches: actualMatches,
-                      stats: {
-                        shots: gp.shots || 0,
-                        shotsOnTarget: gp.shotsOnTarget || 0,
-                        foulsCommitted: gp.foulsCommitted || 0,
-                        foulsWon: gp.foulsWon || 0,
-                      }
-                    };
-                  });
-
-                  combined = [...homeList, ...awayList];
-                }
-
-                const filtered = combined.filter(p => {
-                  const total = p.stats.shots + p.stats.shotsOnTarget + p.stats.foulsCommitted + p.stats.foulsWon;
-                  return p.totalMatches > 0 && total > 0;
-                }).map(p => {
-                  const matches = p.totalMatches;
-                  return {
-                    ...p,
-                    avgStats: {
-                      shots: p.stats.shots / matches,
-                      shotsOnTarget: p.stats.shotsOnTarget / matches,
-                      foulsCommitted: p.stats.foulsCommitted / matches,
-                      foulsWon: p.stats.foulsWon / matches,
-                    }
-                  };
-                });
-
-                if (filtered.length === 0) return null;
-
-                const sorted = [...filtered].sort((a, b) => {
-                  let valA = a.avgStats[preSortField] || 0;
-                  let valB = b.avgStats[preSortField] || 0;
-                  if (valA === valB) {
-                    return (a.nameFull || a.name || '').localeCompare(b.nameFull || b.name || '');
-                  }
-                  return preSortDirection === 'desc' ? valB - valA : valA - valB;
-                });
-
-                const displayed = showAllPreStats ? sorted : sorted.slice(0, 5);
-
-                const handlePreSort = (field: 'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon') => {
-                  if (preSortField === field) {
-                    setPreSortDirection(preSortDirection === 'desc' ? 'asc' : 'desc');
-                  } else {
-                    setPreSortField(field);
-                    setPreSortDirection('desc');
-                  }
-                };
-
-                return (
-                  <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg h-fit">
-                    <div className="flex flex-row items-center justify-between border-b border-white/5 pb-2">
-                      <div className="flex items-center gap-1.5 md:gap-2">
-                        <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 text-[10px] md:text-xs">📊</span>
-                        <h3 className="text-xs md:text-sm font-bold text-white">Promedios de Jugadores</h3>
-                      </div>
-                      <span className="text-[8px] md:text-[9px] text-slate-500 uppercase tracking-widest font-black">
-                        Partidos Previos
-                      </span>
-                    </div>
-
-                    <div className="overflow-x-auto no-scrollbar">
-                      <table className="w-full text-left border-collapse text-[10px] sm:text-xs">
-                        <thead>
-                          <tr className="border-b border-white/5 text-slate-400 font-bold">
-                            <th className="py-1.5 pl-1 font-bold text-slate-400">Jugador</th>
-                            <th 
-                              onClick={() => handlePreSort('shots')}
-                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
-                            >
-                              Tiros {preSortField === 'shots' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
-                            </th>
-                            <th 
-                              onClick={() => handlePreSort('shotsOnTarget')}
-                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
-                            >
-                              Al Arco {preSortField === 'shotsOnTarget' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
-                            </th>
-                            <th 
-                              onClick={() => handlePreSort('foulsCommitted')}
-                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
-                            >
-                              Faltas {preSortField === 'foulsCommitted' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
-                            </th>
-                            <th 
-                              onClick={() => handlePreSort('foulsWon')}
-                              className={`py-1.5 pr-1 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}`}
-                            >
-                              Recibidas {preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/[0.02]">
-                          {displayed.map((player: any, pIdx: number) => {
-                            return (
-                              <tr 
-                                key={pIdx}
-                                onClick={() => setSelectedPrePlayerName(player.nameFull || player.name)}
-                                className="hover:bg-white/[0.02] active:scale-[0.99] transition-all cursor-pointer group"
-                              >
-                                <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
-                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${player.isHome ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
-                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[120px] sm:max-w-xs">
-                                    {player.nameFull || player.name}
-                                  </span>
-                                  <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
-                                </td>
-                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shots.toFixed(2)}</td>
-                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shotsOnTarget.toFixed(2)}</td>
-                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.foulsCommitted.toFixed(2)}</td>
-                                <td className="py-2 pr-1 text-center font-bold text-slate-350">{player.avgStats.foulsWon.toFixed(2)}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {sorted.length > 5 && (
-                      <button
-                        onClick={() => setShowAllPreStats(!showAllPreStats)}
-                        className="w-full text-center py-1.5 text-[9px] md:text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-1"
-                      >
-                        {showAllPreStats ? 'Ver menos ↑' : `Ver más (${sorted.length - 5} jugadores con promedios) ↓`}
-                      </button>
-                    )}
-                  </div>
-                );
-              })()}
-            </>
           )}
 
           {/* Alineaciones */}
@@ -2139,9 +1885,261 @@ export default function MatchDetailView() {
 
         </div>
 
-        {/* COLUMNA DERECHA: Pronósticos */}
+        {/* COLUMNA DERECHA: Promedios de Jugadores + Pronósticos */}
         {user && (
           <div className="xl:col-span-2 flex flex-col gap-3 md:gap-4">
+
+            {/* CUADRO DE ESTADÍSTICAS PROMEDIO PRE-PARTIDO */}
+            {!hasStarted && (() => {
+                if (!globalPlayers || globalPlayers.length === 0) return null;
+
+                const findGlobalPlayer = (lineupPlayer: any) => {
+                  const dbName = (lineupPlayer.player?.name || lineupPlayer.player?.shortName || '').toLowerCase();
+                  const dbShort = (lineupPlayer.player?.shortName || '').toLowerCase();
+                  const dbNumber = lineupPlayer.jerseyNumber;
+
+                  const normalizeString = (str: string) => {
+                    return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+                  };
+
+                  const normDbName = normalizeString(dbName);
+                  const normDbShort = normalizeString(dbShort);
+
+                  const candidates = globalPlayers.filter((gp: any) => gp.number === dbNumber);
+                  if (candidates.length === 1) {
+                    return candidates[0];
+                  } else if (candidates.length > 1) {
+                    for (const gp of candidates) {
+                      const gpName = normalizeString(gp.nameFull || gp.name || '');
+                      if (gpName.includes(normDbShort) || normDbName.includes(gpName) || gpName.includes(normDbName)) {
+                        return gp;
+                      }
+                    }
+                  }
+
+                  return globalPlayers.find((gp: any) => {
+                    const gpName = normalizeString(gp.nameFull || gp.name || '');
+                    const gpShort = normalizeString(gp.name || '');
+                    return (
+                      gpName.includes(normDbName) || 
+                      normDbName.includes(gpName) ||
+                      gpName.includes(normDbShort) ||
+                      gpShort.includes(normDbShort)
+                    );
+                  }) || null;
+                };
+
+                const homeTeamName = hName;
+                const awayTeamName = aName;
+
+                const isPreloaded = match.elnine_players && match.elnine_players.length > 0;
+                const isNotStarted = match.status?.type === 'notstarted';
+                const shouldSubtract = isNotStarted && isPreloaded;
+
+                const isPlayerInPreloadedLineup = (gp: any) => {
+                  if (!match.elnine_players) return false;
+                  return match.elnine_players.some((ep: any) => {
+                    const epName = (ep.nameFull || ep.name || '').toLowerCase();
+                    const gpName = (gp.nameFull || gp.name || '').toLowerCase();
+                    return ep.number === gp.number || epName.includes(gpName) || gpName.includes(epName);
+                  });
+                };
+
+                let combined: any[] = [];
+
+                if (match.lineups && (match.lineups.home?.players?.length > 0 || match.lineups.away?.players?.length > 0)) {
+                  const homePlayersLineup = (match.lineups.home?.players || []).map((p: any) => ({ ...p, isHome: true }));
+                  const awayPlayersLineup = (match.lineups.away?.players || []).map((p: any) => ({ ...p, isHome: false }));
+                  const allLineup = [...homePlayersLineup, ...awayPlayersLineup];
+                  
+                  combined = allLineup.map(lp => {
+                    const gp = findGlobalPlayer(lp);
+                    if (!gp) return null;
+
+                    let actualMatches = gp.totalMatches || 0;
+                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
+                      actualMatches -= 1;
+                    }
+
+                    return {
+                      nameFull: gp.nameFull || lp.player?.name,
+                      name: gp.name || lp.player?.shortName,
+                      number: lp.jerseyNumber || gp.number,
+                      position: lp.position || gp.position,
+                      isHome: lp.isHome,
+                      totalMatches: actualMatches,
+                      stats: {
+                        shots: gp.shots || 0,
+                        shotsOnTarget: gp.shotsOnTarget || 0,
+                        foulsCommitted: gp.foulsCommitted || 0,
+                        foulsWon: gp.foulsWon || 0,
+                      }
+                    };
+                  }).filter(Boolean);
+                } else {
+                  const homeList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, homeTeamName)).map(gp => {
+                    let actualMatches = gp.totalMatches || 0;
+                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
+                      actualMatches -= 1;
+                    }
+                    return {
+                      nameFull: gp.nameFull,
+                      name: gp.name,
+                      number: gp.number,
+                      position: gp.position,
+                      isHome: true,
+                      totalMatches: actualMatches,
+                      stats: {
+                        shots: gp.shots || 0,
+                        shotsOnTarget: gp.shotsOnTarget || 0,
+                        foulsCommitted: gp.foulsCommitted || 0,
+                        foulsWon: gp.foulsWon || 0,
+                      }
+                    };
+                  });
+
+                  const awayList = globalPlayers.filter(gp => isPlayerOfTeam(gp.selection, awayTeamName)).map(gp => {
+                    let actualMatches = gp.totalMatches || 0;
+                    if (shouldSubtract && isPlayerInPreloadedLineup(gp) && actualMatches > 0) {
+                      actualMatches -= 1;
+                    }
+                    return {
+                      nameFull: gp.nameFull,
+                      name: gp.name,
+                      number: gp.number,
+                      position: gp.position,
+                      isHome: false,
+                      totalMatches: actualMatches,
+                      stats: {
+                        shots: gp.shots || 0,
+                        shotsOnTarget: gp.shotsOnTarget || 0,
+                        foulsCommitted: gp.foulsCommitted || 0,
+                        foulsWon: gp.foulsWon || 0,
+                      }
+                    };
+                  });
+
+                  combined = [...homeList, ...awayList];
+                }
+
+                const filtered = combined.filter(p => {
+                  const total = p.stats.shots + p.stats.shotsOnTarget + p.stats.foulsCommitted + p.stats.foulsWon;
+                  return p.totalMatches > 0 && total > 0;
+                }).map(p => {
+                  const matches = p.totalMatches;
+                  return {
+                    ...p,
+                    avgStats: {
+                      shots: p.stats.shots / matches,
+                      shotsOnTarget: p.stats.shotsOnTarget / matches,
+                      foulsCommitted: p.stats.foulsCommitted / matches,
+                      foulsWon: p.stats.foulsWon / matches,
+                    }
+                  };
+                });
+
+                if (filtered.length === 0) return null;
+
+                const sorted = [...filtered].sort((a, b) => {
+                  let valA = a.avgStats[preSortField] || 0;
+                  let valB = b.avgStats[preSortField] || 0;
+                  if (valA === valB) {
+                    return (a.nameFull || a.name || '').localeCompare(b.nameFull || b.name || '');
+                  }
+                  return preSortDirection === 'desc' ? valB - valA : valA - valB;
+                });
+
+                const displayed = showAllPreStats ? sorted : sorted.slice(0, 5);
+
+                const handlePreSort = (field: 'shots' | 'shotsOnTarget' | 'foulsCommitted' | 'foulsWon') => {
+                  if (preSortField === field) {
+                    setPreSortDirection(preSortDirection === 'desc' ? 'asc' : 'desc');
+                  } else {
+                    setPreSortField(field);
+                    setPreSortDirection('desc');
+                  }
+                };
+
+                return (
+                  <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg h-fit">
+                    <div className="flex flex-row items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                        <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 text-[10px] md:text-xs">📊</span>
+                        <h3 className="text-xs md:text-sm font-bold text-white">Promedios de Jugadores</h3>
+                      </div>
+                      <span className="text-[8px] md:text-[9px] text-slate-500 uppercase tracking-widest font-black">
+                        Partidos Previos
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto no-scrollbar">
+                      <table className="w-full text-left border-collapse text-[10px] sm:text-xs">
+                        <thead>
+                          <tr className="border-b border-white/5 text-slate-400 font-bold">
+                            <th className="py-1.5 pl-1 font-bold text-slate-400">Jugador</th>
+                            <th 
+                              onClick={() => handlePreSort('shots')}
+                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shots' ? 'text-emerald-400 font-black' : ''}`}
+                            >
+                              Tiros {preSortField === 'shots' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                            <th 
+                              onClick={() => handlePreSort('shotsOnTarget')}
+                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'shotsOnTarget' ? 'text-emerald-400 font-black' : ''}`}
+                            >
+                              Al Arco {preSortField === 'shotsOnTarget' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                            <th 
+                              onClick={() => handlePreSort('foulsCommitted')}
+                              className={`py-1.5 px-2 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsCommitted' ? 'text-emerald-400 font-black' : ''}`}
+                            >
+                              Faltas {preSortField === 'foulsCommitted' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                            <th 
+                              onClick={() => handlePreSort('foulsWon')}
+                              className={`py-1.5 pr-1 text-center cursor-pointer hover:text-white transition-colors select-none ${preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}`}
+                            >
+                              Recibidas {preSortField === 'foulsWon' ? (preSortDirection === 'desc' ? '↓' : '↑') : ''}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.02]">
+                          {displayed.map((player: any, pIdx: number) => {
+                            return (
+                              <tr 
+                                key={pIdx}
+                                onClick={() => setSelectedPrePlayerName(player.nameFull || player.name)}
+                                className="hover:bg-white/[0.02] active:scale-[0.99] transition-all cursor-pointer group"
+                              >
+                                <td className="py-2 pl-1 flex items-center gap-1.5 min-w-0">
+                                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${player.isHome ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+                                  <span className="font-bold text-slate-200 group-hover:text-emerald-400 transition-colors truncate max-w-[120px] sm:max-w-xs">
+                                    {player.nameFull || player.name}
+                                  </span>
+                                  <span className="text-[9px] text-slate-500 shrink-0 font-medium">#{player.number}</span>
+                                </td>
+                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shots.toFixed(2)}</td>
+                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.shotsOnTarget.toFixed(2)}</td>
+                                <td className="py-2 px-2 text-center font-bold text-slate-350">{player.avgStats.foulsCommitted.toFixed(2)}</td>
+                                <td className="py-2 pr-1 text-center font-bold text-slate-350">{player.avgStats.foulsWon.toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {sorted.length > 5 && (
+                      <button
+                        onClick={() => setShowAllPreStats(!showAllPreStats)}
+                        className="w-full text-center py-1.5 text-[9px] md:text-[10px] font-bold text-slate-400 hover:text-white hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-1"
+                      >
+                        {showAllPreStats ? 'Ver menos ↑' : `Ver más (${sorted.length - 5} jugadores con promedios) ↓`}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             {(() => {
               const nowSec = Math.floor(Date.now() / 1000);
               const start = match.startTimestamp ?? 0;
