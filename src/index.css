@@ -788,6 +788,18 @@ html.lite-mode [class*="blur-"]:not([class*="backdrop-"]) {
   background-color: rgba(255, 255, 255, 0.75) !important;
 }
 
+/* Ensure responsive transparency utilities are respected on desktop */
+@media (min-width: 768px) {
+  [class*="md:bg-transparent"] {
+    background-color: transparent !important;
+  }
+}
+@media (min-width: 1024px) {
+  [class*="lg:bg-transparent"] {
+    background-color: transparent !important;
+  }
+}
+
 
 
 
