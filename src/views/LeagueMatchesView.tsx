@@ -809,6 +809,80 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     return Array.from(seasonsSet).sort((a, b) => a.localeCompare(b));
   };
 
+  const adjustDateForCustomLeague = (baseDateStr: string, direction: 1 | -1) => {
+    if (!isCustomLeague || allMatches.length === 0) return baseDateStr;
+
+    const fmt = getLeagueFormat(leagueId);
+    const seasonMatches = allMatches.filter(m => {
+      const cat = getMatchCategory(m, leagueId);
+      return cat && cat.season === selectedSeason && (fmt !== 'argentina' || cat.tournament === selectedTournament);
+    });
+
+    if (seasonMatches.length === 0) return baseDateStr;
+
+    const matchDates = new Set<string>();
+    seasonMatches.forEach(m => {
+      if (m.startTimestamp) {
+        const d = new Date(m.startTimestamp * 1000);
+        const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        matchDates.add(ymd);
+      }
+    });
+
+    if (matchDates.size === 0) return baseDateStr;
+    if (matchDates.has(baseDateStr)) return baseDateStr;
+
+    const baseMs = new Date(baseDateStr + 'T12:00:00').getTime();
+    let bestDate = baseDateStr;
+    let minDiff = Infinity;
+
+    matchDates.forEach(dateStr => {
+      const dateMs = new Date(dateStr + 'T12:00:00').getTime();
+      const diff = dateMs - baseMs;
+
+      if (direction === 1) {
+        if (diff > 0 && diff < minDiff) {
+          minDiff = diff;
+          bestDate = dateStr;
+        }
+      } else {
+        if (diff < 0 && Math.abs(diff) < minDiff) {
+          minDiff = Math.abs(diff);
+          bestDate = dateStr;
+        }
+      }
+    });
+
+    if (minDiff === Infinity) {
+      let closestDiff = Infinity;
+      matchDates.forEach(dateStr => {
+        const dateMs = new Date(dateStr + 'T12:00:00').getTime();
+        const diff = Math.abs(dateMs - baseMs);
+        if (diff < closestDiff) {
+          closestDiff = diff;
+          bestDate = dateStr;
+        }
+      });
+    }
+
+    return bestDate;
+  };
+
+  // Adjust selectedDate when matches are loaded or viewMode/season changes
+  useEffect(() => {
+    if (!isCustomLeague || viewMode !== 'day' || allMatches.length === 0 || !selectedDate) return;
+
+    const adjusted = adjustDateForCustomLeague(selectedDate, searchDirection);
+    if (adjusted !== selectedDate) {
+      setJumpMsg(searchDirection === -1 
+        ? "No había partidos, saltamos a la fecha anterior disponible." 
+        : "No había partidos, saltamos a la próxima fecha disponible."
+      );
+      setSelectedDate(adjusted);
+      setTimeout(() => setJumpMsg(null), 8000);
+    }
+  }, [viewMode, selectedDate, selectedSeason, selectedTournament, allMatches.length, isCustomLeague, searchDirection]);
+
   const getAvailableRounds = () => {
     const roundsSet = new Set<string>();
     allMatches.forEach(m => {
@@ -1316,8 +1390,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() - (viewMode === 'week' ? 7 : 1));
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
-    setAllMatches([]); // Clear matches immediately to trigger skeleton
-    setLoading(true); // Set loading synchronously to prevent flashing empty message
+    if (!isCustomLeague) {
+      setAllMatches([]); // Clear matches immediately to trigger skeleton
+      setLoading(true); // Set loading synchronously to prevent flashing empty message
+    }
   };
 
   const handleNextDay = () => {
@@ -1325,8 +1401,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     const d = new Date(selectedDate + 'T12:00:00');
     d.setDate(d.getDate() + (viewMode === 'week' ? 7 : 1));
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
-    setAllMatches([]); // Clear matches immediately to trigger skeleton
-    setLoading(true); // Set loading synchronously to prevent flashing empty message
+    if (!isCustomLeague) {
+      setAllMatches([]); // Clear matches immediately to trigger skeleton
+      setLoading(true); // Set loading synchronously to prevent flashing empty message
+    }
   };
 
   const matchesInView = getFilteredMatchesWithoutLive();
