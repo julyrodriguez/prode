@@ -304,7 +304,7 @@ const MatchRow = memo(({
             />
           )}
         </div>
-        {viewMode === 'week' && match.startTimestamp && (
+        {(viewMode === 'week' || viewMode === 'round') && match.startTimestamp && (
           <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
             {new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', {
               weekday: 'short', day: '2-digit'
@@ -745,7 +745,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     localStorage.setItem(`prode_tournament_${leagueId}`, tournament);
   };
 
-  const getClosestSeasonAndTournament = (matches: Match[]) => {
+  const getLatestSeasonAndTournament = (matches: Match[]) => {
     if (matches.length === 0) {
       const fmt = getLeagueFormat(leagueId);
       return {
@@ -754,29 +754,39 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       };
     }
 
-    const nowTs = Date.now() / 1000;
-    let closestMatch = matches[0];
-    let minDiff = Infinity;
-
+    const seasonsSet = new Set<string>();
     matches.forEach(m => {
-      if (m.startTimestamp) {
-        const diff = Math.abs(m.startTimestamp - nowTs);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestMatch = m;
+      const cat = getMatchCategory(m, leagueId);
+      if (cat && cat.season) {
+        seasonsSet.add(cat.season);
+      }
+    });
+
+    let latestSeason = '';
+    if (seasonsSet.size > 0) {
+      const sorted = Array.from(seasonsSet).sort((a, b) => a.localeCompare(b));
+      latestSeason = sorted[sorted.length - 1];
+    } else {
+      const fmt = getLeagueFormat(leagueId);
+      latestSeason = (fmt === 'european' || leagueId === 'champions') ? '2024/25' : '2026';
+    }
+
+    let latestTournament: 'Apertura' | 'Clausura' | 'Liga' | 'Único' = 'Apertura';
+    let maxTs = -1;
+    matches.forEach(m => {
+      const cat = getMatchCategory(m, leagueId);
+      if (cat && cat.season === latestSeason) {
+        const ts = m.startTimestamp || 0;
+        if (ts > maxTs) {
+          maxTs = ts;
+          latestTournament = cat.tournament;
         }
       }
     });
 
-    const cat = getMatchCategory(closestMatch, leagueId);
-    if (cat) {
-      return { season: cat.season, tournament: cat.tournament };
-    }
-
-    const fmt = getLeagueFormat(leagueId);
     return {
-      season: (fmt === 'european' || leagueId === 'champions') ? '2024/25' : '2026',
-      tournament: 'Apertura' as const
+      season: latestSeason,
+      tournament: latestTournament
     };
   };
 
@@ -937,14 +947,14 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
         const storedSeason = localStorage.getItem(`prode_season_${leagueId}`);
         const storedTournament = localStorage.getItem(`prode_tournament_${leagueId}`);
         if ((!storedSeason || !storedTournament) && deduped.length > 0) {
-          const closest = getClosestSeasonAndTournament(deduped);
+          const latest = getLatestSeasonAndTournament(deduped);
           if (!storedSeason) {
-            setSelectedSeason(closest.season);
-            localStorage.setItem(`prode_season_${leagueId}`, closest.season);
+            setSelectedSeason(latest.season);
+            localStorage.setItem(`prode_season_${leagueId}`, latest.season);
           }
           if (!storedTournament) {
-            setSelectedTournament(closest.tournament as 'Apertura' | 'Clausura');
-            localStorage.setItem(`prode_tournament_${leagueId}`, closest.tournament);
+            setSelectedTournament(latest.tournament as 'Apertura' | 'Clausura');
+            localStorage.setItem(`prode_tournament_${leagueId}`, latest.tournament);
           }
         }
 
@@ -1445,7 +1455,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
           <div className="flex flex-row flex-wrap items-center gap-3 relative z-10 w-full sm:w-auto">
             {/* Season Selector */}
-            <div className="relative flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
+            <div className="relative z-20 flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
               <span className="text-slate-300 text-xs font-black uppercase tracking-widest select-none">Temporada:</span>
               <div className="relative inline-block text-left">
                 <button
@@ -1489,7 +1499,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
             {/* Tournament Selector (Argentina only) */}
             {format === 'argentina' && (
-              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
+              <div className="relative z-10 flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
                 <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
                 <div className="flex p-0.5">
                   {(['Apertura', 'Clausura'] as const).map(tName => (

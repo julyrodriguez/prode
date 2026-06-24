@@ -198,51 +198,43 @@ export default function LeagueTablaView() {
           const storedTournament = localStorage.getItem(`prode_tournament_${leagueId}`);
           
           if ((!storedSeason || !storedTournament) && matchesResult.length > 0) {
-            const nowTs = Date.now() / 1000;
-            let closestMatch = null;
-            let minDiff = Infinity;
-
-            // 1. Try to find the closest match that is NOT finished
+            const seasonsSet = new Set<string>();
             matchesResult.forEach((m: any) => {
-              if (m.startTimestamp) {
-                const isFinished = m.status === 'finished' || 
-                                   (typeof m.status === 'object' && m.status?.type === 'finished');
-                if (!isFinished) {
-                  const diff = Math.abs(m.startTimestamp - nowTs);
-                  if (diff < minDiff) {
-                    minDiff = diff;
-                    closestMatch = m;
-                  }
+              const cat = getMatchCategory(m);
+              if (cat && cat.season) {
+                seasonsSet.add(cat.season);
+              }
+            });
+
+            let latestSeason = '';
+            if (seasonsSet.size > 0) {
+              const sorted = Array.from(seasonsSet).sort((a, b) => a.localeCompare(b));
+              latestSeason = sorted[sorted.length - 1];
+            } else {
+              const fmt = getLeagueFormat(leagueId);
+              latestSeason = (fmt === 'european' || leagueId === 'champions') ? '2024/25' : '2026';
+            }
+
+            let latestTournament = 'Apertura';
+            let maxTs = -1;
+            matchesResult.forEach((m: any) => {
+              const cat = getMatchCategory(m);
+              if (cat && cat.season === latestSeason) {
+                const ts = m.startTimestamp || 0;
+                if (ts > maxTs) {
+                  maxTs = ts;
+                  latestTournament = cat.tournament;
                 }
               }
             });
 
-            // 2. Fallback to any closest match
-            if (!closestMatch) {
-              minDiff = Infinity;
-              matchesResult.forEach((m: any) => {
-                if (m.startTimestamp) {
-                  const diff = Math.abs(m.startTimestamp - nowTs);
-                  if (diff < minDiff) {
-                    minDiff = diff;
-                    closestMatch = m;
-                  }
-                }
-              });
+            if (!storedSeason) {
+              setSelectedSeason(latestSeason);
+              localStorage.setItem(`prode_season_${leagueId}`, latestSeason);
             }
-
-            if (closestMatch) {
-              const cat = getMatchCategory(closestMatch);
-              if (cat) {
-                if (!storedSeason) {
-                  setSelectedSeason(cat.season);
-                  localStorage.setItem(`prode_season_${leagueId}`, cat.season);
-                }
-                if (!storedTournament) {
-                  setSelectedTournament(cat.tournament as 'Apertura' | 'Clausura');
-                  localStorage.setItem(`prode_tournament_${leagueId}`, cat.tournament);
-                }
-              }
+            if (!storedTournament) {
+              setSelectedTournament(latestTournament as 'Apertura' | 'Clausura');
+              localStorage.setItem(`prode_tournament_${leagueId}`, latestTournament);
             }
           }
         }
