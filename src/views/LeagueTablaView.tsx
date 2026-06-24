@@ -187,6 +187,39 @@ export default function LeagueTablaView() {
 
         if (isCustomLeague && matchesResult) {
           setAllMatches(matchesResult);
+          
+          const storedSeason = localStorage.getItem(`prode_season_${leagueId}`);
+          const storedTournament = localStorage.getItem(`prode_tournament_${leagueId}`);
+          
+          if ((!storedSeason || !storedTournament) && matchesResult.length > 0) {
+            const nowTs = Date.now() / 1000;
+            let closestMatch = matchesResult[0];
+            let minDiff = Infinity;
+
+            matchesResult.forEach((m: any) => {
+              if (m.startTimestamp) {
+                const diff = Math.abs(m.startTimestamp - nowTs);
+                if (diff < minDiff) {
+                  minDiff = diff;
+                  closestMatch = m;
+                }
+              }
+            });
+
+            if (closestMatch) {
+              const cat = getMatchCategory(closestMatch);
+              if (cat) {
+                if (!storedSeason) {
+                  setSelectedSeason(cat.season);
+                  localStorage.setItem(`prode_season_${leagueId}`, cat.season);
+                }
+                if (!storedTournament) {
+                  setSelectedTournament(cat.tournament as 'Apertura' | 'Clausura');
+                  localStorage.setItem(`prode_tournament_${leagueId}`, cat.tournament);
+                }
+              }
+            }
+          }
         }
 
         setLoading(false);
@@ -308,9 +341,10 @@ export default function LeagueTablaView() {
     }
     
     if (fmt === 'international') {
-      const hasGroup = tName.includes('group') || round.includes('group') || 
-                       tName.includes('grupo') || round.includes('grupo');
-      return !hasGroup;
+      return round.includes('16') || round.includes('octav') || round.includes('cuart') || 
+             round.includes('quarter') || round.includes('semi') || round.includes('final') ||
+             round.includes('elimina') || round.includes('knockout') ||
+             tName.includes('knockout') || tName.includes('playoff') || tName.includes('elimina');
     }
     
     return false;

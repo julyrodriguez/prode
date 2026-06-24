@@ -567,9 +567,10 @@ const isPlayoffMatch = (match: any, fmt: string, seasonStr: string) => {
   }
   
   if (fmt === 'international') {
-    const hasGroup = tName.includes('group') || round.includes('group') || 
-                     tName.includes('grupo') || round.includes('grupo');
-    return !hasGroup;
+    return round.includes('16') || round.includes('octav') || round.includes('cuart') || 
+           round.includes('quarter') || round.includes('semi') || round.includes('final') ||
+           round.includes('elimina') || round.includes('knockout') ||
+           tName.includes('knockout') || tName.includes('playoff') || tName.includes('elimina');
   }
   
   return false;
@@ -742,6 +743,41 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     localStorage.setItem(`prode_tournament_${leagueId}`, tournament);
   };
 
+  const getClosestSeasonAndTournament = (matches: Match[]) => {
+    if (matches.length === 0) {
+      const fmt = getLeagueFormat(leagueId);
+      return {
+        season: (fmt === 'european' || leagueId === 'champions') ? '2024/25' : '2026',
+        tournament: 'Apertura' as const
+      };
+    }
+
+    const nowTs = Date.now() / 1000;
+    let closestMatch = matches[0];
+    let minDiff = Infinity;
+
+    matches.forEach(m => {
+      if (m.startTimestamp) {
+        const diff = Math.abs(m.startTimestamp - nowTs);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestMatch = m;
+        }
+      }
+    });
+
+    const cat = getMatchCategory(closestMatch, leagueId);
+    if (cat) {
+      return { season: cat.season, tournament: cat.tournament };
+    }
+
+    const fmt = getLeagueFormat(leagueId);
+    return {
+      season: (fmt === 'european' || leagueId === 'champions') ? '2024/25' : '2026',
+      tournament: 'Apertura' as const
+    };
+  };
+
   const getAvailableSeasons = () => {
     const seasonsSet = new Set<string>();
     allMatches.forEach(m => {
@@ -768,9 +804,8 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       const cat = getMatchCategory(m, leagueId);
       if (cat && cat.season === selectedSeason) {
         if (format !== 'argentina' || cat.tournament === selectedTournament) {
-          if (m.round_name && m.round_name !== 'no round') {
-            roundsSet.add(m.round_name);
-          }
+          const rName = (!m.round_name || m.round_name === 'no round') ? 'Sin Especificar' : m.round_name;
+          roundsSet.add(rName);
         }
       }
     });
@@ -800,7 +835,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     });
 
     rounds.forEach(r => {
-      const rMatches = seasonMatches.filter(m => m.round_name === r);
+      const rMatches = seasonMatches.filter(m => {
+        const rName = (!m.round_name || m.round_name === 'no round') ? 'Sin Especificar' : m.round_name;
+        return rName === r;
+      });
       rMatches.forEach(m => {
         if (m.startTimestamp) {
           const diff = Math.abs(m.startTimestamp - nowTs);
@@ -830,7 +868,10 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
     if (viewMode === 'round') {
       if (selectedRound) {
-        filtered = filtered.filter(m => m.round_name === selectedRound);
+        filtered = filtered.filter(m => {
+          const rName = (!m.round_name || m.round_name === 'no round') ? 'Sin Especificar' : m.round_name;
+          return rName === selectedRound;
+        });
       }
     } else if (viewMode === 'day') {
       filtered = filtered.filter(m => {
@@ -890,6 +931,20 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
         setAllMatches(deduped);
         setLoading(false);
+
+        const storedSeason = localStorage.getItem(`prode_season_${leagueId}`);
+        const storedTournament = localStorage.getItem(`prode_tournament_${leagueId}`);
+        if ((!storedSeason || !storedTournament) && deduped.length > 0) {
+          const closest = getClosestSeasonAndTournament(deduped);
+          if (!storedSeason) {
+            setSelectedSeason(closest.season);
+            localStorage.setItem(`prode_season_${leagueId}`, closest.season);
+          }
+          if (!storedTournament) {
+            setSelectedTournament(closest.tournament as 'Apertura' | 'Clausura');
+            localStorage.setItem(`prode_tournament_${leagueId}`, closest.tournament);
+          }
+        }
 
         if (user) {
           try {
