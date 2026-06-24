@@ -99,11 +99,21 @@ export default function LeagueTablaView() {
   useEffect(() => {
     if (!isCustomLeague) return;
     const fmt = getLeagueFormat(leagueId);
+    
+    const storedSeason = localStorage.getItem(`prode_season_${leagueId}`);
+    const storedTournament = localStorage.getItem(`prode_tournament_${leagueId}`);
+    
+    let defaultSeason = '2026';
     if (fmt === 'european' || leagueId === 'champions') {
-      setSelectedSeason('2025/26');
+      defaultSeason = '2025/26';
+    }
+    
+    setSelectedSeason(storedSeason || defaultSeason);
+    setSelectedTournament((storedTournament as 'Apertura' | 'Clausura') || 'Apertura');
+
+    if (fmt === 'european' || leagueId === 'champions') {
       setCustomActiveTab('tablaGeneral');
     } else {
-      setSelectedSeason('2026');
       if (fmt === 'argentina' || fmt === 'mls') {
         setCustomActiveTab('zonaA');
       } else if (fmt === 'international') {
@@ -786,7 +796,9 @@ export default function LeagueTablaView() {
             🏟️ {activeLeague.name}
           </h1>
           <p className="text-slate-400 text-xs font-semibold mt-1">
-            {isCustomLeague ? 'Panel de Temporadas, Posiciones y Playoffs' : 'Estadísticas oficiales de la fase de grupos'}
+            {isCustomLeague 
+              ? `Temporada: ${selectedSeason}${format === 'argentina' ? ` | Torneo: ${selectedTournament}` : ''}`
+              : 'Estadísticas oficiales de la fase de grupos'}
           </p>
         </div>
       </div>
@@ -914,73 +926,9 @@ export default function LeagueTablaView() {
       <div className="w-full flex flex-col gap-6 pb-10 animate-fade-in">
         <Header />
 
-        {/* Season & Tournament Dropdowns / Selectors */}
-        <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-4 p-4 bg-[#0b1015]/60 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg w-full">
-          <div className="flex flex-row flex-wrap items-center justify-center gap-4 w-full md:w-auto">
-            {/* Season Selector */}
-            <div className="relative flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
-              <span className="text-slate-300 text-xs font-black uppercase tracking-widest select-none">Temporada:</span>
-              <div className="relative inline-block text-left">
-                <button
-                  type="button"
-                  onClick={() => setShowSeasonDropdown(!showSeasonDropdown)}
-                  className="text-amber-400 hover:text-amber-300 font-extrabold text-xs outline-none cursor-pointer border-b border-dashed border-amber-500/50 hover:border-amber-500 px-1 py-0.5 transition-all text-center uppercase tracking-wider inline-flex items-center gap-1"
-                >
-                  {selectedSeason}
-                  <span className="text-[9px] text-amber-500/80 transition-transform duration-200">▼</span>
-                </button>
-
-                {showSeasonDropdown && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40 cursor-default" 
-                      onClick={() => setShowSeasonDropdown(false)}
-                    />
-                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-28 bg-[#0b1015]/95 border border-white/10 rounded-xl shadow-2xl py-1.5 z-50 animate-fade-in backdrop-blur-xl">
-                      {getAvailableSeasons().map((year) => (
-                        <button
-                          key={year}
-                          type="button"
-                          onClick={() => {
-                            setSelectedSeason(year);
-                            setShowSeasonDropdown(false);
-                          }}
-                          className={`w-full text-center px-4 py-2 text-xs font-black transition-colors cursor-pointer ${
-                            selectedSeason === year
-                              ? 'bg-amber-500 text-black'
-                              : 'text-slate-355 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          {year}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Tournament Selector (Argentina only) */}
-            {format === 'argentina' && (
-              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
-                <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
-                <div className="flex p-0.5">
-                  {(['Apertura', 'Clausura'] as const).map(tName => (
-                    <button
-                      key={tName}
-                      onClick={() => setSelectedTournament(tName)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedTournament === tName ? 'bg-amber-500 text-black shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
-                    >
-                      {tName}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* View Toggles (Standings vs Bracket) */}
-          {(format === 'argentina' || format === 'mls' || format === 'cup' || format === 'international') && (
+        {/* View Toggles (Standings vs Bracket) */}
+        {(format === 'argentina' || format === 'mls' || format === 'cup' || format === 'international') && (
+          <div className="flex justify-center md:justify-end gap-4 p-4 bg-[#0b1015]/60 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg w-full">
             <div className="flex items-center justify-center gap-2 w-full md:w-auto bg-white/5 backdrop-blur-sm p-1.5 border border-white/5 rounded-xl">
               <div className="flex">
                 {format !== 'cup' && (
@@ -999,8 +947,8 @@ export default function LeagueTablaView() {
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* STANDINGS SUB-VIEW */}
         {subView === 'standings' && format !== 'cup' && (

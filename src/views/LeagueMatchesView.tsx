@@ -515,6 +515,121 @@ const setLeaguePredictionsCache = (userId: string, data: Record<number, { home: 
   w.__leaguePredictionsCache[userId] = { data, at: Date.now() };
 };
 
+const getLeagueFormat = (id: string): 'argentina' | 'european' | 'brazil' | 'mls' | 'cup' | 'international' => {
+  if (['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c'].includes(id)) {
+    return 'argentina';
+  }
+  if (['premier-league', 'laliga', 'serie-a', 'ligue-1', 'bundesliga'].includes(id)) {
+    return 'european';
+  }
+  if (id === 'brasileirao') {
+    return 'brazil';
+  }
+  if (id === 'mls') {
+    return 'mls';
+  }
+  if (id === 'copa-arg') {
+    return 'cup';
+  }
+  return 'international';
+};
+
+const isPlayoffMatch = (match: any, fmt: string, seasonStr: string) => {
+  if (fmt === 'european' || fmt === 'brazil') return false;
+  if (fmt === 'cup') return true;
+  
+  const round = (match.round_name || '').toLowerCase();
+  const tName = (match.tournament_name || match.tournament?.name || '').toLowerCase();
+  
+  if (tName.includes('playoff') || round.includes('playoff') || 
+      round.includes('elimina') || tName.includes('elimina') || tName.includes('knockout')) {
+    return true;
+  }
+  
+  if (fmt === 'argentina') {
+    const date = new Date(match.startTimestamp * 1000);
+    const month = date.getMonth();
+    const isMissingRound = !round || round === 'no round' || round === 'round of 16';
+    if (isMissingRound && (month === 4 || month === 5 || month === 10 || month === 11)) {
+      return true;
+    }
+    return round.includes('16') || round.includes('octav') || round.includes('cuart') || 
+           round.includes('quarter') || round.includes('semi') || round.includes('final');
+  }
+  
+  if (fmt === 'mls') {
+    const date = new Date(match.startTimestamp * 1000);
+    const month = date.getMonth();
+    if (month >= 9 && (!round || round === 'no round' || round.includes('final') || round.includes('semi') || round.includes('quarter'))) {
+      return true;
+    }
+    return round.includes('quarter') || round.includes('semi') || round.includes('final');
+  }
+  
+  if (fmt === 'international') {
+    const hasGroup = tName.includes('group') || round.includes('group') || 
+                     tName.includes('grupo') || round.includes('grupo');
+    return !hasGroup;
+  }
+  
+  return false;
+};
+
+const getMatchCategory = (m: any, leagueId: string) => {
+  const ts = m.startTimestamp;
+  if (!ts) return null;
+  const date = new Date(ts * 1000);
+  const year = date.getFullYear();
+  const fmt = getLeagueFormat(leagueId);
+
+  if (fmt === 'european' || leagueId === 'champions') {
+    let season = '';
+    if (ts >= 1719792000 && ts < 1751241600) season = '2024/25';
+    else if (ts >= 1751241600 && ts < 1782777600) season = '2025/26';
+    else if (ts >= 1782777600 && ts < 1814313600) season = '2026/27';
+    else return null;
+
+    const isPlayoff = isPlayoffMatch(m, fmt, season);
+    return { season, tournament: 'Liga' as const, isPlayoff };
+  }
+
+  let season = String(year);
+  const isPlayoff = isPlayoffMatch(m, fmt, season);
+
+  if (fmt === 'argentina') {
+    const midYearTs = Math.floor(new Date(`${year}-07-01T00:00:00Z`).getTime() / 1000);
+    if (ts < midYearTs) {
+      return { season, tournament: 'Apertura' as const, isPlayoff };
+    } else {
+      return { season, tournament: 'Clausura' as const, isPlayoff };
+    }
+  }
+
+  return { season, tournament: 'Único' as const, isPlayoff };
+};
+
+const sortRounds = (rounds: string[]) => {
+  return [...rounds].sort((a, b) => {
+    const isFechaA = a.toLowerCase().includes('fecha');
+    const isFechaB = b.toLowerCase().includes('fecha');
+    
+    if (isFechaA && isFechaB) {
+      const numA = parseInt(a.replace(/\D/g, ''), 10);
+      const numB = parseInt(b.replace(/\D/g, ''), 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+    }
+    
+    if (isFechaA && !isFechaB) return -1;
+    if (!isFechaA && isFechaB) return 1;
+    
+    const numA = parseInt(a.replace(/\D/g, ''), 10);
+    const numB = parseInt(b.replace(/\D/g, ''), 10);
+    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  });
+};
+
 export default function LeagueMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const params = useParams();
   const leagueId = (params?.leagueId as string) || 'general';
@@ -527,18 +642,19 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
   const [searchDirection, setSearchDirection] = useState<1 | -1>(1);
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'round'>('day');
 
   const tournamentId = activeLeague.tournamentId;
+  const isCustomLeague = leagueId !== 'mundial' && leagueId !== 'general';
+  const format = getLeagueFormat(leagueId);
 
-  const [allMatches, setAllMatches] = useState<Match[]>(() => {
-    const cached = getLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode);
-    return cached || [];
-  });
-  const [loading, setLoading] = useState(() => {
-    const cached = getLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode);
-    return !cached;
-  });
+  const [selectedSeason, setSelectedSeason] = useState<string>('2026');
+  const [selectedTournament, setSelectedTournament] = useState<'Apertura' | 'Clausura'>('Apertura');
+  const [showSeasonDropdown, setShowSeasonDropdown] = useState(false);
+  const [selectedRound, setSelectedRound] = useState<string>('');
+
+  const [allMatches, setAllMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [jumpMsg, setJumpMsg] = useState<string | null>(null);
   const [localPredictions, setLocalPredictions] = useState<Record<number, { home: string; away: string }>>(() => {
@@ -576,22 +692,260 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   const deadlineDate = new Date('2026-06-12T00:00:00-03:00'); // Límite: 11/06 inclusive
   const isBeforeDeadline = Date.now() < deadlineDate.getTime();
 
-  const [prevTournamentId, setPrevTournamentId] = useState(tournamentId);
-
-  // Reiniciamos la fecha a "hoy" si cambian la liga en el menú de navegación
-  if (tournamentId !== prevTournamentId) {
+  // Reset date and search direction on league change
+  useEffect(() => {
     const d = new Date();
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     setSearchDirection(1);
-    setPrevTournamentId(tournamentId);
-  }
+  }, [leagueId]);
 
+  // Load season & tournament from localStorage on mount and when leagueId changes
   useEffect(() => {
+    if (!isCustomLeague) return;
+    
+    const fmt = getLeagueFormat(leagueId);
+    let defaultSeason = '2026';
+    if (fmt === 'european' || leagueId === 'champions') {
+      defaultSeason = '2025/26';
+    }
+
+    const storedSeason = localStorage.getItem(`prode_season_${leagueId}`);
+    const storedTournament = localStorage.getItem(`prode_tournament_${leagueId}`);
+
+    setSelectedSeason(storedSeason || defaultSeason);
+    setSelectedTournament((storedTournament as 'Apertura' | 'Clausura') || 'Apertura');
+    
+    if (!storedSeason) {
+      localStorage.setItem(`prode_season_${leagueId}`, defaultSeason);
+    }
+    if (!storedTournament) {
+      localStorage.setItem(`prode_tournament_${leagueId}`, 'Apertura');
+    }
+  }, [leagueId, isCustomLeague]);
+
+  // Set default view mode on mount or when league changes
+  useEffect(() => {
+    if (isCustomLeague) {
+      setViewMode('round');
+    } else {
+      setViewMode('day');
+    }
+  }, [leagueId, isCustomLeague]);
+
+  const handleSeasonChange = (season: string) => {
+    setSelectedSeason(season);
+    localStorage.setItem(`prode_season_${leagueId}`, season);
+  };
+
+  const handleTournamentChange = (tournament: 'Apertura' | 'Clausura') => {
+    setSelectedTournament(tournament);
+    localStorage.setItem(`prode_tournament_${leagueId}`, tournament);
+  };
+
+  const getAvailableSeasons = () => {
+    const seasonsSet = new Set<string>();
+    allMatches.forEach(m => {
+      const cat = getMatchCategory(m, leagueId);
+      if (cat && cat.season) {
+        seasonsSet.add(cat.season);
+      }
+    });
+    
+    if (seasonsSet.size === 0) {
+      const fmt = getLeagueFormat(leagueId);
+      if (fmt === 'european' || leagueId === 'champions') {
+        return ['2024/25', '2025/26'];
+      }
+      return ['2025', '2026'];
+    }
+    
+    return Array.from(seasonsSet).sort((a, b) => a.localeCompare(b));
+  };
+
+  const getAvailableRounds = () => {
+    const roundsSet = new Set<string>();
+    allMatches.forEach(m => {
+      const cat = getMatchCategory(m, leagueId);
+      if (cat && cat.season === selectedSeason) {
+        if (format !== 'argentina' || cat.tournament === selectedTournament) {
+          if (m.round_name && m.round_name !== 'no round') {
+            roundsSet.add(m.round_name);
+          }
+        }
+      }
+    });
+    return sortRounds(Array.from(roundsSet));
+  };
+
+  // Automatically select the closest round when available rounds change
+  useEffect(() => {
+    if (!isCustomLeague) return;
+    const rounds = getAvailableRounds();
+    if (rounds.length === 0) {
+      setSelectedRound('');
+      return;
+    }
+
+    if (selectedRound && rounds.includes(selectedRound)) {
+      return;
+    }
+
+    const nowTs = Date.now() / 1000;
+    let closestRound = rounds[0];
+    let minDiff = Infinity;
+    
+    const seasonMatches = allMatches.filter(m => {
+      const cat = getMatchCategory(m, leagueId);
+      return cat && cat.season === selectedSeason && (format !== 'argentina' || cat.tournament === selectedTournament);
+    });
+
+    rounds.forEach(r => {
+      const rMatches = seasonMatches.filter(m => m.round_name === r);
+      rMatches.forEach(m => {
+        if (m.startTimestamp) {
+          const diff = Math.abs(m.startTimestamp - nowTs);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestRound = r;
+          }
+        }
+      });
+    });
+
+    setSelectedRound(closestRound);
+  }, [selectedSeason, selectedTournament, allMatches.length, isCustomLeague]);
+
+  const getFilteredMatchesWithoutLive = () => {
+    if (!isCustomLeague) {
+      return allMatches;
+    }
+
+    let filtered = allMatches.filter(m => {
+      const cat = getMatchCategory(m, leagueId);
+      if (!cat) return false;
+      if (cat.season !== selectedSeason) return false;
+      if (format === 'argentina' && cat.tournament !== selectedTournament) return false;
+      return true;
+    });
+
+    if (viewMode === 'round') {
+      if (selectedRound) {
+        filtered = filtered.filter(m => m.round_name === selectedRound);
+      }
+    } else if (viewMode === 'day') {
+      filtered = filtered.filter(m => {
+        if (!m.startTimestamp) return false;
+        const date = new Date(m.startTimestamp * 1000);
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        return dateStr === selectedDate;
+      });
+    } else if (viewMode === 'week') {
+      const start = new Date(selectedDate + 'T00:00:00').getTime();
+      const end = start + 7 * 24 * 60 * 60 * 1000;
+      filtered = filtered.filter(m => {
+        if (!m.startTimestamp) return false;
+        const ms = m.startTimestamp * 1000;
+        return ms >= start && ms < end;
+      });
+    }
+
+    return filtered;
+  };
+
+  const getFilteredMatches = () => {
+    const matches = getFilteredMatchesWithoutLive();
+    const filtered = showOnlyLive ? matches.filter(m => parseMatchStatus(m).isLive) : matches;
+    return [...filtered].sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
+  };
+
+  // Hook for Custom Leagues: fetches all matches once and sets up a poll
+  useEffect(() => {
+    if (!isCustomLeague) return;
+
+    let isMounted = true;
+    const fetchData = async (showLoading = false) => {
+      if (!tournamentId) return;
+      if (showLoading) {
+        setLoading(true);
+        setError(null);
+      }
+      try {
+        const url = `https://apivacas.jariel.com.ar/api/matches/all?tournamentId=${tournamentId}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('No se pudieron obtener los partidos.');
+        const data = await response.json();
+        if (!isMounted) return;
+
+        let events = Array.isArray(data) ? data : (data.matches || data.events || data.data || []);
+        events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
+
+        const seenIds = new Set<number>();
+        const deduped = events.filter((e: any) => {
+          if (!e.id) return true;
+          const numId = Number(e.id);
+          if (seenIds.has(numId)) return false;
+          seenIds.add(numId);
+          return true;
+        });
+
+        setAllMatches(deduped);
+        setLoading(false);
+
+        if (user) {
+          try {
+            const predRes = await fetch(`https://apivacas.jariel.com.ar/api/predictions/user/${user.uid}`);
+            if (predRes.ok && isMounted) {
+              const pData = await predRes.json();
+              const predMap: Record<number, { home: string; away: string }> = {};
+              if (Array.isArray(pData)) {
+                pData.forEach(p => {
+                  const idDelPartido = Number(p.matchId || p.match_id);
+                  const golesLocal = p.homeScore !== undefined ? p.homeScore : (p.home_score ?? '');
+                  const golesVisita = p.awayScore !== undefined ? p.awayScore : (p.away_score ?? '');
+                  predMap[idDelPartido] = { home: String(golesLocal), away: String(golesVisita) };
+                });
+              }
+              setLeaguePredictionsCache(user.uid, predMap);
+              if (showLoading) {
+                setLocalPredictions(predMap);
+              } else {
+                setLocalPredictions(prev => {
+                  const merged = { ...predMap };
+                  Object.keys(prev).forEach(k => { merged[Number(k)] = prev[Number(k)]; });
+                  return merged;
+                });
+              }
+            }
+          } catch (err) {
+            console.error('Error al obtener predicciones', err);
+          }
+        }
+      } catch (err: any) {
+        if (showLoading && isMounted) {
+          setError(err.message || 'Error de conexión con el servidor');
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData(true);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user, tournamentId, isCustomLeague]);
+
+  // Hook for Standard Leagues: fetches optimized matches by day/week
+  useEffect(() => {
+    if (isCustomLeague) return;
+
+    let isMounted = true;
     const fetchData = async (showLoading = false) => {
       if (showLoading) {
         setLoading(true);
         setError(null);
-        setAllMatches([]); // Clear matches to trigger skeleton immediately
+        setAllMatches([]);
       }
       try {
         let events: Match[] = [];
@@ -608,6 +962,8 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
           if (!response.ok) throw new Error('No se pudieron obtener los partidos.');
 
           const data = await response.json();
+          if (!isMounted) return;
+
           if (data && data.matches !== undefined) {
             events = data.matches;
             if (data.metadata?.jumpedToFuture && data.metadata?.newDate) {
@@ -615,14 +971,13 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                 setJumpMsg(searchDirection === -1 ? "No había partidos, saltamos a la fecha anterior disponible." : "No había partidos, saltamos a la próxima fecha disponible.");
                 setSelectedDate(data.metadata.newDate);
                 setTimeout(() => setJumpMsg(null), 8000);
-                return; // evitamos el seteo y dejamos que useEffect re-corra con la nueva fecha
+                return;
               }
             }
           } else {
             events = Array.isArray(data) ? data : (data.events || data.data || []);
           }
-        } else {
-          // viewMode === 'week'
+        } else if (viewMode === 'week') {
           const fetchPromises = [];
           for (let i = 0; i < 7; i++) {
             const d = new Date(selectedDate + 'T12:00:00');
@@ -646,6 +1001,8 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
             );
           }
           const results = await Promise.all(fetchPromises);
+          if (!isMounted) return;
+
           const allWeekMatchesMap = new Map<number, Match>();
           results.forEach(({ dateStr, data }) => {
             if (!data) return;
@@ -656,12 +1013,11 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
             dayMatches.forEach(m => {
               const id = m.id || (m as any)._id;
               if (id != null) {
-                // Filtrar partidos que no se jueguen en la fecha solicitada para evitar saltos/jumps de la API en la vista semanal
                 if (m.startTimestamp) {
                   const matchDate = new Date(m.startTimestamp * 1000);
                   const matchDateStr = `${matchDate.getFullYear()}-${String(matchDate.getMonth() + 1).padStart(2, '0')}-${String(matchDate.getDate()).padStart(2, '0')}`;
                   if (matchDateStr !== dateStr) {
-                    return; // Ignorar el partido ya que corresponde a otra fecha por un salto de la API
+                    return;
                   }
                 }
                 allWeekMatchesMap.set(Number(id), m);
@@ -674,9 +1030,8 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
         events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
 
-        // Deduplicar partidos por ID
         const seenIds = new Set<number>();
-        events = events.filter(e => {
+        const deduped = events.filter(e => {
           if (!e.id) return true;
           const numId = Number(e.id);
           if (seenIds.has(numId)) return false;
@@ -684,13 +1039,14 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
           return true;
         });
 
-        setAllMatches(events);
-        setLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode, events);
+        setAllMatches(deduped);
+        setLeagueMatchesCache(tournamentId, selectedDate, searchDirection, viewMode, isPredictionMode, deduped);
+        setLoading(false);
 
         if (user) {
           try {
             const predRes = await fetch(`https://apivacas.jariel.com.ar/api/predictions/user/${user.uid}`);
-            if (predRes.ok) {
+            if (predRes.ok && isMounted) {
               const pData = await predRes.json();
               const predMap: Record<number, { home: string; away: string }> = {};
               if (Array.isArray(pData)) {
@@ -702,13 +1058,9 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                 });
               }
               setLeaguePredictionsCache(user.uid, predMap);
-              // En el refresco automático (showLoading=false) NO sobreescribimos lo que
-              // el usuario ya modificó localmente — solo rellenamos lo que no tiene.
               if (showLoading) {
-                // Primera carga: tomamos todo el servidor
                 setLocalPredictions(predMap);
               } else {
-                // Refresco: local gana; actualizamos solo lo que no hay localmente
                 setLocalPredictions(prev => {
                   const merged = { ...predMap };
                   Object.keys(prev).forEach(k => { merged[Number(k)] = prev[Number(k)]; });
@@ -720,14 +1072,9 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
             console.error('Error al obtener predicciones', err);
           }
         }
-
-
       } catch (err: any) {
-        if (showLoading) {
+        if (showLoading && isMounted) {
           setError(err.message || 'Error de conexión con el servidor');
-        }
-      } finally {
-        if (showLoading) {
           setLoading(false);
         }
       }
@@ -747,9 +1094,12 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     }
 
     fetchData(!hasCache);
-    const interval = setInterval(() => fetchData(false), 30000); // 30 segundos
-    return () => clearInterval(interval);
-  }, [user, tournamentId, selectedDate, searchDirection, viewMode]);
+    const interval = setInterval(() => fetchData(false), 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user, tournamentId, selectedDate, searchDirection, viewMode, isCustomLeague]);
 
   // Obtener lista completa de países participantes desde la tabla de posiciones (torneo 16)
   useEffect(() => {
@@ -913,10 +1263,11 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     setLoading(true); // Set loading synchronously to prevent flashing empty message
   };
 
-  const liveMatches = allMatches.filter(m => parseMatchStatus(m).isLive);
-  const liveMatchesCount = liveMatches.length;
+  const matchesInView = getFilteredMatchesWithoutLive();
+  const liveMatchesInView = matchesInView.filter(m => parseMatchStatus(m).isLive);
+  const liveMatchesCount = isCustomLeague ? liveMatchesInView.length : allMatches.filter(m => parseMatchStatus(m).isLive).length;
 
-  const dailyMatches = showOnlyLive ? liveMatches : allMatches;
+  const dailyMatches = getFilteredMatches();
 
   const handleSavePredictions = async () => {
     if (!user) return;
@@ -1015,6 +1366,86 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
               <span>Ir al Simulador</span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* Season & Tournament Selectors Card */}
+      {isCustomLeague && (
+        <div className="relative overflow-hidden bg-[#0b1015]/60 backdrop-blur-md border border-white/10 rounded-3xl p-5 shadow-lg w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/5 rounded-full blur-[40px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px] pointer-events-none translate-x-1/2 translate-y-1/2" />
+          
+          <div className="flex flex-col gap-1 relative z-10">
+            <h2 className="text-base font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-emerald-400 uppercase tracking-wider">
+              Seleccionar Temporada
+            </h2>
+            <p className="text-slate-400 text-[10px] font-semibold">
+              Los cambios se aplicarán también en la tabla de posiciones y playoffs.
+            </p>
+          </div>
+
+          <div className="flex flex-row flex-wrap items-center gap-3 relative z-10 w-full sm:w-auto">
+            {/* Season Selector */}
+            <div className="relative flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
+              <span className="text-slate-300 text-xs font-black uppercase tracking-widest select-none">Temporada:</span>
+              <div className="relative inline-block text-left">
+                <button
+                  type="button"
+                  onClick={() => setShowSeasonDropdown(!showSeasonDropdown)}
+                  className="text-amber-400 hover:text-amber-300 font-extrabold text-xs outline-none cursor-pointer border-b border-dashed border-amber-500/50 hover:border-amber-500 px-1 py-0.5 transition-all text-center uppercase tracking-wider inline-flex items-center gap-1"
+                >
+                  {selectedSeason}
+                  <span className="text-[9px] text-amber-500/80 transition-transform duration-200">▼</span>
+                </button>
+
+                {showSeasonDropdown && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 cursor-default" 
+                      onClick={() => setShowSeasonDropdown(false)}
+                    />
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-28 bg-[#0b1015]/95 border border-white/10 rounded-xl shadow-2xl py-1.5 z-50 animate-fade-in backdrop-blur-xl">
+                      {getAvailableSeasons().map((year) => (
+                        <button
+                          key={year}
+                          type="button"
+                          onClick={() => {
+                            handleSeasonChange(year);
+                            setShowSeasonDropdown(false);
+                          }}
+                          className={`w-full text-center px-4 py-2 text-xs font-black transition-colors cursor-pointer ${
+                            selectedSeason === year
+                              ? 'bg-amber-500 text-black'
+                              : 'text-slate-300 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {year}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Tournament Selector (Argentina only) */}
+            {format === 'argentina' && (
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
+                <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
+                <div className="flex p-0.5">
+                  {(['Apertura', 'Clausura'] as const).map(tName => (
+                    <button
+                      key={tName}
+                      onClick={() => handleTournamentChange(tName)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedTournament === tName ? 'bg-amber-500 text-black shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
+                    >
+                      {tName}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1207,50 +1638,106 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
       {/* Date Navigator Header - Compact Centered Pill */}
       {selectedDate && (
         <div className="flex justify-center w-full my-1 relative z-40">
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center justify-center gap-3 shadow-lg shadow-black/30 w-fit">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex flex-col md:flex-row items-center justify-center gap-3 shadow-lg shadow-black/30 w-fit">
             
-            <button
-              onClick={() => { setAllMatches([]); setLoading(true); setViewMode(prev => prev === 'day' ? 'week' : 'day'); }}
-              className="px-3.5 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 hover:border-emerald-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
-            >
-              {viewMode === 'day' ? (
-                <>
-                  <span>📅</span> Semana
-                </>
-              ) : (
-                <>
-                  <span>📆</span> Día
-                </>
-              )}
-            </button>
-
-            <div className="w-px h-5 bg-white/10 shrink-0" />
-
-            <div className="flex items-center gap-2 bg-black/35 px-1.5 py-1 rounded-full border border-white/5 shrink-0 relative">
+            {/* View Mode Selectors */}
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
-                onClick={handlePrevDay}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold text-xs cursor-pointer relative z-10"
-              >
-                <span>{'<'}</span>
-              </button>
-
-              <DatePicker
-                selectedDate={selectedDate}
-                viewMode={viewMode}
-                onChange={(date) => {
-                  setSelectedDate(date);
-                  setAllMatches([]);
-                  setLoading(true);
+                onClick={() => {
+                  setViewMode('day');
+                  if (!isCustomLeague) {
+                    setAllMatches([]);
+                    setLoading(true);
+                  }
                 }}
-              />
-
-              <button
-                onClick={handleNextDay}
-                className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold text-xs cursor-pointer relative z-10"
+                className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all cursor-pointer select-none ${
+                  viewMode === 'day'
+                    ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                    : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+                }`}
               >
-                <span>{'>'}</span>
+                📆 Día
               </button>
+              <button
+                onClick={() => {
+                  setViewMode('week');
+                  if (!isCustomLeague) {
+                    setAllMatches([]);
+                    setLoading(true);
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all cursor-pointer select-none ${
+                  viewMode === 'week'
+                    ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                    : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+                }`}
+              >
+                📅 Semana
+              </button>
+              {isCustomLeague && (
+                <button
+                  onClick={() => setViewMode('round')}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all cursor-pointer select-none ${
+                    viewMode === 'round'
+                      ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]'
+                      : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+                  }`}
+                >
+                  🏆 Fecha
+                </button>
+              )}
             </div>
+
+            <div className="hidden md:block w-px h-5 bg-white/10 shrink-0" />
+
+            {/* Calendar Controls (for day / week) */}
+            {(viewMode === 'day' || viewMode === 'week') && (
+              <div className="flex items-center gap-2 bg-black/35 px-1.5 py-1 rounded-full border border-white/5 shrink-0 relative">
+                <button
+                  onClick={handlePrevDay}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold text-xs cursor-pointer relative z-10"
+                >
+                  <span>{'<'}</span>
+                </button>
+
+                <DatePicker
+                  selectedDate={selectedDate}
+                  viewMode={viewMode}
+                  onChange={(date) => {
+                    setSelectedDate(date);
+                    if (!isCustomLeague) {
+                      setAllMatches([]);
+                      setLoading(true);
+                    }
+                  }}
+                />
+
+                <button
+                  onClick={handleNextDay}
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 font-bold text-xs cursor-pointer relative z-10"
+                >
+                  <span>{'>'}</span>
+                </button>
+              </div>
+            )}
+
+            {/* Round Dropdown Selector (for round mode) */}
+            {isCustomLeague && viewMode === 'round' && (
+              <div className="relative flex items-center gap-2 bg-black/35 px-4 py-1.5 border border-white/5 rounded-full shrink-0">
+                <span className="text-slate-400 text-[10px] font-black uppercase tracking-wider select-none">Ronda:</span>
+                <select
+                  value={selectedRound}
+                  onChange={(e) => setSelectedRound(e.target.value)}
+                  className="bg-transparent text-amber-400 font-extrabold text-xs outline-none cursor-pointer border-0 py-0.5 transition-all text-center uppercase tracking-wider inline-flex items-center gap-1 select-none"
+                >
+                  {getAvailableRounds().map((r) => (
+                    <option key={r} value={r} className="bg-[#0b1015] text-slate-100 font-semibold py-1">
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
           </div>
         </div>
@@ -1268,7 +1755,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
         >
           <span>🏟️</span> Todos
           <span className="bg-white/10 text-slate-300 text-[9px] px-1.5 py-0.5 rounded-full font-bold">
-            {allMatches.length}
+            {isCustomLeague ? matchesInView.length : allMatches.length}
           </span>
         </button>
 
