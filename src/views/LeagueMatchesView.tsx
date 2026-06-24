@@ -727,12 +727,8 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
   // Set default view mode on mount or when league changes
   useEffect(() => {
-    if (isCustomLeague) {
-      setViewMode('round');
-    } else {
-      setViewMode('day');
-    }
-  }, [leagueId, isCustomLeague]);
+    setViewMode('day');
+  }, [leagueId]);
 
   const handleSeasonChange = (season: string) => {
     setSelectedSeason(season);
