@@ -2075,7 +2075,9 @@ export default function MatchDetailView() {
                 colorClass = "text-purple-300 bg-purple-500/10";
                 borderClass = "border-purple-500/30";
                 if (inc.incidentClass === "goalDisallowed") {
-                  title = `Anulado: ${inc.player?.shortName || inc.player?.name || ''}`;
+                  const pName = inc.player?.name || inc.player?.shortName || '';
+                  const realPlayer = (pName.toLowerCase().includes('anulado') && inc.assistant) ? inc.assistant : inc.player;
+                  title = `Anulado: ${realPlayer?.shortName || realPlayer?.name || ''}`;
                   detail = "Revisión VAR";
                 } else {
                   title = "Revisión VAR";
