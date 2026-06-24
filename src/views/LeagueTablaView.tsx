@@ -69,6 +69,7 @@ export default function LeagueTablaView() {
   const isArgentinePrototype = leagueId === 'liga-arg';
   const [allMatches, setAllMatches] = useState<any[]>([]);
   const [selectedSeason, setSelectedSeason] = useState<number>(2026);
+  const [showSeasonDropdown, setShowSeasonDropdown] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<'Apertura' | 'Clausura'>('Apertura');
   const [subView, setSubView] = useState<'standings' | 'bracket'>('standings');
   const [customActiveTab, setCustomActiveTab] = useState<'zonaA' | 'zonaB' | 'anual' | 'promedios'>('zonaA');
@@ -613,33 +614,60 @@ export default function LeagueTablaView() {
         <Header />
 
         {/* Season & Tournament Dropdowns / Selectors */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 bg-gradient-to-r from-white/[0.04] to-white/[0.01] backdrop-blur-2xl border border-white/10 rounded-3xl shadow-lg">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-center md:justify-between gap-4 p-4 bg-[#0b1015]/60 backdrop-blur-md border border-white/10 rounded-3xl shadow-lg w-full">
+          <div className="flex flex-row flex-wrap items-center justify-center gap-4 w-full md:w-auto">
             {/* Season Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-xs font-black uppercase tracking-widest">Temporada:</span>
-              <div className="flex bg-black/40 rounded-xl p-1 border border-white/5">
-                {[2025, 2026].map(year => (
-                  <button
-                    key={year}
-                    onClick={() => setSelectedSeason(year)}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedSeason === year ? 'bg-amber-500 text-black shadow-md' : 'text-slate-400 hover:text-white'}`}
-                  >
-                    {year}
-                  </button>
-                ))}
+            <div className="relative flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
+              <span className="text-slate-300 text-xs font-black uppercase tracking-widest select-none">Temporada:</span>
+              <div className="relative inline-block text-left">
+                <button
+                  type="button"
+                  onClick={() => setShowSeasonDropdown(!showSeasonDropdown)}
+                  className="text-amber-400 hover:text-amber-300 font-extrabold text-xs outline-none cursor-pointer border-b border-dashed border-amber-500/50 hover:border-amber-500 px-1 py-0.5 transition-all text-center uppercase tracking-wider inline-flex items-center gap-1"
+                >
+                  {selectedSeason}
+                  <span className="text-[9px] text-amber-500/80 transition-transform duration-200">▼</span>
+                </button>
+
+                {showSeasonDropdown && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40 cursor-default" 
+                      onClick={() => setShowSeasonDropdown(false)}
+                    />
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-28 bg-[#0b1015]/95 border border-white/10 rounded-xl shadow-2xl py-1.5 z-50 animate-fade-in backdrop-blur-xl">
+                      {[2025, 2026].map((year) => (
+                        <button
+                          key={year}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSeason(year);
+                            setShowSeasonDropdown(false);
+                          }}
+                          className={`w-full text-center px-4 py-2 text-xs font-black transition-colors cursor-pointer ${
+                            selectedSeason === year
+                              ? 'bg-amber-500 text-black'
+                              : 'text-slate-350 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {year}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Tournament Selector */}
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 text-xs font-black uppercase tracking-widest">Torneo:</span>
-              <div className="flex bg-black/40 rounded-xl p-1 border border-white/5">
+            <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
+              <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
+              <div className="flex p-0.5">
                 {(['Apertura', 'Clausura'] as const).map(tName => (
                   <button
                     key={tName}
                     onClick={() => setSelectedTournament(tName)}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedTournament === tName ? 'bg-amber-500 text-black shadow-md' : 'text-slate-400 hover:text-white'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedTournament === tName ? 'bg-amber-500 text-black shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
                   >
                     {tName}
                   </button>
@@ -649,17 +677,17 @@ export default function LeagueTablaView() {
           </div>
 
           {/* View Toggles (Standings vs Bracket) */}
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            <div className="flex bg-black/40 rounded-xl p-1 border border-white/5">
+          <div className="flex items-center justify-center gap-2 w-full md:w-auto bg-white/5 backdrop-blur-sm p-1.5 border border-white/5 rounded-xl">
+            <div className="flex">
               <button
                 onClick={() => setSubView('standings')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'standings' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'standings' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
               >
                 📊 Posiciones
               </button>
               <button
                 onClick={() => setSubView('bracket')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'bracket' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'bracket' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
               >
                 🏆 Playoffs
               </button>
@@ -671,7 +699,7 @@ export default function LeagueTablaView() {
         {subView === 'standings' && (
           <div className="flex flex-col gap-6">
             {/* Custom Subtabs (Zona A, Zona B, Anual, Promedios) */}
-            <div className="flex flex-wrap items-center gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner w-full sm:w-auto">
               {(['zonaA', 'zonaB', 'anual', 'promedios'] as const).map(tabKey => (
                 <button
                   key={tabKey}
@@ -726,7 +754,7 @@ export default function LeagueTablaView() {
                           onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
                           className="hover:bg-amber-500/[0.04] transition-colors group cursor-pointer"
                         >
-                          <td className={`py-3.5 px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
+                          <td className={`py-3.5 px-3 text-center font-black text-slate-500 group-hover:text-slate-300 transition-colors ${borderClass}`}>
                             {row.posicion || idx + 1}
                           </td>
                           <td className="py-3.5 px-2">
@@ -751,20 +779,20 @@ export default function LeagueTablaView() {
                               <td className="py-3.5 px-2 text-center font-black text-amber-400 bg-amber-500/5">{row.coeficiente?.toFixed(3)}</td>
                               <td className="py-3.5 px-2 text-center font-black text-white">{row.puntosTotales}</td>
                               <td className="py-3.5 px-2 text-center text-slate-400 font-medium">{row.partidosTotales}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.ptsTemporadaActual}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.ptsTemporadaAnterior}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.ptsTemporadaTrasanterior}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-400 hidden sm:table-cell">{row.ptsTemporadaActual}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-400 hidden sm:table-cell">{row.ptsTemporadaAnterior}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-400 hidden sm:table-cell">{row.ptsTemporadaTrasanterior}</td>
                             </>
                           ) : (
                             <>
                               <td className="py-3.5 px-2 text-center font-black text-amber-400 bg-amber-500/5">{row.puntos ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-450 font-medium">{row.partidosJugados ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-350 font-medium">{row.ganados ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-450">{row.empatados ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-455">{row.perdidos ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.golesAFavor ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center text-slate-550 hidden sm:table-cell">{row.golesEnContra ?? 0}</td>
-                              <td className="py-3.5 px-2 text-center font-bold text-slate-350">
+                              <td className="py-3.5 px-2 text-center text-slate-400 font-medium">{row.partidosJugados ?? 0}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-300 font-medium">{row.ganados ?? 0}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-400">{row.empatados ?? 0}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-400">{row.perdidos ?? 0}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-500 hidden sm:table-cell">{row.golesAFavor ?? 0}</td>
+                              <td className="py-3.5 px-2 text-center text-slate-500 hidden sm:table-cell">{row.golesEnContra ?? 0}</td>
+                              <td className="py-3.5 px-2 text-center font-bold text-slate-300">
                                 {(row.diferenciaGoles ?? 0) > 0 ? `+${row.diferenciaGoles}` : row.diferenciaGoles ?? 0}
                               </td>
                             </>
@@ -805,8 +833,8 @@ export default function LeagueTablaView() {
               <div className="w-full overflow-x-auto custom-scrollbar py-6 rounded-[2rem] border border-white/5 bg-[#0b1015]/60 shadow-2xl backdrop-blur-md">
                 <div className="flex gap-6 min-w-[950px] justify-between px-6 h-[720px]">
                   {/* Octavos */}
-                  <div className="flex flex-col justify-around h-full flex-1">
-                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-500 text-center bg-black/40 py-1.5 rounded-lg border border-white/5 mb-1">Octavos de Final</div>
+                  <div className="flex flex-col justify-around h-full flex-1 min-w-[220px] items-center">
+                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-300 text-center bg-white/5 backdrop-blur-sm py-1.5 rounded-lg border border-white/5 mb-1 w-full max-w-[210px]">Octavos de Final</div>
                     {octavos.length > 0 ? (
                       octavos.map(m => <MatchBracketCard key={m._id} match={m} />)
                     ) : (
@@ -815,8 +843,8 @@ export default function LeagueTablaView() {
                   </div>
 
                   {/* Cuartos */}
-                  <div className="flex flex-col justify-around h-full flex-1">
-                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-500 text-center bg-black/40 py-1.5 rounded-lg border border-white/5 mb-1">Cuartos de Final</div>
+                  <div className="flex flex-col justify-around h-full flex-1 min-w-[220px] items-center">
+                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-300 text-center bg-white/5 backdrop-blur-sm py-1.5 rounded-lg border border-white/5 mb-1 w-full max-w-[210px]">Cuartos de Final</div>
                     {cuartos.length > 0 ? (
                       cuartos.map(m => <MatchBracketCard key={m._id} match={m} />)
                     ) : (
@@ -825,8 +853,8 @@ export default function LeagueTablaView() {
                   </div>
 
                   {/* Semis */}
-                  <div className="flex flex-col justify-around h-full flex-1">
-                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-500 text-center bg-black/40 py-1.5 rounded-lg border border-white/5 mb-1">Semifinales</div>
+                  <div className="flex flex-col justify-around h-full flex-1 min-w-[220px] items-center">
+                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-300 text-center bg-white/5 backdrop-blur-sm py-1.5 rounded-lg border border-white/5 mb-1 w-full max-w-[210px]">Semifinales</div>
                     {semis.length > 0 ? (
                       semis.map(m => <MatchBracketCard key={m._id} match={m} />)
                     ) : (
@@ -835,8 +863,8 @@ export default function LeagueTablaView() {
                   </div>
 
                   {/* Final */}
-                  <div className="flex flex-col justify-around h-full flex-1">
-                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-500 text-center bg-black/40 py-1.5 rounded-lg border border-white/5 mb-1">Final</div>
+                  <div className="flex flex-col justify-around h-full flex-1 min-w-[220px] items-center">
+                    <div className="text-[10px] uppercase font-black tracking-widest text-slate-300 text-center bg-white/5 backdrop-blur-sm py-1.5 rounded-lg border border-white/5 mb-1 w-full max-w-[210px]">Final</div>
                     {finalRound.length > 0 ? (
                       finalRound.map(m => <MatchBracketCard key={m._id} match={m} />)
                     ) : (
@@ -990,7 +1018,7 @@ export default function LeagueTablaView() {
                             onClick={() => row.equipoId && router.push(`/team/${row.equipoId}`)}
                             className="hover:bg-amber-500/[0.04] transition-colors group cursor-pointer"
                           >
-                            <td className={`${bodyPY} px-2 sm:px-3 text-center font-black text-slate-500 group-hover:text-slate-350 transition-colors ${borderClass}`}>
+                            <td className={`${bodyPY} px-2 sm:px-3 text-center font-black text-slate-500 group-hover:text-slate-300 transition-colors ${borderClass}`}>
                               {row.posicion || idx + 1}
                             </td>
                             <td className={`${bodyPY} px-2`}>
@@ -1024,20 +1052,20 @@ export default function LeagueTablaView() {
                                 <td className={`${bodyPY} px-2 text-center font-black text-amber-400 bg-amber-500/5`}>{row.coeficiente?.toFixed(3)}</td>
                                 <td className={`${bodyPY} px-2 text-center font-black text-white`}>{row.puntosTotales}</td>
                                 <td className={`${bodyPY} px-2 text-center text-slate-400 font-medium`}>{row.partidosTotales}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
-                                <td className={`${bodyPY} px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-400 hidden sm:table-cell`}>{row.ptsTemporadaActual}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-400 hidden sm:table-cell`}>{row.ptsTemporadaAnterior}</td>
+                                <td className={`${bodyPY} px-2 text-center text-slate-400 hidden sm:table-cell`}>{row.ptsTemporadaTrasanterior}</td>
                               </>
                             ) : (
                               <>
                                 <td className={`${bodyPY} px-1 sm:px-2 text-center font-black text-amber-400 bg-amber-500/5`}>{row.puntos ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455 font-medium`}>{row.partidosJugados ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-350 font-medium`}>{row.ganados ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.empatados ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-455`}>{row.perdidos ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-550 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
-                                <td className={`${bodyPY} px-1 sm:px-2 text-center font-bold text-slate-350`}>{row.diferenciaGoles ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-400 font-medium`}>{row.partidosJugados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-300 font-medium`}>{row.ganados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-400`}>{row.empatados ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-400`}>{row.perdidos ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.golesAFavor ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center text-slate-500 hidden sm:table-cell`}>{row.golesEnContra ?? '-'}</td>
+                                <td className={`${bodyPY} px-1 sm:px-2 text-center font-bold text-slate-300`}>{row.diferenciaGoles ?? '-'}</td>
                               </>
                             )}
                           </tr>
