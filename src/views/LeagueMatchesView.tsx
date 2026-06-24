@@ -1371,9 +1371,11 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
       {/* Season & Tournament Selectors Card */}
       {isCustomLeague && (
-        <div className="relative overflow-hidden bg-[#0b1015]/60 backdrop-blur-md border border-white/10 rounded-3xl p-5 shadow-lg w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/5 rounded-full blur-[40px] pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px] pointer-events-none translate-x-1/2 translate-y-1/2" />
+        <div className="relative bg-[#0b1015]/60 backdrop-blur-md border border-white/10 rounded-3xl p-5 shadow-lg w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 z-30">
+          <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+            <div className="absolute top-0 left-0 w-32 h-32 bg-amber-500/5 rounded-full blur-[40px] -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-[40px] translate-x-1/2 translate-y-1/2" />
+          </div>
           
           <div className="flex flex-col gap-1 relative z-10">
             <h2 className="text-base font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-emerald-400 uppercase tracking-wider">
