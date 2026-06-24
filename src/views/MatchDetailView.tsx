@@ -831,6 +831,80 @@ export default function MatchDetailView() {
     };
   }, [processedH2H, match]);
 
+  const processedIncidents = useMemo(() => {
+    if (!match) return [];
+    const rawIncidents = match.incidents || [];
+    const elninePls = elninePlayers || match.elnine_players || [];
+    if (!elninePls || elninePls.length === 0) return rawIncidents;
+
+    const baseIncidents = rawIncidents.filter((inc: any) => inc.incidentType !== 'substitution');
+    const substitutions: any[] = [];
+    const homeSubsIn: any[] = [];
+    const homeSubsOut: any[] = [];
+    const awaySubsIn: any[] = [];
+    const awaySubsOut: any[] = [];
+
+    elninePls.forEach((p: any) => {
+      const isHome = isPlayerOfTeam(p.countryFlag, hName);
+      if (p.events) {
+        if (p.events.subInMinute !== undefined) {
+          (isHome ? homeSubsIn : awaySubsIn).push({ player: p, minute: p.events.subInMinute });
+        }
+        if (p.events.subOutMinute !== undefined) {
+          (isHome ? homeSubsOut : awaySubsOut).push({ player: p, minute: p.events.subOutMinute });
+        }
+      }
+    });
+
+    const processTeamSubs = (subsIn: any[], subsOut: any[], isHomeTeam: boolean) => {
+      const insByMin: Record<number, any[]> = {};
+      subsIn.forEach(item => {
+        insByMin[item.minute] = insByMin[item.minute] || [];
+        insByMin[item.minute].push(item.player);
+      });
+
+      const outsByMin: Record<number, any[]> = {};
+      subsOut.forEach(item => {
+        outsByMin[item.minute] = outsByMin[item.minute] || [];
+        outsByMin[item.minute].push(item.player);
+      });
+
+      const minutes = Array.from(new Set([...Object.keys(insByMin).map(Number), ...Object.keys(outsByMin).map(Number)]));
+      minutes.forEach(min => {
+        const ins = insByMin[min] || [];
+        const outs = outsByMin[min] || [];
+        const maxCount = Math.max(ins.length, outs.length);
+        for (let i = 0; i < maxCount; i++) {
+          const pIn = ins[i];
+          const pOut = outs[i];
+          if (pIn || pOut) {
+            substitutions.push({
+              incidentType: 'substitution',
+              time: min,
+              isHome: isHomeTeam,
+              playerIn: pIn ? { name: pIn.nameFull || pIn.name, shortName: pIn.name || pIn.nameFull } : null,
+              playerOut: pOut ? { name: pOut.nameFull || pOut.name, shortName: pOut.name || pOut.nameFull } : null
+            });
+          }
+        }
+      });
+    };
+
+    processTeamSubs(homeSubsIn, homeSubsOut, true);
+    processTeamSubs(awaySubsIn, awaySubsOut, false);
+
+    const merged = [...baseIncidents, ...substitutions];
+    return merged.sort((a, b) => {
+      const timeA = a.time || 0;
+      const timeB = b.time || 0;
+      if (timeA !== timeB) return timeA - timeB;
+      const typeOrder: Record<string, number> = { 'period': 1, 'goal': 2, 'card': 3, 'substitution': 4, 'varDecision': 5 };
+      const orderA = typeOrder[a.incidentType] || 99;
+      const orderB = typeOrder[b.incidentType] || 99;
+      return orderA - orderB;
+    });
+  }, [match?.incidents, match?.elnine_players, elninePlayers, hName, aName]);
+
   const STAT_MAPPINGS: Record<string, string[]> = {
     corners: ['saques de esquina', 'corner kicks', 'córners', 'saques de esquina'],
     fouls: ['faltas', 'fouls'],
@@ -1923,7 +1997,7 @@ export default function MatchDetailView() {
       </div>
 
       {/* Cronología de Eventos – Timeline compacto */}
-      {subSection === 'resumen' && match.incidents && match.incidents.length > 0 && (
+      {subSection === 'resumen' && processedIncidents && processedIncidents.length > 0 && (
         <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
           {/* Cabecera */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
@@ -1939,7 +2013,7 @@ export default function MatchDetailView() {
 
           {/* Lista de eventos */}
           <div className="divide-y divide-white/[0.03] w-full pb-2">
-            {match.incidents.map((inc: any, idx: number) => {
+            {processedIncidents.map((inc: any, idx: number) => {
               let timeStr = inc.addedTime ? `${inc.time}+${inc.addedTime}'` : inc.time ? `${inc.time}'` : '';
               let icon = "•";
               let colorClass = "text-slate-400 bg-slate-700/50";
@@ -1975,8 +2049,10 @@ export default function MatchDetailView() {
                 icon = "⇄";
                 colorClass = "text-blue-300 bg-blue-500/10";
                 borderClass = "border-blue-500/30";
-                title = `${inc.playerIn?.shortName || inc.playerIn?.name || ''}`;
-                detail = `Sale: ${inc.playerOut?.shortName || inc.playerOut?.name || ''}`;
+                const pInName = inc.playerIn?.shortName || inc.playerIn?.name || '';
+                const pOutName = inc.playerOut?.shortName || inc.playerOut?.name || '';
+                title = pInName ? `Entra: ${pInName}` : 'Sustitución';
+                detail = pOutName ? `Sale: ${pOutName}` : '';
               } else if (inc.incidentType === "period") {
                 const periodLabel = translatePeriod(inc.text || '');
                 const hasScore = inc.homeScore !== undefined && inc.awayScore !== undefined;
@@ -1998,10 +2074,16 @@ export default function MatchDetailView() {
                 icon = "📺";
                 colorClass = "text-purple-300 bg-purple-500/10";
                 borderClass = "border-purple-500/30";
-                title = "Revisión VAR";
-                if (inc.incidentClass === "penaltyAwarded") title += " – Penal";
-                else if (inc.incidentClass === "goalDisallowed") title += " – Gol anulado";
-                if (inc.player?.shortName) detail = inc.player.shortName;
+                if (inc.incidentClass === "goalDisallowed") {
+                  title = `Anulado: ${inc.player?.shortName || inc.player?.name || ''}`;
+                  detail = "Revisión VAR";
+                } else {
+                  title = "Revisión VAR";
+                  if (inc.incidentClass === "penaltyAwarded") title += " – Penal";
+                  if (inc.player?.shortName || inc.player?.name) {
+                    detail = inc.player.shortName || inc.player.name;
+                  }
+                }
               } else if (inc.incidentType === "penaltyShootout") {
                 if (inc.incidentClass === "scored") {
                   icon = "⚽";
