@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '../index.css';
 import { Providers } from './providers';
+import { Analytics } from '@vercel/analytics/next';
 
 export const metadata: Metadata = {
   title: 'Prode - Vacas Locas',
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className="antialiased bg-bg-base text-text-primary">
         <Providers>
           {children}
+          <Analytics />
         </Providers>
       </body>
     </html>
