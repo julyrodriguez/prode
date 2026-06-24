@@ -709,7 +709,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     const fmt = getLeagueFormat(leagueId);
     let defaultSeason = '2026';
     if (fmt === 'european' || leagueId === 'champions') {
-      defaultSeason = '2025/26';
+      defaultSeason = '2026/27';
     }
 
     const storedSeason = localStorage.getItem(`prode_season_${leagueId}`);
@@ -717,13 +717,6 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
     setSelectedSeason(storedSeason || defaultSeason);
     setSelectedTournament((storedTournament as 'Apertura' | 'Clausura') || 'Apertura');
-    
-    if (!storedSeason) {
-      localStorage.setItem(`prode_season_${leagueId}`, defaultSeason);
-    }
-    if (!storedTournament) {
-      localStorage.setItem(`prode_tournament_${leagueId}`, 'Apertura');
-    }
   }, [leagueId, isCustomLeague]);
 
   // Set default view mode on mount or when league changes
@@ -802,7 +795,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
     if (seasonsSet.size === 0) {
       const fmt = getLeagueFormat(leagueId);
       if (fmt === 'european' || leagueId === 'champions') {
-        return ['2024/25', '2025/26'];
+        return ['2024/25', '2025/26', '2026/27'];
       }
       return ['2025', '2026'];
     }
@@ -1455,7 +1448,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
           <div className="flex flex-row flex-wrap items-center gap-3 relative z-10 w-full sm:w-auto">
             {/* Season Selector */}
-            <div className="relative z-20 flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
+            <div className="relative z-30 flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
               <span className="text-slate-300 text-xs font-black uppercase tracking-widest select-none">Temporada:</span>
               <div className="relative inline-block text-left">
                 <button
@@ -1499,7 +1492,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
 
             {/* Tournament Selector (Argentina only) */}
             {format === 'argentina' && (
-              <div className="relative z-10 flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
                 <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
                 <div className="flex p-0.5">
                   {(['Apertura', 'Clausura'] as const).map(tName => (

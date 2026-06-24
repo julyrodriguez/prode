@@ -111,7 +111,7 @@ export default function LeagueTablaView() {
     
     let defaultSeason = '2026';
     if (fmt === 'european' || leagueId === 'champions') {
-      defaultSeason = '2025/26';
+      defaultSeason = '2026/27';
     }
     
     setSelectedSeason(storedSeason || defaultSeason);
@@ -282,7 +282,7 @@ export default function LeagueTablaView() {
     if (seasonsSet.size === 0) {
       const fmt = getLeagueFormat(leagueId);
       if (fmt === 'european' || leagueId === 'champions') {
-        return ['2024/25', '2025/26'];
+        return ['2024/25', '2025/26', '2026/27'];
       }
       return ['2025', '2026'];
     }
