@@ -305,11 +305,17 @@ const MatchRow = memo(({
           )}
         </div>
         {(viewMode === 'week' || viewMode === 'round') && match.startTimestamp && (
-          <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
-            {new Date(match.startTimestamp * 1000).toLocaleDateString('es-ES', {
-              weekday: 'short', day: '2-digit'
-            }).replace('.', '')}
-          </span>
+          (() => {
+            const d = new Date(match.startTimestamp * 1000);
+            const weekday = d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '');
+            const day = d.getDate();
+            const month = d.getMonth() + 1;
+            return (
+              <span className="text-[9px] text-emerald-400 font-extrabold uppercase tracking-wider text-center leading-none mb-1">
+                {`${weekday} ${day}/${month}`}
+              </span>
+            );
+          })()
         )}
         {status.isLive ? (
           <span className="text-red-500 text-[9px] md:text-[11px] font-black animate-pulse drop-shadow-[0_0_4px_rgba(239,68,68,0.5)] text-center leading-tight break-words">
