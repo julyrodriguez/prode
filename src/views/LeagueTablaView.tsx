@@ -65,124 +65,279 @@ export default function LeagueTablaView() {
 
   const availableTabs = Object.keys(standingsData);
 
-  // Custom Argentine Prototype States
-  const isArgentinePrototype = leagueId === 'liga-arg';
+  // Dynamic Format Check
+  const getLeagueFormat = (id: string): 'argentina' | 'european' | 'brazil' | 'mls' | 'cup' | 'international' => {
+    if (['liga-arg', 'primera-nacional', 'primera-b-metro', 'federal-a', 'primera-c'].includes(id)) {
+      return 'argentina';
+    }
+    if (['premier-league', 'laliga', 'serie-a', 'ligue-1', 'bundesliga'].includes(id)) {
+      return 'european';
+    }
+    if (id === 'brasileirao') {
+      return 'brazil';
+    }
+    if (id === 'mls') {
+      return 'mls';
+    }
+    if (id === 'copa-arg') {
+      return 'cup';
+    }
+    return 'international';
+  };
+
+  const format = getLeagueFormat(leagueId);
+  const isCustomLeague = leagueId !== 'mundial' && leagueId !== 'general';
+
   const [allMatches, setAllMatches] = useState<any[]>([]);
-  const [selectedSeason, setSelectedSeason] = useState<number>(2026);
+  const [selectedSeason, setSelectedSeason] = useState<string>('2026');
   const [showSeasonDropdown, setShowSeasonDropdown] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<'Apertura' | 'Clausura'>('Apertura');
   const [subView, setSubView] = useState<'standings' | 'bracket'>('standings');
-  const [customActiveTab, setCustomActiveTab] = useState<'zonaA' | 'zonaB' | 'anual' | 'promedios'>('zonaA');
+  const [customActiveTab, setCustomActiveTab] = useState<string>('zonaA');
 
-  // Load API Standings
+  // Reset states dynamically on league change
+  useEffect(() => {
+    if (!isCustomLeague) return;
+    const fmt = getLeagueFormat(leagueId);
+    if (fmt === 'european' || leagueId === 'champions') {
+      setSelectedSeason('2025/26');
+      setCustomActiveTab('tablaGeneral');
+    } else {
+      setSelectedSeason('2026');
+      if (fmt === 'argentina' || fmt === 'mls') {
+        setCustomActiveTab('zonaA');
+      } else if (fmt === 'international') {
+        setCustomActiveTab('grupoA');
+      } else {
+        setCustomActiveTab('tablaGeneral');
+      }
+    }
+    if (fmt === 'cup') {
+      setSubView('bracket');
+    } else {
+      setSubView('standings');
+    }
+  }, [leagueId, isCustomLeague]);
+
+  // Load data dynamically (parallel fetch of standings and matches)
   useEffect(() => {
     let isMounted = true;
-    const fetchStandings = async () => {
+    
+    const fetchData = async () => {
       if (!tournamentId) {
         setLoading(false);
         return;
       }
+
       setLoading(true);
       setError(null);
+
       try {
-        const response = await fetch(`https://apivacas.jariel.com.ar/api/standings/${tournamentId}`);
-        if (!response.ok) throw new Error('No se pudieron obtener las estadísticas.');
-        const json = await response.json();
+        // 1. Fetch official standings from API (for promedios fallback or legacy views)
+        const standingsPromise = fetch(`https://apivacas.jariel.com.ar/api/standings/${tournamentId}`)
+          .then(async res => {
+            if (!res.ok) return null;
+            const json = await res.json();
+            return json.data || {};
+          })
+          .catch(() => null);
+
+        // 2. Fetch matches (for custom leagues to compute seasons/bracket/standings dynamically)
+        const matchesPromise = isCustomLeague
+          ? fetch(`https://apivacas.jariel.com.ar/api/matches/all?tournamentId=${tournamentId}`)
+              .then(async res => {
+                if (!res.ok) return null;
+                return await res.json();
+              })
+              .catch(() => null)
+          : Promise.resolve(null);
+
+        const [standingsResult, matchesResult] = await Promise.all([standingsPromise, matchesPromise]);
 
         if (!isMounted) return;
 
-        const dataObj = json.data || {};
+        if (standingsResult) {
+          const filledTables: Record<string, any[]> = {};
+          for (const [key, value] of Object.entries(standingsResult)) {
+            if (Array.isArray(value) && value.length > 0) {
+              filledTables[key] = value;
+            }
+          }
+          setStandingsData(filledTables);
 
-        // Filter out empty arrays
-        const filledTables: Record<string, any[]> = {};
-        for (const [key, value] of Object.entries(dataObj)) {
-          if (Array.isArray(value) && value.length > 0) {
-            filledTables[key] = value;
+          const available = Object.keys(filledTables);
+          if (available.length > 0) {
+            if (!activeTab || !available.includes(activeTab)) {
+              setActiveTab(available[0]);
+            }
+          } else {
+            setActiveTab(null);
           }
         }
 
-        setStandingsData(filledTables);
-
-        const available = Object.keys(filledTables);
-        if (available.length > 0) {
-          if (!activeTab || !available.includes(activeTab)) {
-            setActiveTab(available[0]);
-          }
-        } else {
-          setActiveTab(null);
+        if (isCustomLeague && matchesResult) {
+          setAllMatches(matchesResult);
         }
 
+        setLoading(false);
       } catch (err: any) {
-        if (isMounted) setError(err.message || 'Error de conexión');
-      } finally {
         if (isMounted) {
-          // If it is not Argentine Prototype, we stop loading here. 
-          // If it is, we wait until matches are fetched.
-          if (!isArgentinePrototype) setLoading(false);
+          setError(err.message || 'Error de conexión');
+          setLoading(false);
         }
       }
     };
 
-    fetchStandings();
+    fetchData();
 
     return () => {
       isMounted = false;
     };
-  }, [tournamentId, isArgentinePrototype]);
+  }, [tournamentId, isCustomLeague]);
 
-  // Load Argentine matches (if applicable)
+  // Keep selectedSeason and customActiveTab in sync with available options
   useEffect(() => {
-    if (!isArgentinePrototype) return;
+    if (!isCustomLeague) return;
     
-    let isMounted = true;
-    const fetchAllMatches = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`https://apivacas.jariel.com.ar/api/matches/all?tournamentId=155`);
-        if (!res.ok) throw new Error("No se pudieron cargar los partidos.");
-        const data = await res.json();
-        if (isMounted) {
-          setAllMatches(data);
-        }
-      } catch (err: any) {
-        if (isMounted) setError(err.message || "Error al obtener historial");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+    const availableSeasons = getAvailableSeasons();
+    if (availableSeasons.length > 0 && !availableSeasons.includes(selectedSeason)) {
+      setSelectedSeason(availableSeasons[availableSeasons.length - 1]);
+    }
 
-    fetchAllMatches();
-    return () => { isMounted = false; };
-  }, [isArgentinePrototype]);
+    const tabs = getSubTabs();
+    if (tabs.length > 0 && !tabs.includes(customActiveTab)) {
+      setCustomActiveTab(tabs[0]);
+    }
+  }, [leagueId, allMatches.length, selectedTournament]);
+
+  const getAvailableSeasons = () => {
+    const seasonsSet = new Set<string>();
+    allMatches.forEach(m => {
+      const cat = getMatchCategory(m);
+      if (cat && cat.season) {
+        seasonsSet.add(cat.season);
+      }
+    });
+    
+    if (seasonsSet.size === 0) {
+      const fmt = getLeagueFormat(leagueId);
+      if (fmt === 'european' || leagueId === 'champions') {
+        return ['2024/25', '2025/26'];
+      }
+      return ['2025', '2026'];
+    }
+    
+    return Array.from(seasonsSet).sort((a, b) => a.localeCompare(b));
+  };
+
+  const getSubTabs = () => {
+    if (format === 'argentina') {
+      if (selectedTournament === 'Clausura') {
+        return ['tablaGeneral', 'promedios'];
+      }
+      return ['zonaA', 'zonaB', 'anual', 'promedios'];
+    }
+    if (format === 'mls') {
+      return ['zonaA', 'zonaB', 'anual'];
+    }
+    if (format === 'international') {
+      if (leagueId === 'champions') return ['tablaGeneral'];
+      // Extract unique groups dynamically from matches
+      const groupsSet = new Set<string>();
+      currentGroupMatches.forEach(m => {
+        const group = getTeamGroup(m);
+        if (group) groupsSet.add(group);
+      });
+      if (groupsSet.size > 0) {
+        return Array.from(groupsSet).sort();
+      }
+      return ['grupoA', 'grupoB', 'grupoC', 'grupoD', 'grupoE', 'grupoF', 'grupoG', 'grupoH'];
+    }
+    return ['tablaGeneral'];
+  };
+
+  const getTeamGroup = (match: any) => {
+    const tName = (match.tournament_name || match.tournament?.name || '').toLowerCase();
+    const round = (match.round_name || '').toLowerCase();
+    const m = tName.match(/group\s+([a-h])/i) || round.match(/group\s+([a-h])/i) || 
+              tName.match(/grupo\s+([a-h])/i) || round.match(/grupo\s+([a-h])/i);
+    if (m) return `grupo${m[1].toUpperCase()}`;
+    return null;
+  };
+
+  const isPlayoffMatch = (match: any, fmt: string, seasonStr: string) => {
+    if (fmt === 'european' || fmt === 'brazil') return false;
+    if (fmt === 'cup') return true;
+    
+    const round = (match.round_name || '').toLowerCase();
+    const tName = (match.tournament_name || match.tournament?.name || '').toLowerCase();
+    
+    if (tName.includes('playoff') || round.includes('playoff') || 
+        round.includes('elimina') || tName.includes('elimina') || tName.includes('knockout')) {
+      return true;
+    }
+    
+    if (fmt === 'argentina') {
+      const date = new Date(match.startTimestamp * 1000);
+      const month = date.getMonth();
+      const isMissingRound = !round || round === 'no round' || round === 'round of 16';
+      if (isMissingRound && (month === 4 || month === 5 || month === 10 || month === 11)) {
+        return true;
+      }
+      return round.includes('16') || round.includes('octav') || round.includes('cuart') || 
+             round.includes('quarter') || round.includes('semi') || round.includes('final');
+    }
+    
+    if (fmt === 'mls') {
+      const date = new Date(match.startTimestamp * 1000);
+      const month = date.getMonth();
+      if (month >= 9 && (!round || round === 'no round' || round.includes('final') || round.includes('semi') || round.includes('quarter'))) {
+        return true;
+      }
+      return round.includes('quarter') || round.includes('semi') || round.includes('final');
+    }
+    
+    if (fmt === 'international') {
+      const hasGroup = tName.includes('group') || round.includes('group') || 
+                       tName.includes('grupo') || round.includes('grupo');
+      return !hasGroup;
+    }
+    
+    return false;
+  };
 
   // Categorize a match by season and tournament
   const getMatchCategory = (m: any) => {
     const ts = m.startTimestamp;
+    if (!ts) return null;
     const date = new Date(ts * 1000);
     const year = date.getFullYear();
-    const month = date.getMonth();
-    const tName = m.tournament_name || m.tournament?.name || '';
-    const round = m.round_name || '';
+    const fmt = getLeagueFormat(leagueId);
 
-    if (year === 2025) {
-      if (ts < 1751328000) { // Before July 1st, 2025
-        const isPlayoff = (!round || round === 'No Round') && (month === 4 || month === 5); // May or June
-        return { season: 2025, tournament: 'Apertura' as const, isPlayoff };
+    if (fmt === 'european' || leagueId === 'champions') {
+      let season = '';
+      if (ts >= 1719792000 && ts < 1751241600) season = '2024/25';
+      else if (ts >= 1751241600 && ts < 1782777600) season = '2025/26';
+      else if (ts >= 1782777600 && ts < 1814313600) season = '2026/27';
+      else return null;
+
+      const isPlayoff = isPlayoffMatch(m, fmt, season);
+      return { season, tournament: 'Liga' as const, isPlayoff };
+    }
+
+    let season = String(year);
+    const isPlayoff = isPlayoffMatch(m, fmt, season);
+
+    if (fmt === 'argentina') {
+      const midYearTs = Math.floor(new Date(`${year}-07-01T00:00:00Z`).getTime() / 1000);
+      if (ts < midYearTs) {
+        return { season, tournament: 'Apertura' as const, isPlayoff };
       } else {
-        const isPlayoff = (!round || round === 'No Round') && (month === 10 || month === 11); // Nov or Dec
-        return { season: 2025, tournament: 'Clausura' as const, isPlayoff };
-      }
-    } else if (year === 2026) {
-      if (ts < 1782777600) { // Before June 30th, 2026
-        const isPlayoff = tName.includes('Playoffs') || 
-                          (month === 4 && (round.includes('16') || round.includes('Quarter') || !round || round === 'No Round'));
-        return { season: 2026, tournament: 'Apertura' as const, isPlayoff };
-      } else {
-        const isPlayoff = tName.includes('Playoffs');
-        return { season: 2026, tournament: 'Clausura' as const, isPlayoff };
+        return { season, tournament: 'Clausura' as const, isPlayoff };
       }
     }
-    return null;
+
+    return { season, tournament: 'Único' as const, isPlayoff };
   };
 
   // Helper to extract penalty scores from incidents
@@ -282,24 +437,68 @@ export default function LeagueTablaView() {
       return t1.nombre.localeCompare(t2.nombre);
     });
 
-    standings.forEach((team, idx) => {
-      team.posicion = idx + 1;
-      if (idx < 4) {
-        team.promocion = "Libertadores";
-      } else if (idx >= 4 && idx < 10) {
-        team.promocion = "Sudamericana";
-      } else if (idx >= 28) {
-        team.promocion = "Descenso";
-      } else {
-        team.promocion = null;
-      }
-    });
-
     return standings;
   };
 
-  // Helper to dynamically partition teams into Zona A and Zona B (Min-Cut / Shared Neighbors Clustering)
+  // Helper to dynamically partition teams into Zona A and Zona B
   const partitionZones = (groupMatches: any[]) => {
+    if (format === 'mls') {
+      // Count matches between each pair of teams
+      const matchCounts: Record<string, number> = {};
+      groupMatches.forEach(m => {
+        const home = m.home_team?.name || m.homeTeam?.name;
+        const away = m.away_team?.name || m.awayTeam?.name;
+        if (!home || !away) return;
+        const key = [home, away].sort().join('||');
+        matchCounts[key] = (matchCounts[key] || 0) + 1;
+      });
+
+      // Build adjacency list keeping only pairs that played at least twice
+      const adj: Record<string, Set<string>> = {};
+      for (const [pair, count] of Object.entries(matchCounts)) {
+        if (count >= 2) {
+          const [t1, t2] = pair.split('||');
+          if (!adj[t1]) adj[t1] = new Set();
+          if (!adj[t2]) adj[t2] = new Set();
+          adj[t1].add(t2);
+          adj[t2].add(t1);
+        }
+      }
+
+      const teams = Object.keys(adj);
+      if (teams.length === 0) return { zonaA: [], zonaB: [] };
+
+      // Run BFS to find Eastern Conference component
+      const seed = teams[0];
+      const componentA = new Set([seed]);
+      const queue = [seed];
+
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        if (adj[curr]) {
+          adj[curr].forEach(neighbor => {
+            if (!componentA.has(neighbor)) {
+              componentA.add(neighbor);
+              queue.push(neighbor);
+            }
+          });
+        }
+      }
+
+      const zoneA = Array.from(componentA);
+      const allTeams = new Set<string>();
+      groupMatches.forEach(m => {
+        const home = m.home_team?.name || m.homeTeam?.name;
+        const away = m.away_team?.name || m.awayTeam?.name;
+        if (home) allTeams.add(home);
+        if (away) allTeams.add(away);
+      });
+      const zoneB = Array.from(allTeams).filter(t => !componentA.has(t));
+
+      return { zonaA: zoneA, zonaB: zoneB };
+    }
+
+    // Default Argentina partition (shared neighbors)
     const adj: Record<string, Set<string>> = {};
     groupMatches.forEach(m => {
       const home = m.home_team?.name || m.homeTeam?.name;
@@ -348,10 +547,75 @@ export default function LeagueTablaView() {
     };
   };
 
-  // Process Argentine standings data dynamically
+  // Helper to assign promotions and positions dynamically
+  const assignPromotions = (standingsList: any[], fmt: string, lgId: string, tab: string) => {
+    const total = standingsList.length;
+    standingsList.forEach((team, idx) => {
+      team.posicion = idx + 1;
+      team.promocion = null;
+
+      if (fmt === 'argentina') {
+        if (tab === 'zonaA' || tab === 'zonaB') {
+          if (idx < 4) {
+            team.promocion = "Playoffs";
+          }
+        } else if (tab === 'anual') {
+          if (idx < 3) {
+            team.promocion = "Libertadores";
+          } else if (idx >= 3 && idx < 9) {
+            team.promocion = "Sudamericana";
+          } else if (idx === total - 1) {
+            team.promocion = "Descenso";
+          }
+        }
+      } else if (fmt === 'european') {
+        if (idx < 4) {
+          team.promocion = "Champions";
+        } else if (idx >= 4 && idx < 6) {
+          team.promocion = "Europa League";
+        } else if (idx === 6) {
+          team.promocion = "Conference League";
+        } else if (idx >= total - 3) {
+          team.promocion = "Descenso";
+        }
+      } else if (fmt === 'brazil') {
+        if (idx < 6) {
+          team.promocion = "Libertadores";
+        } else if (idx >= 6 && idx < 12) {
+          team.promocion = "Sudamericana";
+        } else if (idx >= total - 4) {
+          team.promocion = "Descenso";
+        }
+      } else if (fmt === 'mls') {
+        if (idx < 7) {
+          team.promocion = "Playoffs";
+        } else if (idx >= 7 && idx < 9) {
+          team.promocion = "Playoffs (Wild Card)";
+        }
+      } else if (fmt === 'international') {
+        if (lgId === 'champions') {
+          if (idx < 8) {
+            team.promocion = "Octavos de Final";
+          } else if (idx >= 8 && idx < 24) {
+            team.promocion = "Playoffs K.O.";
+          }
+        } else if (lgId === 'libertadores') {
+          if (idx < 2) {
+            team.promocion = "Libertadores";
+          } else if (idx === 2) {
+            team.promocion = "Sudamericana";
+          }
+        }
+      }
+    });
+  };
+
+  // Process standings data dynamically
   const currentGroupMatches = allMatches.filter(m => {
     const cat = getMatchCategory(m);
-    return cat && cat.season === selectedSeason && cat.tournament === selectedTournament && !cat.isPlayoff;
+    if (!cat || cat.season !== selectedSeason || cat.isPlayoff) return false;
+    if (format === 'argentina' && cat.tournament !== selectedTournament) return false;
+    return true;
   });
 
   const annualMatches = allMatches.filter(m => {
@@ -369,14 +633,33 @@ export default function LeagueTablaView() {
   standingsA.forEach((t, idx) => { t.posicion = idx + 1; });
   standingsB.forEach((t, idx) => { t.posicion = idx + 1; });
 
-  // Fallback to static promedios from database
-  const promediosStandings = standingsData['promedios'] || [];
+  // Group stage standings for international
+  const getGroupStandings = (groupName: string) => {
+    const groupMatches = currentGroupMatches.filter(m => getTeamGroup(m) === groupName);
+    return calculateStandings(groupMatches);
+  };
 
   const getActiveTableData = () => {
-    if (customActiveTab === 'zonaA') return standingsA;
-    if (customActiveTab === 'zonaB') return standingsB;
-    if (customActiveTab === 'anual') return annualStandings;
-    return promediosStandings;
+    let data: any[] = [];
+    if (format === 'argentina') {
+      if (customActiveTab === 'zonaA') data = standingsA;
+      else if (customActiveTab === 'zonaB') data = standingsB;
+      else if (customActiveTab === 'anual') data = annualStandings;
+      else if (customActiveTab === 'tablaGeneral') data = fullStandings;
+      else data = standingsData['promedios'] || []; // Promedios fallback
+    } else if (format === 'mls') {
+      if (customActiveTab === 'zonaA') data = standingsA;
+      else if (customActiveTab === 'zonaB') data = standingsB;
+      else data = annualStandings;
+    } else if (format === 'international') {
+      data = getGroupStandings(customActiveTab);
+    } else {
+      data = fullStandings;
+    }
+
+    const copied = data.map(item => ({ ...item }));
+    assignPromotions(copied, format, leagueId, customActiveTab);
+    return copied;
   };
 
   const activeTableData = getActiveTableData();
@@ -388,53 +671,67 @@ export default function LeagueTablaView() {
     const semis: any[] = [];
     const final: any[] = [];
 
-    playoffMatches.forEach(m => {
-      const cat = getMatchCategory(m);
-      if (!cat || !cat.isPlayoff) return;
-
-      const date = new Date(m.startTimestamp * 1000);
-      const day = date.getDate();
-      const month = date.getMonth();
-      const round = m.round_name || '';
-
-      if (selectedSeason === 2025) {
-        if (selectedTournament === 'Apertura') {
-          // Octavos: May 10-12
-          if (month === 4 && day <= 12) octavos.push(m);
-          // Cuartos: May 18-20
-          else if (month === 4 && day >= 18 && day <= 20) cuartos.push(m);
-          // Semis: May 24-25
-          else if (month === 4 && day >= 24 && day <= 25) semis.push(m);
-          // Final: Jun 1
-          else if (month === 5 && day === 1) final.push(m);
-        } else {
-          // Clausura
-          // Octavos: Nov 22-27
-          if (month === 10 && day >= 22 && day <= 27) octavos.push(m);
-          // Cuartos: Nov 30 - Dec 2
-          else if ((month === 10 && day >= 30) || (month === 11 && day <= 2)) cuartos.push(m);
-          // Semis: Dec 7-8
-          else if (month === 11 && day >= 7 && day <= 8) semis.push(m);
-          // Final: Dec 14
-          else if (month === 11 && day === 14) final.push(m);
-        }
-      } else if (selectedSeason === 2026) {
-        if (selectedTournament === 'Apertura') {
-          if (round.includes('16') || round.includes('Octavos')) octavos.push(m);
-          else if (round.includes('Quarter') || round.includes('Cuartos')) cuartos.push(m);
-          // Semis: May 16-20
-          else if (month === 4 && day >= 15 && day <= 21) semis.push(m);
-          // Final: May 24
-          else if (month === 4 && day >= 22 && day <= 26) final.push(m);
-        } else {
-          // Clausura 2026 Playoffs (Future / Empty)
-          if (round.includes('16')) octavos.push(m);
-          else if (round.includes('Quarter')) cuartos.push(m);
-        }
-      }
-    });
-
     const sortByTime = (a: any, b: any) => a.startTimestamp - b.startTimestamp;
+    const sorted = [...playoffMatches].sort(sortByTime);
+
+    if (sorted.length === 0) return { octavos, cuartos, semis, final };
+
+    const fmt = getLeagueFormat(leagueId);
+
+    if (fmt === 'cup') {
+      // Copa Argentina (single leg knockout, 64 teams)
+      // Octavos = matches 49-56, Cuartos = 57-60, Semis = 61-62, Final = 63
+      sorted.forEach((m, idx) => {
+        const num = idx + 1;
+        if (num >= 49 && num <= 56) octavos.push(m);
+        else if (num >= 57 && num <= 60) cuartos.push(m);
+        else if (num >= 61 && num <= 62) semis.push(m);
+        else if (num === 63) final.push(m);
+      });
+    } else if (fmt === 'mls') {
+      // MLS playoffs: Final = last 1, Semis = 2 before final, Cuartos = 4 before semis, Octavos = all rest
+      const total = sorted.length;
+      sorted.forEach((m, idx) => {
+        const revIdx = total - 1 - idx; // 0 is last match
+        if (revIdx === 0) final.push(m);
+        else if (revIdx >= 1 && revIdx <= 2) semis.push(m);
+        else if (revIdx >= 3 && revIdx <= 6) cuartos.push(m);
+        else octavos.push(m);
+      });
+    } else if (fmt === 'international' || leagueId === 'champions') {
+      // Copa Libertadores & Champions: Final = last 1, Semis = 4 before final, Cuartos = 8 before semis, Octavos = all rest
+      const total = sorted.length;
+      sorted.forEach((m, idx) => {
+        const revIdx = total - 1 - idx;
+        if (revIdx === 0) final.push(m);
+        else if (revIdx >= 1 && revIdx <= 4) semis.push(m);
+        else if (revIdx >= 5 && revIdx <= 12) cuartos.push(m);
+        else octavos.push(m);
+      });
+    } else {
+      // Default (Argentina format playoffs, etc.)
+      const total = sorted.length;
+      sorted.forEach((m, idx) => {
+        const round = (m.round_name || '').toLowerCase();
+        if (round.includes('final') && !round.includes('semi') && !round.includes('quarter')) {
+          final.push(m);
+        } else if (round.includes('semi')) {
+          semis.push(m);
+        } else if (round.includes('quarter') || round.includes('cuart') || round.includes('1/4')) {
+          cuartos.push(m);
+        } else if (round.includes('16') || round.includes('octav') || round.includes('1/8')) {
+          octavos.push(m);
+        } else {
+          // Fallback by index from the end
+          const revIdx = total - 1 - idx;
+          if (revIdx === 0) final.push(m);
+          else if (revIdx >= 1 && revIdx <= 2) semis.push(m);
+          else if (revIdx >= 3 && revIdx <= 6) cuartos.push(m);
+          else octavos.push(m);
+        }
+      });
+    }
+
     octavos.sort(sortByTime);
     cuartos.sort(sortByTime);
     semis.sort(sortByTime);
@@ -445,7 +742,9 @@ export default function LeagueTablaView() {
 
   const playoffMatches = allMatches.filter(m => {
     const cat = getMatchCategory(m);
-    return cat && cat.season === selectedSeason && cat.tournament === selectedTournament && cat.isPlayoff;
+    if (!cat || cat.season !== selectedSeason || !cat.isPlayoff) return false;
+    if (format === 'argentina' && cat.tournament !== selectedTournament) return false;
+    return true;
   });
 
   const { octavos, cuartos, semis, final: finalRound } = buildBracket(playoffMatches);
@@ -487,7 +786,7 @@ export default function LeagueTablaView() {
             🏟️ {activeLeague.name}
           </h1>
           <p className="text-slate-400 text-xs font-semibold mt-1">
-            {isArgentinePrototype ? 'Panel de Temporadas, Posiciones y Playoffs' : 'Estadísticas oficiales de la fase de grupos'}
+            {isCustomLeague ? 'Panel de Temporadas, Posiciones y Playoffs' : 'Estadísticas oficiales de la fase de grupos'}
           </p>
         </div>
       </div>
@@ -606,9 +905,11 @@ export default function LeagueTablaView() {
     );
   }
 
-  // Render Custom Argentine Prototype
-  if (isArgentinePrototype) {
-    const isPromediosTab = customActiveTab === 'promedios';
+  // Render Custom League Layout (for all leagues except Mundial and General)
+  if (isCustomLeague) {
+    const isPromediosTab = format === 'argentina' && customActiveTab === 'promedios';
+    const subTabs = getSubTabs();
+
     return (
       <div className="w-full flex flex-col gap-6 pb-10 animate-fade-in">
         <Header />
@@ -636,7 +937,7 @@ export default function LeagueTablaView() {
                       onClick={() => setShowSeasonDropdown(false)}
                     />
                     <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-28 bg-[#0b1015]/95 border border-white/10 rounded-xl shadow-2xl py-1.5 z-50 animate-fade-in backdrop-blur-xl">
-                      {[2025, 2026].map((year) => (
+                      {getAvailableSeasons().map((year) => (
                         <button
                           key={year}
                           type="button"
@@ -647,7 +948,7 @@ export default function LeagueTablaView() {
                           className={`w-full text-center px-4 py-2 text-xs font-black transition-colors cursor-pointer ${
                             selectedSeason === year
                               ? 'bg-amber-500 text-black'
-                              : 'text-slate-350 hover:text-white hover:bg-white/5'
+                              : 'text-slate-355 hover:text-white hover:bg-white/5'
                           }`}
                         >
                           {year}
@@ -659,60 +960,68 @@ export default function LeagueTablaView() {
               </div>
             </div>
 
-            {/* Tournament Selector */}
-            <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
-              <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
-              <div className="flex p-0.5">
-                {(['Apertura', 'Clausura'] as const).map(tName => (
-                  <button
-                    key={tName}
-                    onClick={() => setSelectedTournament(tName)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedTournament === tName ? 'bg-amber-500 text-black shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
-                  >
-                    {tName}
-                  </button>
-                ))}
+            {/* Tournament Selector (Argentina only) */}
+            {format === 'argentina' && (
+              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm px-4 py-1.5 border border-white/5 rounded-xl">
+                <span className="text-slate-300 text-xs font-black uppercase tracking-widest">Torneo:</span>
+                <div className="flex p-0.5">
+                  {(['Apertura', 'Clausura'] as const).map(tName => (
+                    <button
+                      key={tName}
+                      onClick={() => setSelectedTournament(tName)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedTournament === tName ? 'bg-amber-500 text-black shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
+                    >
+                      {tName}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* View Toggles (Standings vs Bracket) */}
-          <div className="flex items-center justify-center gap-2 w-full md:w-auto bg-white/5 backdrop-blur-sm p-1.5 border border-white/5 rounded-xl">
-            <div className="flex">
-              <button
-                onClick={() => setSubView('standings')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'standings' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
-              >
-                📊 Posiciones
-              </button>
-              <button
-                onClick={() => setSubView('bracket')}
-                className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'bracket' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
-              >
-                🏆 Playoffs
-              </button>
+          {(format === 'argentina' || format === 'mls' || format === 'cup' || format === 'international') && (
+            <div className="flex items-center justify-center gap-2 w-full md:w-auto bg-white/5 backdrop-blur-sm p-1.5 border border-white/5 rounded-xl">
+              <div className="flex">
+                {format !== 'cup' && (
+                  <button
+                    onClick={() => setSubView('standings')}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'standings' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
+                  >
+                    📊 Posiciones
+                  </button>
+                )}
+                <button
+                  onClick={() => setSubView('bracket')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${subView === 'bracket' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5'}`}
+                >
+                  🏆 Playoffs
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* STANDINGS SUB-VIEW */}
-        {subView === 'standings' && (
+        {subView === 'standings' && format !== 'cup' && (
           <div className="flex flex-col gap-6">
-            {/* Custom Subtabs (Zona A, Zona B, Anual, Promedios) */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner w-full sm:w-auto">
-              {(['zonaA', 'zonaB', 'anual', 'promedios'] as const).map(tabKey => (
-                <button
-                  key={tabKey}
-                  onClick={() => setCustomActiveTab(tabKey)}
-                  className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${customActiveTab === tabKey
-                      ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  {formatTabName(tabKey, leagueId)}
-                </button>
-              ))}
-            </div>
+            {/* Custom Subtabs */}
+            {subTabs.length > 1 && (
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-inner w-full sm:w-auto">
+                {subTabs.map(tabKey => (
+                  <button
+                    key={tabKey}
+                    onClick={() => setCustomActiveTab(tabKey)}
+                    className={`px-5 py-2.5 rounded-xl text-sm font-black transition-all cursor-pointer ${customActiveTab === tabKey
+                        ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      }`}
+                  >
+                    {formatTabName(tabKey, leagueId)}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Table */}
             <div className="overflow-hidden bg-[#0b1015]/60 rounded-[2rem] border border-white/5 relative shadow-2xl backdrop-blur-md">
