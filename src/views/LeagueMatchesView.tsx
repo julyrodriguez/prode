@@ -693,11 +693,13 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
   const deadlineDate = new Date('2026-06-12T00:00:00-03:00'); // Límite: 11/06 inclusive
   const isBeforeDeadline = Date.now() < deadlineDate.getTime();
 
-  // Reset date and search direction on league change
+  // Reset date, search direction and clear season selection on league change
   useEffect(() => {
     const d = new Date();
     setSelectedDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`);
     setSearchDirection(1);
+    localStorage.removeItem(`prode_season_${leagueId}`);
+    localStorage.removeItem(`prode_tournament_${leagueId}`);
   }, [leagueId]);
 
   // Load season & tournament from localStorage on mount and when leagueId changes

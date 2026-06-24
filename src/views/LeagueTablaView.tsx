@@ -95,6 +95,12 @@ export default function LeagueTablaView() {
   const [subView, setSubView] = useState<'standings' | 'bracket'>('standings');
   const [customActiveTab, setCustomActiveTab] = useState<string>('zonaA');
 
+  // Reset selection on league switch to trigger closest season recalculation
+  useEffect(() => {
+    localStorage.removeItem(`prode_season_${leagueId}`);
+    localStorage.removeItem(`prode_tournament_${leagueId}`);
+  }, [leagueId]);
+
   // Reset states dynamically on league change
   useEffect(() => {
     if (!isCustomLeague) return;
@@ -193,18 +199,37 @@ export default function LeagueTablaView() {
           
           if ((!storedSeason || !storedTournament) && matchesResult.length > 0) {
             const nowTs = Date.now() / 1000;
-            let closestMatch = matchesResult[0];
+            let closestMatch = null;
             let minDiff = Infinity;
 
+            // 1. Try to find the closest match that is NOT finished
             matchesResult.forEach((m: any) => {
               if (m.startTimestamp) {
-                const diff = Math.abs(m.startTimestamp - nowTs);
-                if (diff < minDiff) {
-                  minDiff = diff;
-                  closestMatch = m;
+                const isFinished = m.status === 'finished' || 
+                                   (typeof m.status === 'object' && m.status?.type === 'finished');
+                if (!isFinished) {
+                  const diff = Math.abs(m.startTimestamp - nowTs);
+                  if (diff < minDiff) {
+                    minDiff = diff;
+                    closestMatch = m;
+                  }
                 }
               }
             });
+
+            // 2. Fallback to any closest match
+            if (!closestMatch) {
+              minDiff = Infinity;
+              matchesResult.forEach((m: any) => {
+                if (m.startTimestamp) {
+                  const diff = Math.abs(m.startTimestamp - nowTs);
+                  if (diff < minDiff) {
+                    minDiff = diff;
+                    closestMatch = m;
+                  }
+                }
+              });
+            }
 
             if (closestMatch) {
               const cat = getMatchCategory(closestMatch);
