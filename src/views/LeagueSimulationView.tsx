@@ -21,7 +21,8 @@ const translateTeamToSpanish = (name: string): string => {
     'Czech Republic': 'República Checa', 'Czechia': 'República Checa', 'Romania': 'Rumania',
     'Russia': 'Rusia', 'New Zealand': 'Nueva Zelanda', 'South Africa': 'Sudáfrica',
     'Panama': 'Panamá', 'Costa Rica': 'Costa Rica', 'Honduras': 'Honduras', 'El Salvador': 'El Salvador',
-    'Jamaica': 'Jamaica', 'Hungary': 'Hungría'
+    'Jamaica': 'Jamaica', 'Hungary': 'Hungría',
+    "Côte d'Ivoire": 'Costa de Marfil', "Cote d'Ivoire": 'Costa de Marfil', 'Ivory Coast': 'Costa de Marfil'
   };
   const trimmed = name.trim();
   return translations[trimmed] || translations[trimmed.replace(/\s+/g, ' ')] || trimmed;

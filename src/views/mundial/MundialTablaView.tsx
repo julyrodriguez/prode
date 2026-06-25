@@ -275,7 +275,10 @@ export default function MundialTablaView() {
       'Honduras': 'Honduras',
       'El Salvador': 'El Salvador',
       'Jamaica': 'Jamaica',
-      'Hungary': 'Hungría'
+      'Hungary': 'Hungría',
+      "Côte d'Ivoire": 'Costa de Marfil',
+      "Cote d'Ivoire": 'Costa de Marfil',
+      'Ivory Coast': 'Costa de Marfil'
     };
     const trimmed = name.trim();
     return translations[trimmed] || translations[trimmed.replace(/\s+/g, ' ')] || trimmed;

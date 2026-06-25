@@ -97,7 +97,10 @@ const translateTeamToSpanish = (name: string): string => {
     'Honduras': 'Honduras',
     'El Salvador': 'El Salvador',
     'Jamaica': 'Jamaica',
-    'Hungary': 'Hungría'
+    'Hungary': 'Hungría',
+    "Côte d'Ivoire": 'Costa de Marfil',
+    "Cote d'Ivoire": 'Costa de Marfil',
+    'Ivory Coast': 'Costa de Marfil'
   };
   const trimmed = name.trim();
   return translations[trimmed] || translations[trimmed.replace(/\s+/g, ' ')] || trimmed;
@@ -163,7 +166,7 @@ const isPlayerOfTeam = (playerSelection: string | null | undefined, teamName: st
     'usa': ['estados unidos', 'ee. uu.', 'usa', 'united states'],
     'czech-republic': ['republica checa', 'czech republic'],
     'bosnia-herzegovina': ['bosnia', 'bosnia y herzegovina', 'bosnia-herzegovina'],
-    'ivory-coast': ['costa de marfil', 'ivory coast'],
+    'ivory-coast': ['costa de marfil', 'ivory coast', "cote d'ivoire", "cote divoire", "cote de marfil", "cote d’ivoire"],
     'dr-congo': ['rd congo', 'congo dr', 'dr congo'],
     'cape-verde': ['cabo verde', 'cape verde'],
     'new-zealand': ['nueva zelanda', 'new zealand'],
