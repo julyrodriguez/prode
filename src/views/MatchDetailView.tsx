@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles, Tv } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
 import TeamHoverCard from '../components/TeamHoverCard';
 import { elnineMappings } from '../lib/elnineMappings';
@@ -405,6 +405,15 @@ export default function MatchDetailView() {
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Live Streaming States
+  const [streams, setStreams] = useState<any[]>([]);
+  const [selectedStreamUrl, setSelectedStreamUrl] = useState<string | null>(null);
+  const [loadingStreams, setLoadingStreams] = useState<boolean>(false);
+  const [allMatches, setAllMatches] = useState<any[]>([]);
+  const [activeMatchTitle, setActiveMatchTitle] = useState<string | null>(null);
+  const [showPlayer, setShowPlayer] = useState<boolean>(true);
+  const [showManualSelector, setShowManualSelector] = useState<boolean>(false);
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -690,6 +699,81 @@ export default function MatchDetailView() {
       .then(d => setMatchPredictions(Array.isArray(d) ? d : []))
       .catch(() => setMatchPredictions([]));
   }, [id]);
+
+  // Fetch stream links from futbol-libres agenda
+  useEffect(() => {
+    if (!match || !user) return;
+    
+    const hNameRaw = match?.homeTeam?.name || match?.home_team?.name || '';
+    const aNameRaw = match?.awayTeam?.name || match?.away_team?.name || '';
+    if (!hNameRaw && !aNameRaw) return;
+
+    const homeSpanish = translateTeamToSpanish(hNameRaw);
+    const awaySpanish = translateTeamToSpanish(aNameRaw);
+
+    let isMounted = true;
+    const fetchStreams = async () => {
+      setLoadingStreams(true);
+      try {
+        const res = await fetch(`/api/stream?home=${encodeURIComponent(homeSpanish)}&away=${encodeURIComponent(awaySpanish)}`);
+        if (!res.ok) throw new Error('Error al obtener canales de transmisión');
+        const data = await res.json();
+        
+        if (isMounted && data.success) {
+          setAllMatches(data.allMatches || []);
+          if (data.matched) {
+            const matchStreams = data.matched.streams || [];
+            setStreams(matchStreams);
+            setActiveMatchTitle(data.matched.title);
+            
+            // Prefer DirecTV Sports / DSports for the user
+            const dsports = matchStreams.find((s: any) => 
+              s.channelName.toLowerCase().includes('directv sports') || 
+              s.channelName.toLowerCase().includes('dsports')
+            );
+            if (dsports) {
+              setSelectedStreamUrl(dsports.streamUrl);
+            } else if (matchStreams.length > 0) {
+              setSelectedStreamUrl(matchStreams[0].streamUrl);
+            }
+          } else {
+            // Check if we can find a loose match manually from allMatches
+            const looseHome = normalizeString(homeSpanish);
+            const looseAway = normalizeString(awaySpanish);
+            const foundLoose = (data.allMatches || []).find((m: any) => {
+              const mTitle = normalizeString(m.title);
+              return mTitle.includes(looseHome) || mTitle.includes(looseAway);
+            });
+
+            if (foundLoose) {
+              setStreams(foundLoose.streams || []);
+              setActiveMatchTitle(foundLoose.title);
+              const dsports = (foundLoose.streams || []).find((s: any) => 
+                s.channelName.toLowerCase().includes('directv sports') || 
+                s.channelName.toLowerCase().includes('dsports')
+              );
+              if (dsports) {
+                setSelectedStreamUrl(dsports.streamUrl);
+              } else if (foundLoose.streams.length > 0) {
+                setSelectedStreamUrl(foundLoose.streams[0].streamUrl);
+              }
+            } else {
+              setStreams([]);
+              setSelectedStreamUrl(null);
+              setActiveMatchTitle(null);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching stream links:', err);
+      } finally {
+        if (isMounted) setLoadingStreams(false);
+      }
+    };
+
+    fetchStreams();
+    return () => { isMounted = false; };
+  }, [match, user]);
 
   // Fetch H2H statistics
   useEffect(() => {
@@ -2004,6 +2088,149 @@ export default function MatchDetailView() {
           📊 Estadísticas
         </button>
       </div>
+
+      {/* Reproductor de Streaming en Vivo */}
+      {subSection === 'resumen' && (
+        <div className="w-full mb-4">
+          {!user ? (
+            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 shadow-xl">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                <Tv className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
+                  Transmisión en Vivo Restringida
+                </h3>
+                <p className="text-xs text-slate-400 max-w-sm">
+                  Debes iniciar sesión con tu cuenta para poder ver este partido en vivo gratis.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/login')}
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] border-0 cursor-pointer"
+              >
+                🔑 Iniciar Sesión
+              </button>
+            </div>
+          ) : loadingStreams ? (
+            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center gap-3">
+              <div className="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider animate-pulse">Buscando transmisiones en vivo...</span>
+            </div>
+          ) : selectedStreamUrl ? (
+            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+              {/* Header de Streaming */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 border-b border-white/5 bg-slate-950/40 gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </div>
+                  <span className="text-[11px] font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                    <Tv className="w-3.5 h-3.5 text-indigo-400" /> Transmisión en Vivo
+                  </span>
+                  {activeMatchTitle && (
+                    <span className="text-xs text-slate-400 truncate font-semibold border-l border-white/10 pl-2.5">
+                      {activeMatchTitle}
+                    </span>
+                  )}
+                </div>
+
+                {/* Controles de Transmisión */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Selector de Canales */}
+                  {streams.length > 0 && (
+                    <div className="flex gap-1 overflow-x-auto max-w-[200px] sm:max-w-xs scrollbar-none">
+                      {streams.map((s, idx) => {
+                        const isSelected = selectedStreamUrl === s.streamUrl;
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => setSelectedStreamUrl(s.streamUrl)}
+                            className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap border-0 ${
+                              isSelected
+                                ? 'bg-gradient-to-r from-emerald-500/20 to-indigo-500/20 text-white border border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.1)]'
+                                : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
+                            }`}
+                          >
+                            {s.channelName.replace('DirecTV Sports', 'DSports')}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Botón para contraer/expandir reproductor */}
+                  <button
+                    onClick={() => setShowPlayer(!showPlayer)}
+                    className="p-1 rounded-md border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 cursor-pointer bg-transparent"
+                    title={showPlayer ? "Ocultar reproductor" : "Mostrar reproductor"}
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showPlayer ? '' : 'rotate-180'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Contenedor del Iframe */}
+              {showPlayer && (
+                <div className="relative w-full aspect-video bg-black">
+                  <iframe
+                    src={selectedStreamUrl}
+                    allowFullScreen
+                    scrolling="no"
+                    frameBorder="0"
+                    className="absolute inset-0 w-full h-full"
+                    allow="encrypted-media"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Mostrar banner alternativo si no se encontró transmisión automáticamente */
+            <div className="w-full bg-white/[0.01] border border-dashed border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center gap-3">
+              <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                <Tv className="w-4 h-4 text-slate-500" /> No se detectó transmisión automática
+              </div>
+              <button
+                onClick={() => setShowManualSelector(!showManualSelector)}
+                className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-black text-slate-200 uppercase tracking-wider hover:bg-white/10 hover:border-indigo-500/30 transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                🔍 Buscar partido en la agenda
+              </button>
+
+              {showManualSelector && allMatches.length > 0 && (
+                <div className="w-full max-w-md mt-2 p-3 bg-slate-950/80 border border-white/5 rounded-xl flex flex-col gap-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Partidos de hoy en Fútbol Libre:</span>
+                  <div className="max-h-48 overflow-y-auto divide-y divide-white/5">
+                    {allMatches.map((m, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setStreams(m.streams || []);
+                          setActiveMatchTitle(m.title);
+                          if (m.streams && m.streams.length > 0) {
+                            const dsports = m.streams.find((s: any) => 
+                              s.channelName.toLowerCase().includes('directv sports') || 
+                              s.channelName.toLowerCase().includes('dsports')
+                            );
+                            setSelectedStreamUrl(dsports ? dsports.streamUrl : m.streams[0].streamUrl);
+                          }
+                          setShowManualSelector(false);
+                        }}
+                        className="w-full text-left py-2 px-1 hover:bg-white/5 text-xs text-slate-300 font-semibold flex items-center justify-between border-0 cursor-pointer rounded bg-transparent"
+                      >
+                        <span className="truncate max-w-[80%]">{m.title}</span>
+                        <span className="text-[9px] font-bold text-indigo-400 shrink-0 bg-indigo-500/10 px-1.5 py-0.5 rounded">{m.time}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Cronología de Eventos – Timeline compacto */}
       {subSection === 'resumen' && processedIncidents && processedIncidents.length > 0 && (
