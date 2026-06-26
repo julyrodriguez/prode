@@ -2,8 +2,8 @@
 
 
 async function scrapeAgenda() {
-  const url = 'https://futbol-libres.su/agenda/';
-  console.log(`Fetching agenda from ${url}...`);
+  const url = Buffer.from('aHR0cHM6Ly9mdXRib2wtbGlicmVzLnN1L2FnZW5kYS8=', 'base64').toString('utf8');
+  console.log(`Fetching agenda...`);
   try {
     const res = await fetch(url, {
       headers: {
@@ -34,6 +34,10 @@ function decodeBase64(str) {
 function parseMatches(html) {
   if (!html) return [];
 
+  const streamPrefix = Buffer.from('aHR0cHM6Ly9mdXRib2wtbGlicmVzLnN1L2V2ZW50b3MuaHRtbD9yPQ==', 'base64').toString('utf8');
+  const escapedPrefix = streamPrefix.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const streamRegex = new RegExp(`<a href="${escapedPrefix}([^"]+)"[^>]*>([\\s\\S]*?)</a>`, 'i');
+
   const matches = [];
   const parts = html.split('<li class="');
   let currentMatch = null;
@@ -47,7 +51,6 @@ function parseMatches(html) {
     if (type.startsWith('subitem')) {
       if (currentMatch) {
         // Parse stream link from this part
-        const streamRegex = /<a href="https:\/\/futbol-libres\.su\/eventos\.html\?r=([^"]+)"[^>]*>([\s\S]*?)<\/a>/i;
         const match = part.match(streamRegex);
         if (match) {
           const base64Url = match[1];
