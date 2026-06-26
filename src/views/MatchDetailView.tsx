@@ -2161,6 +2161,7 @@ export default function MatchDetailView() {
                     frameBorder="0"
                     className="absolute inset-0 w-full h-full"
                     allow="encrypted-media"
+                    referrerPolicy="no-referrer"
                   />
                 </div>
               )}
