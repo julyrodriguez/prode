@@ -1,6 +1,5 @@
 // Using native fetch from Node v22
 
-
 async function scrapeAgenda() {
   const url = Buffer.from('aHR0cHM6Ly9mdXRib2wtbGlicmVzLnN1L2FnZW5kYS8=', 'base64').toString('utf8');
   console.log(`Fetching agenda...`);
