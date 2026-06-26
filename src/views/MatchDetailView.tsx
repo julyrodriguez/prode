@@ -2090,29 +2090,9 @@ export default function MatchDetailView() {
       </div>
 
       {/* Reproductor de Streaming en Vivo */}
-      {subSection === 'resumen' && (
+      {subSection === 'resumen' && user && (
         <div className="w-full mb-4">
-          {!user ? (
-            <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 shadow-xl">
-              <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
-                <Tv className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-black uppercase tracking-wider text-slate-200">
-                  Transmisión en Vivo Restringida
-                </h3>
-                <p className="text-xs text-slate-400 max-w-sm">
-                  Debes iniciar sesión con tu cuenta para poder ver este partido en vivo gratis.
-                </p>
-              </div>
-              <button
-                onClick={() => router.push('/login')}
-                className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] border-0 cursor-pointer"
-              >
-                🔑 Iniciar Sesión
-              </button>
-            </div>
-          ) : loadingStreams ? (
+          {loadingStreams ? (
             <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-8 flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
               <span className="text-xs text-slate-400 font-bold uppercase tracking-wider animate-pulse">Buscando transmisiones en vivo...</span>
@@ -2171,7 +2151,7 @@ export default function MatchDetailView() {
                 </div>
               </div>
 
-              {/* Contenedor del Iframe */}
+              {/* Contenedor del Iframe (sin sandbox para evitar bloqueos del reproductor) */}
               {showPlayer && (
                 <div className="relative w-full aspect-video bg-black">
                   <iframe
@@ -2181,7 +2161,6 @@ export default function MatchDetailView() {
                     frameBorder="0"
                     className="absolute inset-0 w-full h-full"
                     allow="encrypted-media"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                   />
                 </div>
               )}
