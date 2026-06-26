@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles, Tv } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles, Tv, Play } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
 import TeamHoverCard from '../components/TeamHoverCard';
 import { elnineMappings } from '../lib/elnineMappings';
@@ -412,7 +412,7 @@ export default function MatchDetailView() {
   const [loadingStreams, setLoadingStreams] = useState<boolean>(false);
   const [allMatches, setAllMatches] = useState<any[]>([]);
   const [activeMatchTitle, setActiveMatchTitle] = useState<string | null>(null);
-  const [showPlayer, setShowPlayer] = useState<boolean>(true);
+  const [showPlayer, setShowPlayer] = useState<boolean>(false);
   const [showManualSelector, setShowManualSelector] = useState<boolean>(false);
   const [loadedMatchId, setLoadedMatchId] = useState<string | null>(null);
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
@@ -2100,6 +2100,27 @@ export default function MatchDetailView() {
               <div className="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
               <span className="text-xs text-slate-400 font-bold uppercase tracking-wider animate-pulse">Buscando transmisiones en vivo...</span>
             </div>
+          ) : !showPlayer ? (
+            /* Card/Banner premium para abrir la transmisión */
+            <div className="w-full bg-gradient-to-r from-slate-900 via-indigo-950/20 to-slate-900 border border-indigo-500/20 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl select-none">
+              <div className="flex items-center gap-3 text-left">
+                <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                  <Tv className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">¿Quieres ver el partido en vivo?</h4>
+                  <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
+                    {activeMatchTitle || (selectedStreamUrl ? 'Transmisión disponible' : 'Señales de transmisión disponibles')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPlayer(true)}
+                className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-indigo-600 hover:from-emerald-400 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] border-0 cursor-pointer w-full sm:w-auto shrink-0 flex items-center justify-center gap-1.5"
+              >
+                <Play className="w-3 h-3 fill-current animate-pulse text-emerald-300" /> Abrir Partido en Vivo
+              </button>
+            </div>
           ) : selectedStreamUrl ? (
             <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
               {/* Header de Streaming */}
@@ -2143,31 +2164,29 @@ export default function MatchDetailView() {
                     </div>
                   )}
 
-                  {/* Botón para contraer/expandir reproductor */}
+                  {/* Botón para cerrar reproductor */}
                   <button
-                    onClick={() => setShowPlayer(!showPlayer)}
-                    className="p-1 rounded-md border border-white/5 hover:bg-white/5 text-slate-400 hover:text-slate-200 cursor-pointer bg-transparent"
-                    title={showPlayer ? "Ocultar reproductor" : "Mostrar reproductor"}
+                    onClick={() => setShowPlayer(false)}
+                    className="p-1.5 rounded-md border border-red-500/20 hover:bg-red-500/10 text-red-400 hover:text-red-300 cursor-pointer bg-transparent border-0 flex items-center justify-center"
+                    title="Cerrar transmisión"
                   >
-                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showPlayer ? '' : 'rotate-180'}`} />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
               {/* Contenedor del Iframe (sin sandbox para evitar bloqueos del reproductor) */}
-              {showPlayer && (
-                <div className="relative w-full aspect-video bg-black">
-                  <iframe
-                    src={selectedStreamUrl}
-                    allowFullScreen
-                    scrolling="no"
-                    frameBorder="0"
-                    className="absolute inset-0 w-full h-full"
-                    allow="encrypted-media"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              )}
+              <div className="relative w-full aspect-video bg-black">
+                <iframe
+                  src={selectedStreamUrl}
+                  allowFullScreen
+                  scrolling="no"
+                  frameBorder="0"
+                  className="absolute inset-0 w-full h-full"
+                  allow="encrypted-media"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
             </div>
           ) : (
             /* Mostrar banner alternativo si no se encontró transmisión automáticamente */
@@ -2200,6 +2219,7 @@ export default function MatchDetailView() {
                             setSelectedStreamUrl(dsports ? dsports.streamUrl : m.streams[0].streamUrl);
                           }
                           setShowManualSelector(false);
+                          setShowPlayer(true); // Abre el reproductor al elegir el partido
                         }}
                         className="w-full text-left py-2 px-1 hover:bg-white/5 text-xs text-slate-300 font-semibold flex items-center justify-between border-0 cursor-pointer rounded bg-transparent"
                       >
