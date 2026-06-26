@@ -414,6 +414,7 @@ export default function MatchDetailView() {
   const [activeMatchTitle, setActiveMatchTitle] = useState<string | null>(null);
   const [showPlayer, setShowPlayer] = useState<boolean>(true);
   const [showManualSelector, setShowManualSelector] = useState<boolean>(false);
+  const [loadedMatchId, setLoadedMatchId] = useState<string | null>(null);
   const [matchPredictions, setMatchPredictions] = useState<any[]>([]);
   const [showAllPredictions, setShowAllPredictions] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -703,6 +704,7 @@ export default function MatchDetailView() {
   // Fetch stream links from futbol-libres agenda
   useEffect(() => {
     if (!match || !user) return;
+    if (loadedMatchId === id) return; // Prevent infinite reload cycle when match updates every 15s
     
     const hNameRaw = match?.homeTeam?.name || match?.home_team?.name || '';
     const aNameRaw = match?.awayTeam?.name || match?.away_team?.name || '';
@@ -720,6 +722,7 @@ export default function MatchDetailView() {
         const data = await res.json();
         
         if (isMounted && data.success) {
+          setLoadedMatchId(id); // Mark as loaded for this match ID
           setAllMatches(data.allMatches || []);
           if (data.matched) {
             const matchStreams = data.matched.streams || [];
@@ -773,7 +776,7 @@ export default function MatchDetailView() {
 
     fetchStreams();
     return () => { isMounted = false; };
-  }, [match, user]);
+  }, [match, user, loadedMatchId, id]);
 
   // Fetch H2H statistics
   useEffect(() => {
