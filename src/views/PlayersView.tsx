@@ -370,9 +370,17 @@ export default function PlayersView() {
         const selectionFlagText = p.selection ? removeAccents(p.selection.toLowerCase()) : '';
         const selectionFormattedText = p.selection ? removeAccents(formatSelectionName(p.selection).toLowerCase()) : '';
         
+        // Match Turkey variations
+        const isTurkeySearch = p.selection === 'turkey' && (
+          query.includes('turk') ||
+          query.includes('turqu') ||
+          query.includes('türk')
+        );
+
         return nameText.includes(query) || 
                selectionFlagText.includes(query) || 
-               selectionFormattedText.includes(query);
+               selectionFormattedText.includes(query) ||
+               isTurkeySearch;
       });
 
   // Fetch details for search results

@@ -17,7 +17,7 @@ const translateTeamToSpanish = (name: string): string => {
     'Colombia': 'Colombia', 'Chile': 'Chile', 'Peru': 'Perú', 'Paraguay': 'Paraguay',
     'Venezuela': 'Venezuela', 'Bolivia': 'Bolivia', 'Algeria': 'Argelia', 'Austria': 'Austria',
     'Egypt': 'Egipto', 'Sweden': 'Suecia', 'Norway': 'Noruega', 'Scotland': 'Escocia',
-    'Ireland': 'Irlanda', 'Greece': 'Grecia', 'Turkey': 'Turquía', 'Ukraine': 'Ucrania',
+    'Ireland': 'Irlanda', 'Greece': 'Grecia', 'Turkey': 'Turquía', 'Türkiye': 'Turquía', 'turquia': 'Turquía', 'Turquía': 'Turquía', 'turkia': 'Turquía', 'Turkia': 'Turquía', 'Ukraine': 'Ucrania',
     'Czech Republic': 'República Checa', 'Czechia': 'República Checa', 'Romania': 'Rumania',
     'Russia': 'Rusia', 'New Zealand': 'Nueva Zelanda', 'South Africa': 'Sudáfrica',
     'Panama': 'Panamá', 'Costa Rica': 'Costa Rica', 'Honduras': 'Honduras', 'El Salvador': 'El Salvador',

@@ -85,6 +85,11 @@ const translateTeamToSpanish = (name: string): string => {
     'Ireland': 'Irlanda',
     'Greece': 'Grecia',
     'Turkey': 'Turquía',
+    'Türkiye': 'Turquía',
+    'turquia': 'Turquía',
+    'Turquía': 'Turquía',
+    'turkia': 'Turquía',
+    'Turkia': 'Turquía',
     'Ukraine': 'Ucrania',
     'Czech Republic': 'República Checa',
     'Czechia': 'República Checa',
@@ -160,6 +165,7 @@ const isPlayerOfTeam = (playerSelection: string | null | undefined, teamName: st
   if (normTeam.includes(spaceSelection) || spaceSelection.includes(normTeam)) return true;
 
   const teamTranslations: Record<string, string[]> = {
+    'turkey': ['turquia', 'turkia', 'turkiye', 'turkey'],
     'saudi-arabia': ['arabia saudita', 'saudi arabia'],
     'south-korea': ['corea del sur', 'south korea', 'korea republic'],
     'netherlands': ['paises bajos', 'holanda', 'netherlands', 'holland'],
