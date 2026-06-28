@@ -959,6 +959,9 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
             <p className="text-sm font-semibold text-slate-300">
               <strong className="font-black text-white">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
               <strong className="font-black text-white">10 minutos antes</strong> del comienzo del partido.
+              <span className="block text-xs text-amber-400/90 mt-1 font-medium">
+                ⚠️ En los partidos de mata-mata la predicción abarca solo para los 90 minutos.
+              </span>
             </p>
           </div>
           {activeLeague.id === 'mundial' && (
