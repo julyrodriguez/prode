@@ -961,10 +961,6 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
                 <strong className="font-black text-white">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
                 <strong className="font-black text-white">10 minutos antes</strong> del comienzo del partido.
               </p>
-              <p className="text-[11px] sm:text-xs text-amber-400 font-bold leading-normal flex items-start gap-1">
-                <span className="shrink-0">⚠️</span>
-                <span>En los partidos de mata-mata la predicción abarca solo para los 90 minutos.</span>
-              </p>
             </div>
           </div>
           {activeLeague.id === 'mundial' && (
@@ -976,6 +972,16 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
               <span>Ir al Simulador</span>
             </button>
           )}
+        </div>
+      )}
+
+      {/* 90-minute limit knockout banner */}
+      {isPredictionMode && (
+        <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl px-4 py-3 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+          <span className="text-lg shrink-0">⚠️</span>
+          <p className="text-xs sm:text-sm font-black text-amber-400 leading-normal">
+            En los partidos de mata-mata la predicción abarca solo los 90 minutos reglamentarios.
+          </p>
         </div>
       )}
 
