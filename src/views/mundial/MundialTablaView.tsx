@@ -391,12 +391,13 @@ export default function MundialTablaView() {
       return { name: cleanLabel, isReal: false };
     }
 
-    const sWinnerIdx = sourceMatch.winner;
-    const hasWinner = sWinnerIdx === 0 || sWinnerIdx === 1;
+    const sWinnerVal = sourceMatch.winner;
+    const hasWinner = sWinnerVal === 1 || sWinnerVal === 2;
 
     if (hasWinner) {
-      const winnerPart = sourceMatch.participants?.[sWinnerIdx];
-      const loserPart = sourceMatch.participants?.[1 - sWinnerIdx];
+      const winnerIdx = sWinnerVal - 1;
+      const winnerPart = sourceMatch.participants?.[winnerIdx];
+      const loserPart = sourceMatch.participants?.[1 - winnerIdx];
       
       if (type === 'winner' && winnerPart) {
         return resolveParticipantName(winnerPart, stagesList);
@@ -695,8 +696,8 @@ export default function MundialTablaView() {
                             const hasId = localId !== null;
                             const tooltipText = resolved.isReal ? pName : getContestantsLabel(p, stages);
 
-                            const isWinner = match.winner === pIdx || (hasId && match.winner === localId);
-                            const isLoser = match.winner !== -1 && !isWinner;
+                            const isWinner = match.winner === pIdx + 1;
+                            const isLoser = (match.winner === 1 || match.winner === 2) && !isWinner;
                             const score = match.score && match.score.length > pIdx ? match.score[pIdx] : null;
 
                             return (
@@ -706,9 +707,9 @@ export default function MundialTablaView() {
                                 title={tooltipText}
                                 className={`flex items-center justify-between p-0.5 md:p-1 rounded transition-all ${
                                   hasId ? 'cursor-pointer hover:bg-white/5' : ''
-                                } ${
-                                  isWinner ? 'bg-amber-500/10 text-white font-bold' : 'text-slate-350'
-                                } ${isLoser ? 'opacity-40' : ''}`}
+                                }  ${
+                                  isWinner ? 'bg-amber-500/10 text-white font-bold border border-amber-500/20 shadow-[inset_0_0_8px_rgba(245,158,11,0.1)]' : 'text-slate-350 border border-transparent'
+                                } ${isLoser ? 'opacity-35' : ''}`}
                               >
                                 <div className="flex items-center gap-1 md:gap-1.5 min-w-0 flex-grow pr-1">
                                   <div className="w-4 h-4 md:w-4.5 md:h-4.5 flex-shrink-0 bg-white/5 rounded-full border border-white/5 flex items-center justify-center overflow-hidden">

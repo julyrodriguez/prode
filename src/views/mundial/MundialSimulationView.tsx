@@ -832,7 +832,9 @@ export default function MundialSimulationView() {
                     {/* Home Team */}
                     <div
                       onClick={() => selectWinner(m.key, m.home)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.home.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
@@ -841,7 +843,9 @@ export default function MundialSimulationView() {
                     {/* Away Team */}
                     <div
                       onClick={() => selectWinner(m.key, m.away)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.away.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
@@ -862,7 +866,9 @@ export default function MundialSimulationView() {
                   <div key={m.key} className="flex flex-col bg-black/40 border border-white/5 rounded-xl overflow-hidden text-xs shadow-md">
                     <div
                       onClick={() => selectWinner(m.key, m.home)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.home.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
@@ -870,7 +876,9 @@ export default function MundialSimulationView() {
                     </div>
                     <div
                       onClick={() => selectWinner(m.key, m.away)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.away.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
@@ -891,7 +899,9 @@ export default function MundialSimulationView() {
                   <div key={m.key} className="flex flex-col bg-black/40 border border-white/5 rounded-xl overflow-hidden text-xs shadow-md">
                     <div
                       onClick={() => selectWinner(m.key, m.home)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.home.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
@@ -899,7 +909,9 @@ export default function MundialSimulationView() {
                     </div>
                     <div
                       onClick={() => selectWinner(m.key, m.away)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.away.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
@@ -920,7 +932,9 @@ export default function MundialSimulationView() {
                   <div key={m.key} className="flex flex-col bg-black/40 border border-white/5 rounded-xl overflow-hidden text-xs shadow-md">
                     <div
                       onClick={() => selectWinner(m.key, m.home)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.home.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.home.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.home.name}</span>
@@ -928,7 +942,9 @@ export default function MundialSimulationView() {
                     </div>
                     <div
                       onClick={() => selectWinner(m.key, m.away)}
-                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                      className={`px-3 py-2.5 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${
+                        m.winner?.id === m.away.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                      } ${m.winner && m.winner.id > 0 && m.winner.id !== m.away.id ? 'opacity-35' : ''}`}
                     >
                       <img src={`/escudos/${m.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                       <span className="font-extrabold truncate flex-1">{m.away.name}</span>
@@ -949,7 +965,9 @@ export default function MundialSimulationView() {
                 <div className="flex flex-col bg-black/40 border border-amber-500/20 rounded-xl overflow-hidden text-xs shadow-lg">
                   <div
                     onClick={() => selectWinner(finalMatchResolved.key, finalMatchResolved.home)}
-                    className={`px-3 py-3 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${finalMatchResolved.winner?.id === finalMatchResolved.home.id ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-slate-300'}`}
+                    className={`px-3 py-3 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${
+                      finalMatchResolved.winner?.id === finalMatchResolved.home.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                    } ${finalMatchResolved.winner && finalMatchResolved.winner.id > 0 && finalMatchResolved.winner.id !== finalMatchResolved.home.id ? 'opacity-35' : ''}`}
                   >
                     <img src={`/escudos/${finalMatchResolved.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{finalMatchResolved.home.name}</span>
@@ -957,7 +975,9 @@ export default function MundialSimulationView() {
                   </div>
                   <div
                     onClick={() => selectWinner(finalMatchResolved.key, finalMatchResolved.away)}
-                    className={`px-3 py-3 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${finalMatchResolved.winner?.id === finalMatchResolved.away.id ? 'bg-amber-500/10 text-amber-400 font-bold' : 'text-slate-300'}`}
+                    className={`px-3 py-3 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${
+                      finalMatchResolved.winner?.id === finalMatchResolved.away.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                    } ${finalMatchResolved.winner && finalMatchResolved.winner.id > 0 && finalMatchResolved.winner.id !== finalMatchResolved.away.id ? 'opacity-35' : ''}`}
                   >
                     <img src={`/escudos/${finalMatchResolved.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{finalMatchResolved.away.name}</span>
@@ -974,14 +994,18 @@ export default function MundialSimulationView() {
                 <div className="flex flex-col bg-black/40 border border-white/5 rounded-xl overflow-hidden text-xs shadow-md">
                   <div
                     onClick={() => selectWinner(thirdPlaceMatchResolved.key, thirdPlaceMatchResolved.home)}
-                    className={`px-3 py-2 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${thirdPlaceMatchResolved.winner?.id === thirdPlaceMatchResolved.home.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                    className={`px-3 py-2 flex items-center gap-2 cursor-pointer border-b border-white/5 transition-all hover:bg-white/5 ${
+                      thirdPlaceMatchResolved.winner?.id === thirdPlaceMatchResolved.home.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                    } ${thirdPlaceMatchResolved.winner && thirdPlaceMatchResolved.winner.id > 0 && thirdPlaceMatchResolved.winner.id !== thirdPlaceMatchResolved.home.id ? 'opacity-35' : ''}`}
                   >
                     <img src={`/escudos/${thirdPlaceMatchResolved.home.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{thirdPlaceMatchResolved.home.name}</span>
                   </div>
                   <div
                     onClick={() => selectWinner(thirdPlaceMatchResolved.key, thirdPlaceMatchResolved.away)}
-                    className={`px-3 py-2 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${thirdPlaceMatchResolved.winner?.id === thirdPlaceMatchResolved.away.id ? 'bg-amber-500/10 text-amber-400' : 'text-slate-300'}`}
+                    className={`px-3 py-2 flex items-center gap-2 cursor-pointer transition-all hover:bg-white/5 ${
+                      thirdPlaceMatchResolved.winner?.id === thirdPlaceMatchResolved.away.id ? 'bg-amber-500/10 text-amber-400 font-bold border-l-2 border-l-amber-500' : 'text-slate-300 border-l-2 border-l-transparent'
+                    } ${thirdPlaceMatchResolved.winner && thirdPlaceMatchResolved.winner.id > 0 && thirdPlaceMatchResolved.winner.id !== thirdPlaceMatchResolved.away.id ? 'opacity-35' : ''}`}
                   >
                     <img src={`/escudos/${thirdPlaceMatchResolved.away.id}.png`} alt="" className="w-4 h-4 object-contain shrink-0" onError={(e) => { e.currentTarget.src = '/football2.png' }} />
                     <span className="font-extrabold truncate flex-1">{thirdPlaceMatchResolved.away.name}</span>
