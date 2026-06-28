@@ -977,7 +977,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
       {/* 90-minute limit knockout banner */}
       {isPredictionMode && (
-        <div className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/25 rounded-2xl px-4 py-3 animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+        <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md border border-amber-500/40 rounded-2xl px-4 py-3 animate-pulse shadow-[0_0_20px_rgba(245,158,11,0.2)]">
           <span className="text-lg shrink-0">⚠️</span>
           <p className="text-xs sm:text-sm font-black text-amber-400 leading-normal">
             En los partidos de mata-mata la predicción abarca solo los 90 minutos reglamentarios.
