@@ -60,7 +60,7 @@ function getPointsForPrediction(
   const multiplier = esArgentina ? 2 : 1;
 
   if (tournamentId === 16) {
-    const stage = (match?.stage || match?.round_name || '').toLowerCase();
+    const stage = (match?.stage || match?.round_name || pred?.stage || pred?.round_name || '').toLowerCase();
     const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
 
     // Group stage detection

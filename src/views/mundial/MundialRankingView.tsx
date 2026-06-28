@@ -132,6 +132,8 @@ function getPointsForPrediction(
       match?.roundInfo?.slug || 
       match?.round_name || 
       match?.stage || 
+      pred?.stage ||
+      pred?.round_name ||
       ""
     ).toLowerCase();
 

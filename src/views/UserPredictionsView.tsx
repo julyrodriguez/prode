@@ -18,6 +18,8 @@ interface Prediction {
   equipoVisita: string;
   golesRealesLocal: number;
   golesRealesVisita: number;
+  stage?: string;
+  round_name?: string;
 }
 
 function getResult(pred: Prediction): 'exact' | 'tendency' | 'wrong' {
@@ -40,7 +42,7 @@ function getPointsForPrediction(
 
   if (tournamentId === 16) {
     // Mundial (tournamentId 16) rules:
-    const stage = (match?.stage || match?.round_name || '').toLowerCase();
+    const stage = (match?.stage || match?.round_name || pred.stage || pred.round_name || '').toLowerCase();
     const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
 
     // Group stage detection:
