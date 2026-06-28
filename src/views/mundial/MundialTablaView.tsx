@@ -377,6 +377,61 @@ export default function MundialTablaView() {
     return null;
   };
 
+  const matchPairings: Record<number, number> = {
+    // 16avos to Octavos
+    73: 75, 75: 73,
+    74: 77, 77: 74,
+    76: 78, 78: 76,
+    79: 80, 80: 79,
+    81: 82, 82: 81,
+    83: 84, 84: 83,
+    85: 87, 87: 85,
+    86: 88, 88: 86,
+
+    // Octavos to Cuartos
+    89: 90, 90: 89,
+    91: 92, 92: 91,
+    93: 94, 94: 93,
+    95: 96, 96: 95,
+
+    // Cuartos to Semis
+    97: 98, 98: 97,
+    99: 100, 100: 99,
+
+    // Semis to Final
+    101: 102, 102: 101,
+  };
+
+  const resolveMatchParticipants = (match: any, stagesList: any[]): [{ name: string; isReal: boolean }, { name: string; isReal: boolean }] => {
+    const p0 = match?.participants?.[0];
+    const p1 = match?.participants?.[1];
+
+    let r0 = p0 ? resolveParticipantName(p0, stagesList) : { name: '', isReal: false };
+    let r1 = p1 ? resolveParticipantName(p1, stagesList) : { name: '', isReal: false };
+
+    if (r0 && r1 && r0.name === r1.name && r0.name !== '' && r0.isReal && r1.isReal) {
+      const name0 = p0?.nombre || p0?.name || '';
+      const name1 = p1?.nombre || p1?.name || '';
+
+      const parsed0 = parseMatchNumber(name0);
+      const parsed1 = parseMatchNumber(name1);
+
+      if (parsed0 && !parsed1) {
+        const pairedNum = matchPairings[parsed0.num];
+        if (pairedNum) {
+          r1 = resolveParticipantName({ name: `Ganador del partido ${pairedNum}` }, stagesList);
+        }
+      } else if (!parsed0 && parsed1) {
+        const pairedNum = matchPairings[parsed1.num];
+        if (pairedNum) {
+          r0 = resolveParticipantName({ name: `Ganador del partido ${pairedNum}` }, stagesList);
+        }
+      }
+    }
+
+    return [r0, r1];
+  };
+
   const resolveParticipantName = (p: any, stagesList: any[]): { name: string; isReal: boolean } => {
     const name = p.nombre || p.name || '';
     const parsed = parseMatchNumber(name);
@@ -671,26 +726,29 @@ export default function MundialTablaView() {
                   
                   {/* min-h-0 on mobile keeps semifinal/final compact, while md:min-h-[850px] spaces stages vertically for horizontal alignment */}
                   <div className="flex flex-col justify-around flex-grow min-h-0 md:min-h-[850px] relative gap-1.5 md:gap-2.5 p-1.5 bg-slate-900/10 border border-white/[0.02] rounded-xl shadow-inner">
-                    {stage.groups?.map((match: any, idx: number) => (
-                      <div 
-                        key={idx}
-                        className="bg-[#0b1015]/85 border border-white/5 hover:border-amber-500/20 transition-all duration-300 rounded-lg p-1.5 md:p-2 flex flex-col gap-1 shadow-md w-full relative group"
-                      >
-                        {match.games && match.games[0]?.start_time && (
-                          <div className="text-[7px] md:text-[8px] font-black text-slate-500 tracking-wider uppercase flex justify-between items-center px-0.5 border-b border-white/5 pb-0.5">
-                            <span>
-                              {stageIdx === 4 
-                                ? (idx === 0 ? '🏆 Gran Final' : '🥉 Tercer Puesto') 
-                                : `Partido ${idx + 1}`
-                              }
-                            </span>
-                            <span className="text-amber-500/80">{match.games[0].start_time.split(' ')[0]}</span>
-                          </div>
-                        )}
+                    {stage.groups?.map((match: any, idx: number) => {
+                      const resolvedPair = resolveMatchParticipants(match, stages);
+                      
+                      return (
+                        <div 
+                          key={idx}
+                          className="bg-[#0b1015]/85 border border-white/5 hover:border-amber-500/20 transition-all duration-300 rounded-lg p-1.5 md:p-2 flex flex-col gap-1 shadow-md w-full relative group"
+                        >
+                          {match.games && match.games[0]?.start_time && (
+                            <div className="text-[7px] md:text-[8px] font-black text-slate-500 tracking-wider uppercase flex justify-between items-center px-0.5 border-b border-white/5 pb-0.5">
+                              <span>
+                                {stageIdx === 4 
+                                  ? (idx === 0 ? '🏆 Gran Final' : '🥉 Tercer Puesto') 
+                                  : `Partido ${idx + 1}`
+                                }
+                              </span>
+                              <span className="text-amber-500/80">{match.games[0].start_time.split(' ')[0]}</span>
+                            </div>
+                          )}
 
-                        <div className="flex flex-col gap-0.5 md:gap-1">
-                          {match.participants?.map((p: any, pIdx: number) => {
-                            const resolved = resolveParticipantName(p, stages);
+                          <div className="flex flex-col gap-0.5 md:gap-1">
+                            {match.participants?.map((p: any, pIdx: number) => {
+                              const resolved = resolvedPair[pIdx] || resolveParticipantName(p, stages);
                             const pName = resolved.name;
                             const localId = resolved.isReal ? getTeamIdByName(pName) : null;
                             const hasId = localId !== null;
@@ -744,8 +802,9 @@ export default function MundialTablaView() {
                             );
                           })}
                         </div>
-                      </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
