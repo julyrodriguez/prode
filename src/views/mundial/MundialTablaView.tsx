@@ -363,16 +363,24 @@ export default function MundialTablaView() {
   const getMatchByNumber = (stagesList: any[], num: number): any | null => {
     if (!stagesList) return null;
     if (num >= 73 && num <= 88) {
-      return stagesList[0]?.groups?.[num - 73] || null;
+      const stage0Map = [2, 8, 0, 3, 9, 1, 10, 11, 7, 6, 5, 4, 14, 13, 12, 15];
+      const idx = stage0Map[num - 73];
+      return idx !== undefined ? stagesList[0]?.groups?.[idx] || null : null;
     }
     if (num >= 89 && num <= 96) {
-      return stagesList[1]?.groups?.[num - 89] || null;
+      const stage1Map = [1, 0, 4, 5, 2, 3, 6, 7];
+      const idx = stage1Map[num - 89];
+      return idx !== undefined ? stagesList[1]?.groups?.[idx] || null : null;
     }
     if (num >= 97 && num <= 100) {
-      return stagesList[2]?.groups?.[num - 97] || null;
+      const stage2Map = [0, 1, 2, 3];
+      const idx = stage2Map[num - 97];
+      return idx !== undefined ? stagesList[2]?.groups?.[idx] || null : null;
     }
     if (num >= 101 && num <= 102) {
-      return stagesList[3]?.groups?.[num - 101] || null;
+      const stage3Map = [0, 1];
+      const idx = stage3Map[num - 101];
+      return idx !== undefined ? stagesList[3]?.groups?.[idx] || null : null;
     }
     return null;
   };
