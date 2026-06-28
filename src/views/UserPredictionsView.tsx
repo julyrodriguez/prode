@@ -20,6 +20,7 @@ interface Prediction {
   golesRealesVisita: number;
   stage?: string;
   round_name?: string;
+  pointsEarned?: number | null;
 }
 
 function getResult(pred: Prediction): 'exact' | 'tendency' | 'wrong' {
@@ -383,7 +384,10 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
       const r = getResult(p);
       acc[r]++;
       const match = matchesMap.get(Number(p.matchId));
-      acc.pts += getPointsForPrediction(p, match, tournament.tournamentId, r);
+      const pts = (p.pointsEarned !== undefined && p.pointsEarned !== null)
+        ? p.pointsEarned
+        : getPointsForPrediction(p, match, tournament.tournamentId, r);
+      acc.pts += pts;
       return acc;
     },
     { exact: 0, tendency: 0, wrong: 0, pts: 0 }
@@ -774,7 +778,9 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                 const match = matchesMap.get(Number(pred.matchId));
                 const hLogo = getTeamLogo(match, 'home');
                 const aLogo = getTeamLogo(match, 'away');
-                const ptsObtenidos = getPointsForPrediction(pred, match, tournament.tournamentId, result);
+                const ptsObtenidos = (pred.pointsEarned !== undefined && pred.pointsEarned !== null)
+                  ? pred.pointsEarned
+                  : getPointsForPrediction(pred, match, tournament.tournamentId, result);
                 
                 const date = new Date(pred.fechaUnix * 1000);
                 const dateStr = date.toLocaleDateString('es-ES', {
