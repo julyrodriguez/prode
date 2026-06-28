@@ -169,7 +169,7 @@ export default function RankingView() {
     matches.forEach(m => {
       const mId = m.id !== undefined ? m.id : m._id;
       if (mId !== undefined) {
-        allMatchesMap.set(mId, m);
+        allMatchesMap.set(Number(mId), m);
       }
     });
 
@@ -220,7 +220,7 @@ export default function RankingView() {
           const pred = uPredMap.get(matchInfo.matchId);
           if (pred) {
             const result = getResult(pred);
-            const matchDetail = allMatchesMap.get(matchInfo.matchId);
+            const matchDetail = allMatchesMap.get(Number(matchInfo.matchId));
             const points = getPointsForPrediction(pred, matchDetail, selectedLeague.tournamentId, result);
             userState.points += points;
             if (result === 'exact') {

@@ -371,7 +371,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
   matches.forEach((m) => {
     const mId = m.id !== undefined ? m.id : m._id;
     if (mId !== undefined) {
-      matchesMap.set(mId, m);
+      matchesMap.set(Number(mId), m);
     }
   });
 
@@ -380,7 +380,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
     (acc, p) => {
       const r = getResult(p);
       acc[r]++;
-      const match = matchesMap.get(p.matchId);
+      const match = matchesMap.get(Number(p.matchId));
       acc.pts += getPointsForPrediction(p, match, tournament.tournamentId, r);
       return acc;
     },
@@ -769,7 +769,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
               {filteredPredictions.map((pred) => {
                 const result = getResult(pred);
                 const cfg = resultConfig[result];
-                const match = matchesMap.get(pred.matchId);
+                const match = matchesMap.get(Number(pred.matchId));
                 const hLogo = getTeamLogo(match, 'home');
                 const aLogo = getTeamLogo(match, 'away');
                 const ptsObtenidos = getPointsForPrediction(pred, match, tournament.tournamentId, result);

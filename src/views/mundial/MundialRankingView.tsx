@@ -249,7 +249,7 @@ export default function MundialRankingView() {
     matches.forEach(m => {
       const mId = m.id !== undefined ? m.id : m._id;
       if (mId !== undefined) {
-        allMatchesMap.set(mId, m);
+        allMatchesMap.set(Number(mId), m);
       }
     });
 
@@ -299,10 +299,10 @@ export default function MundialRankingView() {
       userStates.forEach(userState => {
         const uPredMap = userPredsMap.get(userState.userId);
         if (uPredMap) {
-          const pred = uPredMap.get(matchInfo.matchId);
+          const pred = uPredMap.get(Number(matchInfo.matchId));
           if (pred) {
             const result = getResult(pred);
-            const matchDetail = allMatchesMap.get(matchInfo.matchId);
+            const matchDetail = allMatchesMap.get(Number(matchInfo.matchId));
             const points = getPointsForPrediction(pred, matchDetail, tournamentId, result);
             userState.points += points;
             if (result === 'exact') {
@@ -531,7 +531,7 @@ export default function MundialRankingView() {
     liveMatches.forEach(m => {
       const mId = m.id !== undefined ? m.id : m._id;
       if (mId !== undefined) {
-        liveMatchesMap.set(mId, m);
+        liveMatchesMap.set(Number(mId), m);
       }
     });
 
@@ -543,7 +543,7 @@ export default function MundialRankingView() {
       let extraTendencies = 0;
 
       preds.forEach(pred => {
-        const match = liveMatchesMap.get(pred.matchId);
+        const match = liveMatchesMap.get(Number(pred.matchId));
         if (match) {
           const result = getPredictionResult(pred, match);
           if (result && result !== 'wrong') {
@@ -594,7 +594,7 @@ export default function MundialRankingView() {
     liveMatches.forEach(m => {
       const mId = m.id !== undefined ? m.id : m._id;
       if (mId !== undefined) {
-        liveMatchesMap.set(mId, m);
+        liveMatchesMap.set(Number(mId), m);
       }
     });
 
@@ -610,7 +610,7 @@ export default function MundialRankingView() {
       let extraPreds = 0;
 
       preds.forEach(pred => {
-        const match = liveMatchesMap.get(pred.matchId);
+        const match = liveMatchesMap.get(Number(pred.matchId));
         if (match) {
           const result = getPredictionResult(pred, match);
           if (result) {
