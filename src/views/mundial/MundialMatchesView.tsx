@@ -953,21 +953,24 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
       {/* Prediction mode banner */}
       {isPredictionMode && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/20 backdrop-blur-sm border border-white/5 rounded-2xl p-4">
-          <div className="flex items-center gap-3">
-            <span className="text-lg">🔒</span>
-            <p className="text-sm font-semibold text-slate-300">
-              <strong className="font-black text-white">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
-              <strong className="font-black text-white">10 minutos antes</strong> del comienzo del partido.
-              <span className="block text-xs text-amber-400/90 mt-1 font-medium">
-                ⚠️ En los partidos de mata-mata la predicción abarca solo para los 90 minutos.
-              </span>
-            </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-black/20 backdrop-blur-sm border border-white/5 rounded-2xl p-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <span className="text-lg leading-none mt-0.5 shrink-0">🔒</span>
+            <div className="flex flex-col gap-1 min-w-0">
+              <p className="text-xs sm:text-sm font-semibold text-slate-300 leading-relaxed">
+                <strong className="font-black text-white">Regla:</strong> Los pronósticos se bloquean automáticamente{' '}
+                <strong className="font-black text-white">10 minutos antes</strong> del comienzo del partido.
+              </p>
+              <p className="text-[11px] sm:text-xs text-amber-400 font-bold leading-normal flex items-start gap-1">
+                <span className="shrink-0">⚠️</span>
+                <span>En los partidos de mata-mata la predicción abarca solo para los 90 minutos.</span>
+              </p>
+            </div>
           </div>
           {activeLeague.id === 'mundial' && (
             <button
               onClick={() => router.push('/liga/mundial/simulacion')}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-sm shadow-[0_4px_15px_rgba(99,102,241,0.3)] transition-all duration-150 active:scale-95 shrink-0 self-start sm:self-auto"
+              className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold text-xs sm:text-sm shadow-[0_4px_15px_rgba(99,102,241,0.3)] transition-all duration-150 active:scale-95 shrink-0 self-stretch sm:self-auto text-center"
             >
               <span>🪄</span>
               <span>Ir al Simulador</span>
