@@ -3013,8 +3013,6 @@ export default function MatchDetailView() {
           }
         };
 
-        const homeClean = normalizeString(match.home_team?.name || match.homeTeam?.name || '');
-        
         return (
           <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 shadow-lg h-fit">
             <div className="flex flex-row items-center justify-between border-b border-white/5 pb-2">
@@ -3066,8 +3064,7 @@ export default function MatchDetailView() {
                 </thead>
                 <tbody className="divide-y divide-white/[0.02]">
                   {displayedPlayers.map((player: any, pIdx: number) => {
-                    const playerFlagClean = normalizeString(player.countryFlag || '');
-                    const isHomeTeam = homeClean.includes(playerFlagClean) || playerFlagClean.includes(homeClean);
+                    const isHomeTeam = isPlayerOfTeam(player.countryFlag, hName);
 
                     return (
                       <tr 
