@@ -201,8 +201,8 @@ const getMatchTime = (match: Match) => {
   if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ET';
   if (statusDesc?.includes('1st') || statusDesc?.includes('first')) return 'PRIMER TIEMPO';
   if (statusDesc?.includes('2nd') || statusDesc?.includes('second')) return 'SEGUNDO TIEMPO';
-  if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
   if (statusDesc === 'ap' || statusDesc?.includes('pen')) return 'PENALES';
+  if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
   const original = typeof match.status === 'object' ? match.status?.description : match.status;
   if (!original) return 'EN VIVO';
   const origStr = String(original).trim();

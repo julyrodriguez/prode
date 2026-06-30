@@ -1823,8 +1823,8 @@ export default function MatchDetailView() {
     }
     if (desc?.includes('1st') || desc?.includes('first')) return 'PRIMER TIEMPO';
     if (desc?.includes('2nd') || desc?.includes('second')) return 'SEGUNDO TIEMPO';
-    if (desc === 'aet' || desc?.includes('extra')) return 'TIEMPO EXTRA';
     if (desc === 'ap' || desc?.includes('pen')) return 'PENALES';
+    if (desc === 'aet' || desc?.includes('extra')) return 'TIEMPO EXTRA';
 
     return statusDesc ? String(statusDesc).toUpperCase() : 'EN VIVO';
   };

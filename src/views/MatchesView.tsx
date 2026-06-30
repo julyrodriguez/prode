@@ -383,8 +383,8 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
     if (statusDesc?.includes('2nd') || statusDesc?.includes('second')) {
       return 'SEGUNDO TIEMPO';
     }
-    if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
     if (statusDesc === 'ap' || statusDesc?.includes('pen')) return 'PENALES';
+    if (statusDesc === 'aet' || statusDesc?.includes('extra')) return 'TIEMPO EXTRA';
 
     const original = typeof match.status === 'object' ? match.status?.description : match.status;
     if (!original) return 'EN VIVO';
