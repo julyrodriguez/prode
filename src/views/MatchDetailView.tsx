@@ -1777,12 +1777,21 @@ export default function MatchDetailView() {
   }
 
   let matchEndText = '';
-  if (statusType === 'finished' && statusDesc === 'AP') {
-    const penInc = match.incidents?.slice().reverse().find((inc: any) => inc.text === 'PEN' && inc.incidentType === 'period');
-    if (penInc && penInc.homeScore !== undefined) {
-      matchEndText = `Penales (${penInc.homeScore} - ${penInc.awayScore})`;
+  const hPen = match.homeScore?.penalties;
+  const aPen = match.awayScore?.penalties;
+  const hasPenalties = hPen !== undefined && aPen !== undefined;
+
+  if (statusType === 'finished' && (statusDesc === 'AP' || statusDesc?.toLowerCase().includes('penalt') || statusDesc?.toLowerCase().includes('penales') || statusDesc?.toLowerCase().includes('penalties'))) {
+    if (hasPenalties) {
+      matchEndText = `Penales (${hPen} - ${aPen})`;
     } else {
-      matchEndText = 'Penales';
+      // Fallback: buscar en incidents
+      const penInc = match.incidents?.slice().reverse().find((inc: any) => inc.text === 'PEN' && inc.incidentType === 'period');
+      if (penInc && penInc.homeScore !== undefined) {
+        matchEndText = `Penales (${penInc.homeScore} - ${penInc.awayScore})`;
+      } else {
+        matchEndText = 'Penales';
+      }
     }
   }
 
@@ -2015,9 +2024,15 @@ export default function MatchDetailView() {
             {hasStarted && statusType !== 'canceled' ? (
               <div className="flex flex-col items-center">
                 <div className="flex items-center gap-2 md:gap-4 text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-black font-mono tracking-tighter text-white drop-shadow-2xl">
-                  <span>{hScore}</span>
+                  <div className="flex flex-col items-end">
+                    {hasPenalties && <span className="text-[11px] sm:text-base md:text-xl text-slate-400 font-bold leading-none mb-0.5 md:mb-1">({hPen})</span>}
+                    <span>{hScore}</span>
+                  </div>
                   <span className="text-slate-600 text-xl sm:text-3xl mb-1 md:mb-3 font-sans select-none">-</span>
-                  <span>{aScore}</span>
+                  <div className="flex flex-col items-start">
+                    {hasPenalties && <span className="text-[11px] sm:text-base md:text-xl text-slate-400 font-bold leading-none mb-0.5 md:mb-1">({aPen})</span>}
+                    <span>{aScore}</span>
+                  </div>
                 </div>
                 {matchEndText && (
                   <span className="text-emerald-400 font-bold text-[9px] sm:text-xs uppercase tracking-widest mt-0.5 md:mt-1 mb-1 md:mb-2 drop-shadow-md text-center max-w-[100px] sm:max-w-none truncate">
@@ -2383,6 +2398,86 @@ export default function MatchDetailView() {
                       <div className="flex flex-col items-start text-left min-w-0">
                         <span className="text-[10px] sm:text-xs font-semibold text-slate-200 group-hover:text-indigo-300 transition-colors leading-tight truncate max-w-[95px] xs:max-w-[140px] sm:max-w-xs">{title}</span>
                         {detail && <span className="text-[8px] sm:text-[10px] text-slate-500 leading-tight truncate max-w-[95px] xs:max-w-[140px] sm:max-w-xs">{detail}</span>}
+                      </div>
+                    </div>
+                  ) : <div />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Tanda de Penales – desde penaltiesShootout (Promiedos) */}
+      {subSection === 'resumen' && match.penaltiesShootout && match.penaltiesShootout.length > 0 && (
+        <div className="w-full bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
+          {/* Cabecera */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/5">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🥅</span>
+              <span className="text-[11px] font-black text-slate-200 uppercase tracking-wider">Tanda de Penales</span>
+            </div>
+            <div className="flex gap-4 text-[9px] font-bold uppercase tracking-widest">
+              <span className="text-emerald-400 truncate max-w-[80px]" title={hName}>{hName}</span>
+              <span className="text-slate-500">vs</span>
+              <span className="text-indigo-400 truncate max-w-[80px]" title={aName}>{aName}</span>
+            </div>
+          </div>
+
+          {/* Score total de penales */}
+          {hasPenalties && (
+            <div className="flex items-center justify-center gap-3 py-2 border-b border-white/[0.04] bg-white/[0.015]">
+              <span className={`text-xl font-black font-mono ${hPen > aPen ? 'text-emerald-400' : 'text-slate-400'}`}>{hPen}</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Penales</span>
+              <span className={`text-xl font-black font-mono ${aPen > hPen ? 'text-indigo-400' : 'text-slate-400'}`}>{aPen}</span>
+            </div>
+          )}
+
+          {/* Lista de tiros por ronda */}
+          <div className="divide-y divide-white/[0.03] w-full pb-2">
+            {Array.from(new Set(match.penaltiesShootout.map((s: any) => s.round))).map((round: any) => {
+              const roundShots = match.penaltiesShootout.filter((s: any) => s.round === round);
+              const homeShot = roundShots.find((s: any) => s.isHome);
+              const awayShot = roundShots.find((s: any) => !s.isHome);
+              return (
+                <div key={round} className="grid grid-cols-[1fr_32px_1fr] items-center px-2 py-1.5 hover:bg-white/[0.02] transition-colors">
+                  {/* LOCAL */}
+                  {homeShot ? (
+                    <div className="flex items-center justify-end gap-1.5 pr-1.5 min-w-0">
+                      <div className="flex flex-col items-end text-right min-w-0">
+                        <span className={`text-[10px] sm:text-xs font-semibold leading-tight truncate max-w-[110px] sm:max-w-xs ${homeShot.scored ? 'text-emerald-300' : 'text-red-300'}`}>
+                          {homeShot.player}
+                        </span>
+                      </div>
+                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs shrink-0 ${
+                        homeShot.scored
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                          : 'bg-red-500/10 border-red-500/30 text-red-300'
+                      }`}>
+                        {homeShot.scored ? '⚽' : '❌'}
+                      </div>
+                    </div>
+                  ) : <div />}
+
+                  {/* CENTRO: número de ronda */}
+                  <div className="flex items-center justify-center shrink-0">
+                    <span className="text-[10px] font-black text-slate-500">{round}</span>
+                  </div>
+
+                  {/* VISITANTE */}
+                  {awayShot ? (
+                    <div className="flex items-center justify-start gap-1.5 pl-1.5 min-w-0">
+                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-xs shrink-0 ${
+                        awayShot.scored
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+                          : 'bg-red-500/10 border-red-500/30 text-red-300'
+                      }`}>
+                        {awayShot.scored ? '⚽' : '❌'}
+                      </div>
+                      <div className="flex flex-col items-start text-left min-w-0">
+                        <span className={`text-[10px] sm:text-xs font-semibold leading-tight truncate max-w-[110px] sm:max-w-xs ${awayShot.scored ? 'text-emerald-300' : 'text-red-300'}`}>
+                          {awayShot.player}
+                        </span>
                       </div>
                     </div>
                   ) : <div />}
