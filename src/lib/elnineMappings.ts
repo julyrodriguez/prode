@@ -8,6 +8,7 @@ export const elnineMappings: Record<string, string> = {
   "12813000": "https://elnine.com.ar/partido/sudafrica-vs-canada-2026-06-28-mMECe3Ffid",
   "12813001": "https://elnine.com.ar/partido/mexico-vs-ecuador-2026-07-01-gT7-jOd_x9",
   "12813004": "https://elnine.com.ar/partido/espana-vs-austria-2026-07-02-8DOK9DdLlj",
+  "12813009": "https://elnine.com.ar/partido/canada-vs-marruecos-2026-07-04-fHBBGMjp26",
   "12813011": "https://elnine.com.ar/partido/colombia-vs-ghana-2026-07-04-khHA27yPqc",
   "12813012": "https://elnine.com.ar/partido/brasil-vs-japon-2026-06-29-OXiwzT4X7E",
   "12813013": "https://elnine.com.ar/partido/belgica-vs-senegal-2026-07-01-vQy-UMYgdH",

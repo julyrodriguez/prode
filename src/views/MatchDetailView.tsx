@@ -402,6 +402,7 @@ export default function MatchDetailView() {
   const isLight = theme === 'light';
 
   const [subSection, setSubSection] = useState<'resumen' | 'estadisticas'>('resumen');
+  const [lineupViewMode, setLineupViewMode] = useState<'field' | 'list'>('field');
   const [match, setMatch] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -3247,154 +3248,360 @@ export default function MatchDetailView() {
           )}
 
           {/* Alineaciones */}
-          {subSection === 'resumen' && match.lineups && (
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4">
-              <div className="flex items-center gap-2">
-                <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-[10px] md:text-xs">📋</span>
-                <h3 className="text-xs md:text-sm font-bold text-slate-200">Alineaciones Iniciales</h3>
-              </div>
+          {/* Alineaciones */}
+          {subSection === 'resumen' && match.lineups && (() => {
+            const homeStarters = (match.lineups.home?.players || []).filter((p: any) => !p.substitute);
+            const awayStarters = (match.lineups.away?.players || []).filter((p: any) => !p.substitute);
+            
+            const hasPitchLocations = homeStarters.length > 0 && homeStarters.some((p: any) => p.pitchLocation) &&
+                                     awayStarters.length > 0 && awayStarters.some((p: any) => p.pitchLocation);
+            
+            const activeViewMode = hasPitchLocations ? lineupViewMode : 'list';
 
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase tracking-widest px-1 pb-2 border-b border-white/5">
-                  <span className="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">{match.lineups.home?.formation || 'Local'}</span>
-                  <span className="text-indigo-400 bg-indigo-400/10 px-1.5 py-0.5 rounded border border-indigo-400/20">{match.lineups.away?.formation || 'Visitante'}</span>
+            const getPlayerBadges = (playerLineup: any, isHome: boolean) => {
+              if (!match.incidents) return [];
+              const badges: string[] = [];
+              const lineupShort = (playerLineup.player?.shortName || '').toLowerCase();
+              const lineupFull = (playerLineup.player?.nameFull || playerLineup.player?.name || '').toLowerCase();
+
+              match.incidents.forEach((inc: any) => {
+                if (inc.isHome !== isHome) return;
+
+                if (inc.incidentType === 'goal' || (inc.incidentType === 'penaltyShootout' && inc.incidentClass === 'scored')) {
+                  const incPlayerShort = (inc.player?.shortName || inc.player?.name || '').toLowerCase();
+                  const incPlayerFull = (inc.player?.nameFull || inc.player?.name || '').toLowerCase();
+                  if (
+                    (lineupShort && incPlayerShort && lineupShort === incPlayerShort) ||
+                    (lineupFull && incPlayerFull && lineupFull === incPlayerFull)
+                  ) {
+                    badges.push('⚽');
+                  }
+                }
+                if (inc.incidentType === 'card') {
+                  const incPlayerShort = (inc.player?.shortName || inc.player?.name || '').toLowerCase();
+                  const incPlayerFull = (inc.player?.nameFull || inc.player?.name || '').toLowerCase();
+                  if (
+                    (lineupShort && incPlayerShort && lineupShort === incPlayerShort) ||
+                    (lineupFull && incPlayerFull && lineupFull === incPlayerFull)
+                  ) {
+                    if (inc.incidentClass === 'yellow') {
+                      badges.push('🟨');
+                    } else if (inc.incidentClass === 'red') {
+                      badges.push('🟥');
+                    }
+                  }
+                }
+                if (inc.incidentType === 'substitution') {
+                  const outPlayerShort = (inc.playerOut?.shortName || inc.playerOut?.name || '').toLowerCase();
+                  const outPlayerFull = (inc.playerOut?.nameFull || inc.playerOut?.name || '').toLowerCase();
+                  if (
+                    (lineupShort && outPlayerShort && lineupShort === outPlayerShort) ||
+                    (lineupFull && outPlayerFull && lineupFull === outPlayerFull)
+                  ) {
+                    badges.push('🔴');
+                  }
+                }
+              });
+
+              return badges;
+            };
+
+            return (
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-3 md:p-4 flex flex-col gap-3 md:gap-4">
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 text-[10px] md:text-xs">📋</span>
+                    <h3 className="text-xs md:text-sm font-bold text-slate-200">Alineaciones</h3>
+                  </div>
+                  {hasPitchLocations && (
+                    <div className="flex bg-black/25 p-0.5 rounded-lg border border-white/5">
+                      <button
+                        onClick={() => setLineupViewMode('field')}
+                        className={`px-2 md:px-3 py-1 rounded-md text-[9px] md:text-[10px] font-bold transition-all cursor-pointer ${
+                          activeViewMode === 'field' 
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-sm' 
+                            : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                        }`}
+                      >
+                        🏟️ Cancha
+                      </button>
+                      <button
+                        onClick={() => setLineupViewMode('list')}
+                        className={`px-2 md:px-3 py-1 rounded-md text-[9px] md:text-[10px] font-bold transition-all cursor-pointer ${
+                          activeViewMode === 'list' 
+                            ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-sm' 
+                            : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                        }`}
+                      >
+                        📋 Lista
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex w-full gap-2">
-                  {/* LOCAL */}
-                  <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
-                    {(match.lineups.home?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => {
-                      const scrapedPlayer = findScrapedPlayer(p, true);
-                      const hasStats = !!scrapedPlayer?.stats;
-                      return (
-                        <div 
-                          key={i} 
-                          onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
-                          className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
-                        >
-                          <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0 animate-pulse-slow">
-                            {p.jerseyNumber}
-                          </span>
-                          <div className="flex flex-col truncate overflow-hidden w-full">
-                            <div className="flex items-center gap-1.5 w-full min-w-0">
-                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
-                              {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
-                            </div>
-                            <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center text-[9px] font-black text-slate-500 uppercase tracking-widest px-1 pb-2 border-b border-white/5">
+                    <span className="text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-400/20">{match.lineups.home?.formation || 'Local'}</span>
+                    <span className="text-indigo-400 bg-indigo-400/10 px-1.5 py-0.5 rounded border border-indigo-400/20">{match.lineups.away?.formation || 'Visitante'}</span>
                   </div>
 
-                  {/* Divisor */}
-                  <div className="w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
-
-                  {/* VISITANTE */}
-                  <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
-                    {(match.lineups.away?.players || []).filter((p: any) => !p.substitute).map((p: any, i: number) => {
-                      const scrapedPlayer = findScrapedPlayer(p, false);
-                      const hasStats = !!scrapedPlayer?.stats;
-                      return (
-                        <div 
-                          key={i} 
-                          onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
-                          className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
-                        >
-                          <div className="flex flex-col truncate overflow-hidden w-full items-end">
-                            <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
-                              {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
-                              <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
-                            </div>
-                            <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                          </div>
-                          <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0 animate-pulse-slow">
-                            {p.jerseyNumber}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* SUPLENTES */}
-                {((match.lineups.home?.players || []).some((p: any) => p.substitute) || 
-                  (match.lineups.away?.players || []).some((p: any) => p.substitute)) && (
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowSubstitutes(!showSubstitutes)}
-                      className="w-full text-center py-2 text-[10px] md:text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-3 flex items-center justify-center gap-1.5"
-                    >
-                      {showSubstitutes ? 'Ocultar suplentes' : 'Ver suplentes'}
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showSubstitutes ? 'rotate-180' : ''}`} />
-                    </button>
-                    {showSubstitutes && (
-                      <div className="mt-2 pt-3 border-t border-white/5 flex flex-col gap-2 animate-fade-in">
-                        <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center mb-1">Suplentes</h4>
-                        <div className="flex w-full gap-2">
-                          {/* LOCAL SUPLENTES */}
-                          <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
-                            {(match.lineups.home?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
-                              const scrapedPlayer = findScrapedPlayer(p, true);
-                              const hasStats = !!scrapedPlayer?.stats;
-                              return (
-                                <div 
-                                  key={i} 
-                                  onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
-                                  className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
-                                >
-                                  <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/5 text-emerald-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/10 shadow-sm shrink-0">
-                                    {p.jerseyNumber}
-                                  </span>
-                                  <div className="flex flex-col truncate overflow-hidden w-full">
-                                    <div className="flex items-center gap-1.5 w-full min-w-0">
-                                      <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
-                                      {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
-                                    </div>
-                                    <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* Divisor */}
-                          <div className="w-px bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
-
-                          {/* VISITANTE SUPLENTES */}
-                          <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
-                            {(match.lineups.away?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
-                              const scrapedPlayer = findScrapedPlayer(p, false);
-                              const hasStats = !!scrapedPlayer?.stats;
-                              return (
-                                <div 
-                                  key={i} 
-                                  onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
-                                  className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
-                                >
-                                  <div className="flex flex-col truncate overflow-hidden w-full items-end">
-                                    <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
-                                      {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
-                                      <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
-                                    </div>
-                                    <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
-                                  </div>
-                                  <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/5 text-indigo-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/10 shadow-sm shrink-0">
-                                    {p.jerseyNumber}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                  {activeViewMode === 'field' ? (
+                    /* Football Field Pitch Map */
+                    <div className="relative w-full aspect-[3/4.2] md:aspect-[3/3.8] max-w-[450px] mx-auto bg-gradient-to-b from-green-950 via-emerald-900 to-green-950 border border-emerald-800/40 rounded-2xl overflow-hidden shadow-2xl p-2 select-none">
+                      {/* Green field textures / grass strips */}
+                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-[0.07]">
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <div key={i} className={`w-full h-[10%] ${i % 2 === 0 ? 'bg-white' : 'bg-transparent'}`} />
+                        ))}
                       </div>
-                    )}
-                  </div>
-                )}
+
+                      {/* Field lines */}
+                      <div className="absolute inset-4 border border-white/10 rounded pointer-events-none">
+                        {/* Center line */}
+                        <div className="absolute top-1/2 left-0 right-0 h-px bg-white/10" />
+                        {/* Center circle */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[25%] aspect-square rounded-full border border-white/10" />
+                        {/* Center spot */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20" />
+                        
+                        {/* Top Goal Box (Away team side) */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[55%] h-[15%] border-b border-x border-white/10" />
+                        {/* Top Small Goal Box */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[25%] h-[5%] border-b border-x border-white/10" />
+                        {/* Top Penalty Spot */}
+                        <div className="absolute top-[11%] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/20" />
+
+                        {/* Bottom Goal Box (Home team side) */}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[55%] h-[15%] border-t border-x border-white/10" />
+                        {/* Bottom Small Goal Box */}
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[25%] h-[5%] border-t border-x border-white/10" />
+                        {/* Bottom Penalty Spot */}
+                        <div className="absolute bottom-[11%] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/20" />
+                      </div>
+
+                      {/* Home Team players */}
+                      {homeStarters.map((p: any, i: number) => {
+                        const scrapedPlayer = findScrapedPlayer(p, true);
+                        const hasStats = !!scrapedPlayer?.stats;
+                        const xCoord = p.pitchLocation?.x ?? 0;
+                        const yCoord = p.pitchLocation?.y ?? 50;
+                        const leftPercent = Math.max(5, Math.min(95, yCoord));
+                        const bottomPercent = Math.max(5, Math.min(48, (xCoord * 0.43) + 5));
+                        const badges = getPlayerBadges(p, true);
+
+                        return (
+                          <div 
+                            key={`home-${i}`}
+                            style={{
+                              position: 'absolute',
+                              left: `${leftPercent}%`,
+                              bottom: `${bottomPercent}%`,
+                              transform: 'translate(-50%, 50%)',
+                            }}
+                            onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                            className={`absolute flex flex-col items-center group z-10 ${scrapedPlayer ? 'cursor-pointer' : ''}`}
+                          >
+                            <div className="relative">
+                              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[9px] md:text-xs border border-white/40 flex items-center justify-center shadow-lg transition-all group-hover:scale-110 active:scale-95 group-hover:border-emerald-300">
+                                {p.jerseyNumber}
+                              </div>
+                              {badges.length > 0 && (
+                                <div className="absolute -top-1.5 -right-1.5 flex gap-0.5 bg-black/80 rounded px-0.5 py-0.25 border border-white/10 text-[7px] md:text-[8px] z-20">
+                                  {badges.map((b, bIdx) => (
+                                    <span key={bIdx}>{b}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1 py-0.25 rounded text-[7.5px] md:text-[8.5px] font-bold text-slate-200 border border-white/5 whitespace-nowrap shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all max-w-[80px]">
+                              <span className="truncate max-w-[65px]">{p.player?.shortName || p.player?.name}</span>
+                              {hasStats && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 ml-0.5" />}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {/* Away Team players */}
+                      {awayStarters.map((p: any, i: number) => {
+                        const scrapedPlayer = findScrapedPlayer(p, false);
+                        const hasStats = !!scrapedPlayer?.stats;
+                        const xCoord = p.pitchLocation?.x ?? 0;
+                        const yCoord = p.pitchLocation?.y ?? 50;
+                        const leftPercent = Math.max(5, Math.min(95, yCoord));
+                        const topPercent = Math.max(5, Math.min(48, (xCoord * 0.43) + 5));
+                        const badges = getPlayerBadges(p, false);
+
+                        return (
+                          <div 
+                            key={`away-${i}`}
+                            style={{
+                              position: 'absolute',
+                              left: `${leftPercent}%`,
+                              top: `${topPercent}%`,
+                              transform: 'translate(-50%, -50%)',
+                            }}
+                            onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                            className={`absolute flex flex-col items-center group z-10 ${scrapedPlayer ? 'cursor-pointer' : ''}`}
+                          >
+                            <div className="relative">
+                              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-indigo-500 hover:bg-indigo-400 text-white font-black text-[9px] md:text-xs border border-white/40 flex items-center justify-center shadow-lg transition-all group-hover:scale-110 active:scale-95 group-hover:border-indigo-300">
+                                {p.jerseyNumber}
+                              </div>
+                              {badges.length > 0 && (
+                                <div className="absolute -top-1.5 -right-1.5 flex gap-0.5 bg-black/80 rounded px-0.5 py-0.25 border border-white/10 text-[7px] md:text-[8px] z-20">
+                                  {badges.map((b, bIdx) => (
+                                    <span key={bIdx}>{b}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1 py-0.25 rounded text-[7.5px] md:text-[8.5px] font-bold text-slate-200 border border-white/5 whitespace-nowrap shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all max-w-[80px]">
+                              <span className="truncate max-w-[65px]">{p.player?.shortName || p.player?.name}</span>
+                              {hasStats && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0 ml-0.5" />}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    /* Classic List View */
+                    <div className="flex w-full gap-2">
+                      {/* LOCAL */}
+                      <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
+                        {homeStarters.map((p: any, i: number) => {
+                          const scrapedPlayer = findScrapedPlayer(p, true);
+                          const hasStats = !!scrapedPlayer?.stats;
+                          return (
+                            <div 
+                              key={i} 
+                              onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                              className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
+                            >
+                              <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/20 shadow-sm shrink-0 animate-pulse-slow">
+                                {p.jerseyNumber}
+                              </span>
+                              <div className="flex flex-col truncate overflow-hidden w-full">
+                                <div className="flex items-center gap-1.5 w-full min-w-0">
+                                  <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                  {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
+                                </div>
+                                <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Divisor */}
+                      <div className="w-px bg-gradient-to-b from-transparent via-white/10 to-transparent"></div>
+
+                      {/* VISITANTE */}
+                      <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
+                        {awayStarters.map((p: any, i: number) => {
+                          const scrapedPlayer = findScrapedPlayer(p, false);
+                          const hasStats = !!scrapedPlayer?.stats;
+                          return (
+                            <div 
+                              key={i} 
+                              onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                              className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
+                            >
+                              <div className="flex flex-col truncate overflow-hidden w-full items-end">
+                                <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
+                                  {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
+                                  <span className="text-slate-300 text-[10px] md:text-[11px] font-semibold truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                </div>
+                                <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                              </div>
+                              <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/20 shadow-sm shrink-0 animate-pulse-slow">
+                                {p.jerseyNumber}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SUPLENTES */}
+                  {((match.lineups.home?.players || []).some((p: any) => p.substitute) || 
+                    (match.lineups.away?.players || []).some((p: any) => p.substitute)) && (
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowSubstitutes(!showSubstitutes)}
+                        className="w-full text-center py-2 text-[10px] md:text-xs font-bold text-slate-400 hover:text-slate-200 hover:bg-white/[0.02] border-t border-white/5 transition-all cursor-pointer mt-3 flex items-center justify-center gap-1.5"
+                      >
+                        {showSubstitutes ? 'Ocultar suplentes' : 'Ver suplentes'}
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showSubstitutes ? 'rotate-180' : ''}`} />
+                      </button>
+                      {showSubstitutes && (
+                        <div className="mt-2 pt-3 border-t border-white/5 flex flex-col gap-2 animate-fade-in">
+                          <h4 className="text-[9px] font-black text-slate-500 uppercase tracking-widest text-center mb-1">Suplentes</h4>
+                          <div className="flex w-full gap-2">
+                            {/* LOCAL SUPLENTES */}
+                            <div className="flex-1 flex flex-col gap-2 pr-1 min-w-0">
+                              {(match.lineups.home?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
+                                const scrapedPlayer = findScrapedPlayer(p, true);
+                                const hasStats = !!scrapedPlayer?.stats;
+                                return (
+                                  <div 
+                                    key={i} 
+                                    onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                                    className={`flex items-center gap-2 group min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 active:scale-[0.98]' : ''}`}
+                                  >
+                                    <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-emerald-500/5 text-emerald-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-emerald-500/10 shadow-sm shrink-0">
+                                      {p.jerseyNumber}
+                                    </span>
+                                    <div className="flex flex-col truncate overflow-hidden w-full">
+                                      <div className="flex items-center gap-1.5 w-full min-w-0">
+                                        <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-emerald-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                        {hasStats && <BarChart3 className="w-3.5 h-3.5 text-emerald-400 group-hover:text-emerald-300 transition-all shrink-0" />}
+                                      </div>
+                                      <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Divisor */}
+                            <div className="w-px bg-gradient-to-b from-transparent via-white/5 to-transparent"></div>
+
+                            {/* VISITANTE SUPLENTES */}
+                            <div className="flex-1 flex flex-col gap-2 pl-1 min-w-0">
+                              {(match.lineups.away?.players || []).filter((p: any) => p.substitute).map((p: any, i: number) => {
+                                const scrapedPlayer = findScrapedPlayer(p, false);
+                                const hasStats = !!scrapedPlayer?.stats;
+                                return (
+                                  <div 
+                                    key={i} 
+                                    onClick={() => scrapedPlayer && setSelectedPlayer(scrapedPlayer)}
+                                    className={`flex items-center justify-end gap-2 group text-right min-w-0 rounded-lg p-1 border border-transparent transition-all ${scrapedPlayer ? 'cursor-pointer hover:bg-indigo-500/5 hover:border-indigo-500/20 active:scale-[0.98]' : ''}`}
+                                  >
+                                    <div className="flex flex-col truncate overflow-hidden w-full items-end">
+                                      <div className="flex items-center gap-1.5 w-full min-w-0 justify-end">
+                                        {hasStats && <BarChart3 className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 transition-all shrink-0" />}
+                                        <span className="text-slate-400 text-[10px] md:text-[11px] font-medium truncate group-hover:text-indigo-300 transition-colors shrink min-w-0">{p.player?.shortName || p.player?.name}</span>
+                                      </div>
+                                      <span className="text-slate-600 text-[7px] md:text-[8px] uppercase font-bold">{p.position}</span>
+                                    </div>
+                                    <span className="w-4 h-4 md:w-5 md:h-5 rounded bg-indigo-500/5 text-indigo-500/60 flex items-center justify-center text-[8px] md:text-[9px] font-bold border border-indigo-500/10 shadow-sm shrink-0">
+                                      {p.jerseyNumber}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Posiciones en la tabla / Tabla de Grupos Mundial */}
           {subSection === 'estadisticas' && (isMundialMatch ? (
