@@ -33,7 +33,14 @@ const PRODE_USER_IDS = new Set([
   'aayngHYHpsNaw66u8FjG9RvF7Vk1'
 ]);
 
-function getResult(pred: any): 'exact' | 'tendency' | 'wrong' {
+function getResult(pred: any, match?: any, tournamentId?: number): 'exact' | 'tendency' | 'wrong' {
+  if (pred.pointsEarned !== undefined && pred.pointsEarned !== null) {
+    if (pred.pointsEarned === 0) return 'wrong';
+    const exactPts = getPointsForPrediction(pred, match, tournamentId || 0, 'exact');
+    if (pred.pointsEarned === exactPts) return 'exact';
+    return 'tendency';
+  }
+
   const { miPronosticoLocal: pl, miPronosticoVisita: pv, golesRealesLocal: gl, golesRealesVisita: gv } = pred;
   if (pl === gl && pv === gv) return 'exact';
   const predSign = pl > pv ? 1 : pl < pv ? -1 : 0;
@@ -219,8 +226,8 @@ export default function RankingView() {
         if (uPredMap) {
           const pred = uPredMap.get(matchInfo.matchId);
           if (pred) {
-            const result = getResult(pred);
             const matchDetail = allMatchesMap.get(Number(matchInfo.matchId));
+            const result = getResult(pred, matchDetail, selectedLeague.tournamentId);
             const points = getPointsForPrediction(pred, matchDetail, selectedLeague.tournamentId, result);
             userState.points += points;
             if (result === 'exact') {

@@ -9,6 +9,7 @@ export const elnineMappings: Record<string, string> = {
   "12813001": "https://elnine.com.ar/partido/mexico-vs-ecuador-2026-07-01-gT7-jOd_x9",
   "12813004": "https://elnine.com.ar/partido/espana-vs-austria-2026-07-02-8DOK9DdLlj",
   "12813009": "https://elnine.com.ar/partido/canada-vs-marruecos-2026-07-04-fHBBGMjp26",
+  "12813010": "https://elnine.com.ar/partido/paraguay-vs-francia-2026-07-04-3SQUtt-OqY",
   "12813011": "https://elnine.com.ar/partido/colombia-vs-ghana-2026-07-04-khHA27yPqc",
   "12813012": "https://elnine.com.ar/partido/brasil-vs-japon-2026-06-29-OXiwzT4X7E",
   "12813013": "https://elnine.com.ar/partido/belgica-vs-senegal-2026-07-01-vQy-UMYgdH",
@@ -88,5 +89,6 @@ export const elnineMappings: Record<string, string> = {
   "15186963": "https://elnine.com.ar/partido/tunez-vs-japon-2026-06-21-SlRdPJfAvG",
   "15186972": "https://elnine.com.ar/partido/japon-vs-suecia-2026-06-25-wZngOuB7q0",
   "15186973": "https://elnine.com.ar/partido/tunez-vs-holanda-2026-06-25-fQx-DEcMi-",
+  "1777787029": "https://elnine.com.ar/partido/brasil-vs-noruega-2026-07-05-FNYRuXyeE2",
   // Se pueden agregar más vinculaciones de partidos aquí
 };

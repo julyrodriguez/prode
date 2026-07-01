@@ -23,7 +23,18 @@ interface Prediction {
   pointsEarned?: number | null;
 }
 
-function getResult(pred: Prediction): 'exact' | 'tendency' | 'wrong' {
+function getResult(
+  pred: Prediction,
+  match?: any,
+  tournamentId?: number
+): 'exact' | 'tendency' | 'wrong' {
+  if (pred.pointsEarned !== undefined && pred.pointsEarned !== null) {
+    if (pred.pointsEarned === 0) return 'wrong';
+    const exactPts = getPointsForPrediction(pred, match, tournamentId || 16, 'exact');
+    if (pred.pointsEarned === exactPts) return 'exact';
+    return 'tendency';
+  }
+
   const { miPronosticoLocal: pl, miPronosticoVisita: pv, golesRealesLocal: gl, golesRealesVisita: gv } = pred;
   if (pl === gl && pv === gv) return 'exact';
   const predSign = pl > pv ? 1 : pl < pv ? -1 : 0;
@@ -381,9 +392,9 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
   // Calculate statistics
   const totals = predictions.reduce(
     (acc, p) => {
-      const r = getResult(p);
-      acc[r]++;
       const match = matchesMap.get(Number(p.matchId));
+      const r = getResult(p, match, tournament.tournamentId);
+      acc[r]++;
       const pts = (p.pointsEarned !== undefined && p.pointsEarned !== null)
         ? p.pointsEarned
         : getPointsForPrediction(p, match, tournament.tournamentId, r);
@@ -401,7 +412,8 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
 
   // Apply filters and searches
   const filteredPredictions = predictions.filter(pred => {
-    const matchesFilter = filter === 'all' || getResult(pred) === filter;
+    const match = matchesMap.get(Number(pred.matchId));
+    const matchesFilter = filter === 'all' || getResult(pred, match, tournament.tournamentId) === filter;
     const matchesSearch = searchQuery === '' || 
       pred.equipoLocal.toLowerCase().includes(searchQuery.toLowerCase()) || 
       pred.equipoVisita.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -773,9 +785,9 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
           {filteredPredictions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               {filteredPredictions.map((pred) => {
-                const result = getResult(pred);
-                const cfg = resultConfig[result];
                 const match = matchesMap.get(Number(pred.matchId));
+                const result = getResult(pred, match, tournament.tournamentId);
+                const cfg = resultConfig[result];
                 const hLogo = getTeamLogo(match, 'home');
                 const aLogo = getTeamLogo(match, 'away');
                 const ptsObtenidos = (pred.pointsEarned !== undefined && pred.pointsEarned !== null)
