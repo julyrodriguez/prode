@@ -3385,8 +3385,8 @@ export default function MatchDetailView() {
                         const hasStats = !!scrapedPlayer?.stats;
                         const xCoord = p.pitchLocation?.x ?? 0;
                         const yCoord = p.pitchLocation?.y ?? 50;
-                        const leftPercent = Math.max(5, Math.min(95, yCoord));
-                        const bottomPercent = Math.max(5, Math.min(48, (xCoord * 0.43) + 5));
+                        const leftPercent = (yCoord * 0.72) + 14;
+                        const bottomPercent = (xCoord * 0.40) + 6;
                         const badges = getPlayerBadges(p, true);
 
                         return (
@@ -3413,8 +3413,8 @@ export default function MatchDetailView() {
                                 </div>
                               )}
                             </div>
-                            <div className="mt-0.5 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1 py-0.25 rounded text-[7.5px] md:text-[8.5px] font-bold text-slate-200 border border-white/5 whitespace-nowrap shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all max-w-[80px]">
-                              <span className="truncate max-w-[65px]">{p.player?.shortName || p.player?.name}</span>
+                            <div className="mt-0.5 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1 py-0.25 rounded text-[7px] sm:text-[7.5px] md:text-[8.5px] font-bold text-slate-200 border border-white/5 whitespace-nowrap shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all max-w-[70px] sm:max-w-[75px] md:max-w-[85px]">
+                              <span className="truncate max-w-[55px] sm:max-w-[60px] md:max-w-[70px]">{p.player?.shortName || p.player?.name}</span>
                               {hasStats && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 ml-0.5" />}
                             </div>
                           </div>
@@ -3427,8 +3427,8 @@ export default function MatchDetailView() {
                         const hasStats = !!scrapedPlayer?.stats;
                         const xCoord = p.pitchLocation?.x ?? 0;
                         const yCoord = p.pitchLocation?.y ?? 50;
-                        const leftPercent = Math.max(5, Math.min(95, yCoord));
-                        const topPercent = Math.max(5, Math.min(48, (xCoord * 0.43) + 5));
+                        const leftPercent = (yCoord * 0.72) + 14;
+                        const topPercent = (xCoord * 0.40) + 6;
                         const badges = getPlayerBadges(p, false);
 
                         return (
@@ -3455,8 +3455,8 @@ export default function MatchDetailView() {
                                 </div>
                               )}
                             </div>
-                            <div className="mt-0.5 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1 py-0.25 rounded text-[7.5px] md:text-[8.5px] font-bold text-slate-200 border border-white/5 whitespace-nowrap shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all max-w-[80px]">
-                              <span className="truncate max-w-[65px]">{p.player?.shortName || p.player?.name}</span>
+                            <div className="mt-0.5 flex items-center gap-0.5 bg-black/60 backdrop-blur-sm px-1 py-0.25 rounded text-[7px] sm:text-[7.5px] md:text-[8.5px] font-bold text-slate-200 border border-white/5 whitespace-nowrap shadow-sm group-hover:bg-slate-900 group-hover:text-white transition-all max-w-[70px] sm:max-w-[75px] md:max-w-[85px]">
+                              <span className="truncate max-w-[55px] sm:max-w-[60px] md:max-w-[70px]">{p.player?.shortName || p.player?.name}</span>
                               {hasStats && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse shrink-0 ml-0.5" />}
                             </div>
                           </div>
