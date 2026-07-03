@@ -194,6 +194,7 @@ export default function MundialRankingView() {
   const [error, setError] = useState<string | null>(null);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [isCensoredUnlocked, setIsCensoredUnlocked] = useState(false);
+  const [showCensorConfirmModal, setShowCensorConfirmModal] = useState(false);
 
   // Lock body scroll when rules modal is open
   useEffect(() => {
@@ -861,9 +862,7 @@ export default function MundialRankingView() {
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        if (window.confirm("Vas a desbloquear imagen sensible")) {
-                          setIsCensoredUnlocked(true);
-                        }
+                        setShowCensorConfirmModal(true);
                       }}
                       className="inline-flex items-center justify-center p-0.5 rounded bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
                       title="Desbloquear nombre"
@@ -1023,9 +1022,7 @@ export default function MundialRankingView() {
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          if (window.confirm("Vas a desbloquear imagen sensible")) {
-                            setIsCensoredUnlocked(true);
-                          }
+                          setShowCensorConfirmModal(true);
                         }}
                         className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
                         title="Desbloquear nombre"
@@ -1092,9 +1089,7 @@ export default function MundialRankingView() {
                         onClick={(e) => {
                           e.stopPropagation();
                           e.preventDefault();
-                          if (window.confirm("Vas a desbloquear imagen sensible")) {
-                            setIsCensoredUnlocked(true);
-                          }
+                          setShowCensorConfirmModal(true);
                         }}
                         className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
                         title="Desbloquear nombre"
@@ -1220,9 +1215,7 @@ export default function MundialRankingView() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
-                                if (window.confirm("Vas a desbloquear imagen sensible")) {
-                                  setIsCensoredUnlocked(true);
-                                }
+                                setShowCensorConfirmModal(true);
                               }}
                               className="inline-flex items-center justify-center p-0.5 rounded bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
                               title="Desbloquear nombre"
@@ -1421,9 +1414,7 @@ export default function MundialRankingView() {
                             onClick={(e) => {
                               e.stopPropagation();
                               e.preventDefault();
-                              if (window.confirm("Vas a desbloquear imagen sensible")) {
-                                setIsCensoredUnlocked(true);
-                              }
+                              setShowCensorConfirmModal(true);
                             }}
                             className="inline-flex items-center justify-center p-0.5 rounded bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
                             title="Desbloquear nombre"
@@ -1547,9 +1538,7 @@ export default function MundialRankingView() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   e.preventDefault();
-                                  if (window.confirm("Vas a desbloquear imagen sensible")) {
-                                    setIsCensoredUnlocked(true);
-                                  }
+                                  setShowCensorConfirmModal(true);
                                 }}
                                 className="inline-flex items-center justify-center p-0.5 rounded bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
                                 title="Desbloquear nombre"
@@ -1756,6 +1745,39 @@ export default function MundialRankingView() {
           <p className="text-white font-black text-sm uppercase tracking-widest animate-pulse">
             Cargando predicciones de {displayRanking.find(r => r.userId === navigatingUserId)?.name || 'usuario'}...
           </p>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Modal de Confirmación de Censura ── */}
+      {showCensorConfirmModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-modal-fade-in">
+          <div className="relative w-full max-w-sm bg-[#0b1015] border border-white/10 rounded-[2rem] p-6 shadow-2xl flex flex-col items-center gap-5 text-center animate-modal-scale-in">
+            <span className="text-4xl">👁️</span>
+            <div>
+              <h3 className="text-lg font-black text-white">Desbloquear imagen sensible</h3>
+              <p className="text-xs text-slate-400 mt-2 leading-normal">
+                Vas a desbloquear imagen sensible. ¿Estás seguro de que querés ver el nombre del usuario?
+              </p>
+            </div>
+            <div className="flex gap-3 w-full mt-2">
+              <button
+                onClick={() => setShowCensorConfirmModal(false)}
+                className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-slate-350 hover:text-white font-bold rounded-2xl transition-all cursor-pointer text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setIsCensoredUnlocked(true);
+                  setShowCensorConfirmModal(false);
+                }}
+                className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-black font-black rounded-2xl transition-all cursor-pointer shadow-lg shadow-amber-500/20 text-xs"
+              >
+                Desbloquear
+              </button>
+            </div>
+          </div>
         </div>,
         document.body
       )}
