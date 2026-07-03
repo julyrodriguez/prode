@@ -199,6 +199,9 @@ const parseMatchStatus = (match: Match) => {
 };
 
 const getMatchTime = (match: Match) => {
+  if (typeof match.status === 'object' && match.status?.minute) {
+    return match.status.minute;
+  }
   const statusDesc = typeof match.status === 'object' ? match.status?.description?.toLowerCase() : match.status?.toLowerCase();
   if (statusDesc?.includes('halftime') || statusDesc === 'ht' || statusDesc === 'pause') return 'ET';
   if (statusDesc?.includes('1st') || statusDesc?.includes('first')) return 'PRIMER TIEMPO';
