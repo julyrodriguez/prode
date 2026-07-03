@@ -801,7 +801,9 @@ export default function MundialRankingView() {
           const isCensored = entry.userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
           return (
             <div
-              className="relative flex flex-col items-center gap-0 overflow-hidden rounded-2xl border-4 cursor-pointer hover:scale-[1.02] transition-all duration-300"
+              className={`relative flex flex-col items-center gap-0 overflow-hidden rounded-2xl border-4 transition-all duration-300 ${
+                isCensored ? 'cursor-default' : 'cursor-pointer hover:scale-[1.02]'
+              }`}
               style={{
                 background: 'linear-gradient(160deg,#2a1a00 0%,#1a1000 60%,#0d0800 100%)',
                 borderColor: accent,
@@ -988,10 +990,15 @@ export default function MundialRankingView() {
             return (
               <div 
                 onClick={() => {
+                  if (isCensored) return;
                   setNavigatingUserId(displayRanking[0].userId);
                   router.push(`/predictions/${displayRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
                 }}
-                className="relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/60"
+                className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
+                  isCensored 
+                    ? 'cursor-default bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)]' 
+                    : 'cursor-pointer hover:scale-[1.02] bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/60'
+                }`}
               >
                 <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
                 <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
@@ -1051,13 +1058,14 @@ export default function MundialRankingView() {
             return (
               <div 
                 onClick={() => {
+                  if (isCensored) return;
                   setNavigatingUserId(displayRanking[1].userId);
                   router.push(`/predictions/${displayRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
                 }}
-                className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 cursor-pointer transition-all duration-300 group hover:scale-[1.02] ${
-                  isDark 
-                    ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)] hover:border-slate-400/50' 
-                    : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)] hover:border-slate-400/40'
+                className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
+                  isCensored
+                    ? `cursor-default ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)]' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)]'}`
+                    : `cursor-pointer hover:scale-[1.02] ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)] hover:border-slate-400/50' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)] hover:border-slate-400/40'}`
                 }`}
               >
                 <div className="absolute top-0 right-0 w-20 h-20 bg-slate-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
@@ -1177,10 +1185,11 @@ export default function MundialRankingView() {
                   <div
                     key={entry.userId}
                     onClick={() => {
+                      if (isCensored) return;
                       setNavigatingUserId(entry.userId);
                       router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
                     }}
-                    className={`grid grid-cols-[36px_1fr_60px_60px_100px] md:grid-cols-[48px_1fr_90px_90px_200px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
+                    className={`grid grid-cols-[36px_1fr_60px_60px_100px] md:grid-cols-[48px_1fr_90px_90px_200px] items-center px-3 md:px-6 transition-colors duration-75 ${rowPadding} ${rowBg} ${isCensored ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     {/* Posición */}
                     <div className="flex items-center justify-center">
@@ -1371,10 +1380,11 @@ export default function MundialRankingView() {
                   <div
                     key={entry.userId}
                     onClick={() => {
+                      if (isCensored) return;
                       setNavigatingUserId(entry.userId);
                       router.push(`/predictions/${entry.userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
                     }}
-                    className={`grid grid-cols-[56px_1fr_42px_42px_40px] md:grid-cols-[64px_1fr_80px_80px_80px] items-center px-3 md:px-6 cursor-pointer transition-colors duration-75 ${rowPadding} ${rowBg}`}
+                    className={`grid grid-cols-[56px_1fr_42px_42px_40px] md:grid-cols-[64px_1fr_80px_80px_80px] items-center px-3 md:px-6 transition-colors duration-75 ${rowPadding} ${rowBg} ${isCensored ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     <div className="flex items-center justify-start gap-1 md:gap-1.5 pl-1 md:pl-2">
                       {isLast ? (
