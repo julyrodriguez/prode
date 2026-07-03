@@ -89,6 +89,9 @@ export const elnineMappings: Record<string, string> = {
   "15186963": "https://elnine.com.ar/partido/tunez-vs-japon-2026-06-21-SlRdPJfAvG",
   "15186972": "https://elnine.com.ar/partido/japon-vs-suecia-2026-06-25-wZngOuB7q0",
   "15186973": "https://elnine.com.ar/partido/tunez-vs-holanda-2026-06-25-fQx-DEcMi-",
+  "1777583110": "https://elnine.com.ar/partido/portugal-vs-espana-2026-07-06-lX3wCf8Tlm",
+  "1777670469": "https://elnine.com.ar/partido/estados-unidos-vs-belgica-2026-07-07-n8fhiqLXE9",
+  "1777698584": "https://elnine.com.ar/partido/mexico-vs-inglaterra-2026-07-06-lcolKK5uOV",
   "1777787029": "https://elnine.com.ar/partido/brasil-vs-noruega-2026-07-05-FNYRuXyeE2",
   // Se pueden agregar más vinculaciones de partidos aquí
 };
