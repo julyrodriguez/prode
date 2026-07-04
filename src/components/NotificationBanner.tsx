@@ -2,13 +2,19 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { requestAndRegisterNotifications, checkSubscriptionStatus } from '../lib/notifications';
+import { requestAndRegisterNotifications, checkSubscriptionStatus, syncVapidSubscription } from '../lib/notifications';
 import { Bell, X, CheckCircle } from 'lucide-react';
 
 export default function NotificationBanner() {
   const { user } = useAuth();
   const [showBanner, setShowBanner] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      syncVapidSubscription(user.uid);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;

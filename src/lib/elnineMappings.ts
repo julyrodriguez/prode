@@ -1,6 +1,5 @@
 export const elnineMappings: Record<string, string> = {
   "12812989": "https://elnine.com.ar/partido/costa-de-marfil-vs-noruega-2026-06-30-ZDRn3OIBka",
-  "12812992": "https://elnine.com.ar/partido/estados-unidos-vs-bosnia-herzegovina-2026-07-02-YDXCovuAXU",
   "12812995": "https://elnine.com.ar/partido/francia-vs-suecia-2026-06-30--a-k3IXiNr",
   "12812997": "https://elnine.com.ar/partido/portugal-vs-croacia-2026-07-02-EFi6xSWj59",
   "12812998": "https://elnine.com.ar/partido/holanda-vs-marruecos-2026-06-30-4GOrc9-fdl",
@@ -12,11 +11,9 @@ export const elnineMappings: Record<string, string> = {
   "12813010": "https://elnine.com.ar/partido/paraguay-vs-francia-2026-07-04-3SQUtt-OqY",
   "12813011": "https://elnine.com.ar/partido/colombia-vs-ghana-2026-07-04-khHA27yPqc",
   "12813012": "https://elnine.com.ar/partido/brasil-vs-japon-2026-06-29-OXiwzT4X7E",
-  "12813013": "https://elnine.com.ar/partido/belgica-vs-senegal-2026-07-01-vQy-UMYgdH",
   "12813014": "https://elnine.com.ar/partido/alemania-vs-paraguay-2026-06-29-6ptqcilsE6",
   "12813018": "https://elnine.com.ar/partido/australia-vs-egipto-2026-07-03-_l8CK-E5c6",
   "12813019": "https://elnine.com.ar/partido/suiza-vs-argelia-2026-07-03-_m5dXwrqGx",
-  "12813020": "https://elnine.com.ar/partido/inglaterra-vs-rd-congo-2026-07-01-EUKqJGe0Rv",
   "15186490": "https://elnine.com.ar/partido/mexico-vs-corea-del-sur-2026-06-19-4Ds0i1SLQF",
   "15186499": "https://elnine.com.ar/partido/belgica-vs-iran-2026-06-21-C-pmrJR24t",
   "15186501": "https://elnine.com.ar/partido/francia-vs-senegal-2026-06-16-sVnNwoBFGs",
