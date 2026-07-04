@@ -1772,6 +1772,7 @@ export default function MatchDetailView() {
 
   const statusType = typeof match.status === 'object' ? match.status?.type : null;
   const statusDesc = typeof match.status === 'object' ? match.status?.description : match.status;
+  const isFinished = statusType === 'finished' || match.status === 'finished' || match.status === 'ended';
 
   const startMs = match.startTimestamp ? (match.startTimestamp * 1000) : 0;
   const isPastTime = startMs > 0 && startMs < Date.now();
@@ -2082,7 +2083,7 @@ export default function MatchDetailView() {
               </div>
             )}
 
-            {user && (
+            {user && !isFinished && (
               <button
                 onClick={handleToggleNotification}
                 className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 border cursor-pointer ${

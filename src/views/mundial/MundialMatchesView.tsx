@@ -154,11 +154,11 @@ const parseMatchStatus = (match: Match) => {
   // 1. Si status es un string
   if (typeof match.status === 'string') {
     const statusStr = match.status.toLowerCase();
-    if (statusStr === 'notstarted') return { isLive: false, hasStarted: false, label: 'Pendiente' };
-    if (statusStr === 'inprogress' || statusStr === 'live') return { isLive: true, hasStarted: true, label: 'EN VIVO' };
-    if (statusStr === 'finished' || statusStr === 'ended') return { isLive: false, hasStarted: true, label: 'Finalizado' };
-    if (statusStr === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
-    if (statusStr === 'postponed') return { isLive: false, hasStarted: false, label: 'Postergado' };
+    if (statusStr === 'notstarted') return { isLive: false, hasStarted: false, isFinished: false, label: 'Pendiente' };
+    if (statusStr === 'inprogress' || statusStr === 'live') return { isLive: true, hasStarted: true, isFinished: false, label: 'EN VIVO' };
+    if (statusStr === 'finished' || statusStr === 'ended') return { isLive: false, hasStarted: true, isFinished: true, label: 'Finalizado' };
+    if (statusStr === 'canceled') return { isLive: false, hasStarted: false, isFinished: false, label: 'Cancelado' };
+    if (statusStr === 'postponed') return { isLive: false, hasStarted: false, isFinished: false, label: 'Postergado' };
   }
 
   // 2. Si status es un objeto
@@ -170,34 +170,34 @@ const parseMatchStatus = (match: Match) => {
       if (desc === 'fro') {
         if (isPastTime) {
           if (isOverTwoHours) {
-            return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
+            return { isLive: false, hasStarted: true, isFinished: true, label: 'Finalizado (A confirmar)' };
           }
-          return { isLive: false, hasStarted: true, label: 'En juego (Sin vivo)' };
+          return { isLive: false, hasStarted: true, isFinished: false, label: 'En juego (Sin vivo)' };
         }
-        return { isLive: false, hasStarted: false, label: 'Solo Result. Final' };
+        return { isLive: false, hasStarted: false, isFinished: false, label: 'Solo Result. Final' };
       }
-      return { isLive: false, hasStarted: false, label: 'Pendiente' };
+      return { isLive: false, hasStarted: false, isFinished: false, label: 'Pendiente' };
     }
 
     if (type === 'inprogress' || type === 'live') {
-      return { isLive: true, hasStarted: true, label: match.status.description || 'EN VIVO' };
+      return { isLive: true, hasStarted: true, isFinished: false, label: match.status.description || 'EN VIVO' };
     }
     if (type === 'finished' || type === 'ended') {
       const isPenalties = desc === 'ap' || desc?.includes('pen');
-      return { isLive: false, hasStarted: true, label: 'Finalizado', isPenalties };
+      return { isLive: false, hasStarted: true, isFinished: true, label: 'Finalizado', isPenalties };
     }
-    if (type === 'canceled') return { isLive: false, hasStarted: false, label: 'Cancelado' };
-    if (type === 'postponed') return { isLive: false, hasStarted: false, label: 'Postergado' };
+    if (type === 'canceled') return { isLive: false, hasStarted: false, isFinished: false, label: 'Cancelado' };
+    if (type === 'postponed') return { isLive: false, hasStarted: false, isFinished: false, label: 'Postergado' };
   }
 
   // 3. Fallback basado en tiempo
   if (isPastTime) {
     if (isOverTwoHours) {
-      return { isLive: false, hasStarted: true, label: 'Finalizado (A confirmar)' };
+      return { isLive: false, hasStarted: true, isFinished: true, label: 'Finalizado (A confirmar)' };
     }
-    return { isLive: true, hasStarted: true, label: 'EN JUEGO' };
+    return { isLive: true, hasStarted: true, isFinished: false, label: 'EN JUEGO' };
   }
-  return { isLive: false, hasStarted: false, label: 'Pendiente' };
+  return { isLive: false, hasStarted: false, isFinished: false, label: 'Pendiente' };
 };
 
 const getMatchTime = (match: Match) => {
@@ -347,7 +347,7 @@ const MatchRow = memo(({
 
       {/* Columna Derecha: Equipos, Score y Prode */}
       <div className="flex flex-col py-1.5 pl-2 pr-10 md:pl-3 md:pr-12 justify-center relative">
-        {user && (
+        {user && !status.isFinished && (
           <button
             onClick={(e) => {
               e.stopPropagation();
