@@ -5,6 +5,8 @@ import { prefetchMatches } from '../lib/matchCache';
 import { useAuth } from '../context/AuthContext';
 import TeamForm from '../components/TeamForm';
 import CS2MatchesSection from '../components/CS2MatchesSection';
+import { Bell } from 'lucide-react';
+import { toggleMatchNotification, toggleCompetitionNotification, getUserNotificationPreferences } from '../lib/notifications';
 import TeamRedCards from '../components/TeamRedCards';
 import MatchGoalsCollapsible from '../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../components/MatchSkeleton';
@@ -128,10 +130,37 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
   const [isSaving, setIsSaving] = useState(false);
   const [saveToast, setSaveToast] = useState<{ ok: boolean; msg: string } | null>(null);
   const [redirectingMatchId, setRedirectingMatchId] = useState<number | null>(null);
+  const [notifiedMatches, setNotifiedMatches] = useState<number[]>([]);
+  const [notifiedCompetitions, setNotifiedCompetitions] = useState<number[]>([]);
 
   useEffect(() => {
     setRedirectingMatchId(null);
   }, [pathname]);
+
+  useEffect(() => {
+    if (user) {
+      getUserNotificationPreferences(user.uid).then((prefs) => {
+        setNotifiedMatches(prefs.notifiedMatches || []);
+        setNotifiedCompetitions(prefs.notifiedCompetitions || []);
+      });
+    }
+  }, [user]);
+
+  const handleToggleMatchNotification = async (matchId: number) => {
+    if (!user) return;
+    const active = await toggleMatchNotification(user.uid, matchId);
+    setNotifiedMatches(prev => 
+      active ? [...prev, matchId] : prev.filter(id => id !== matchId)
+    );
+  };
+
+  const handleToggleCompetitionNotification = async (competitionId: number) => {
+    if (!user) return;
+    const active = await toggleCompetitionNotification(user.uid, competitionId);
+    setNotifiedCompetitions(prev => 
+      active ? [...prev, competitionId] : prev.filter(id => id !== competitionId)
+    );
+  };
 
   // Filtros de "En vivo" y collapsible de competencias
   const [showOnlyLive, setShowOnlyLive] = useState(false);
@@ -711,6 +740,26 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                     
                     <div className="flex items-center gap-3">
                       <div className="hidden md:block h-px w-24 bg-gradient-to-r from-white/10 to-transparent"></div>
+                      {user && tMatches[0]?.tournament?.id && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleCompetitionNotification(tMatches[0].tournament.id!);
+                          }}
+                          className={`p-1.5 rounded-xl transition-all duration-150 cursor-pointer ${
+                            notifiedCompetitions.includes(tMatches[0].tournament.id)
+                              ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
+                              : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                          }`}
+                          title={
+                            notifiedCompetitions.includes(tMatches[0].tournament.id)
+                              ? 'Notificaciones activadas para este torneo'
+                              : 'Activar notificaciones para este torneo'
+                          }
+                        >
+                          <Bell className={`h-3.5 w-3.5 ${notifiedCompetitions.includes(tMatches[0].tournament.id) ? 'fill-yellow-400' : ''}`} />
+                        </button>
+                      )}
                       <span className={`text-slate-400 group-hover/header:text-emerald-400 transition-transform duration-300 text-[10px] transform ${
                         isCollapsed ? '-rotate-90' : 'rotate-0'
                       }`}>
@@ -796,7 +845,27 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
                         </div>
 
                         {/* Columna Derecha: Equipos, Score y Prode */}
-                        <div className="flex flex-col py-1.5 px-2 md:px-3 justify-center relative">
+                        <div className="flex flex-col py-1.5 pl-2 pr-10 md:pl-3 md:pr-12 justify-center relative">
+                          {user && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleMatchNotification(match.id);
+                              }}
+                              className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-xl transition-all duration-150 cursor-pointer ${
+                                notifiedMatches.includes(match.id)
+                                  ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
+                                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                              }`}
+                              title={
+                                notifiedMatches.includes(match.id)
+                                  ? 'Notificaciones activadas para este partido'
+                                  : 'Activar notificaciones para este partido'
+                              }
+                            >
+                              <Bell className={`h-4 w-4 ${notifiedMatches.includes(match.id) ? 'fill-yellow-400' : ''}`} />
+                            </button>
+                          )}
                           {(match.round_name || (match as any).worldCupGroupLabel || (showGoldStyle && isPredictionMode)) && (
                             <div className="w-full text-center text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1 opacity-80 flex items-center justify-center gap-1.5">
                               {match.round_name && <span>{match.round_name}</span>}

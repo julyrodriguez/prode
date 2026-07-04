@@ -9,6 +9,7 @@ import { auth } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { createPortal } from 'react-dom';
 import { PrivateRoute } from '../providers';
+import NotificationBanner from '../../components/NotificationBanner';
 
 export const DashboardContext = createContext<{
   setOverriddenLeagueId: (id: any | null) => void;
@@ -733,6 +734,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* ── PAGE CONTENT ── */}
         <div className={`flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 relative ${isMatchDetail ? 'pb-8' : 'pb-24 md:pb-8'}`}>
           <div className="max-w-7xl mx-auto py-6">
+            <NotificationBanner />
             <DashboardContext.Provider value={{ setOverriddenLeagueId }}>
               {children}
             </DashboardContext.Provider>

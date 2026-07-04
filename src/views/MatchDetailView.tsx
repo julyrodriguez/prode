@@ -9,10 +9,11 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import Link from 'next/link';
 import { LEAGUES } from '../components/layout/AppLayout';
-import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles, Tv, Play } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, X, BarChart3, ChevronDown, Activity, Award, Sparkles, Tv, Play, Bell } from 'lucide-react';
 import TeamLogo from '../components/TeamLogo';
 import TeamHoverCard from '../components/TeamHoverCard';
 import { elnineMappings } from '../lib/elnineMappings';
+import { toggleMatchNotification, getUserNotificationPreferences } from '../lib/notifications';
 
 
 const parseStatValue = (val: string | number | undefined): number => {
@@ -428,6 +429,21 @@ export default function MatchDetailView() {
 
   const [elninePlayers, setElninePlayers] = useState<any[] | null>(null);
   const [loadingElnine, setLoadingElnine] = useState<boolean>(false);
+  const [isNotified, setIsNotified] = useState(false);
+
+  useEffect(() => {
+    if (user && id) {
+      getUserNotificationPreferences(user.uid).then((prefs) => {
+        setIsNotified((prefs.notifiedMatches || []).includes(Number(id)));
+      });
+    }
+  }, [user, id]);
+
+  const handleToggleNotification = async () => {
+    if (!user || !id) return;
+    const active = await toggleMatchNotification(user.uid, Number(id));
+    setIsNotified(active);
+  };
   const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
   const [selectedPrePlayerName, setSelectedPrePlayerName] = useState<string | null>(null);
   const [prePlayerMatches, setPrePlayerMatches] = useState<any[]>([]);
@@ -2064,6 +2080,20 @@ export default function MatchDetailView() {
                 {isLive && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0"></div>}
                 <span>{getMatchTimeStatus()}</span>
               </div>
+            )}
+
+            {user && (
+              <button
+                onClick={handleToggleNotification}
+                className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 border cursor-pointer ${
+                  isNotified
+                    ? 'text-yellow-400 bg-yellow-400/10 border-yellow-500/20 hover:bg-yellow-400/20 shadow-[0_0_10px_rgba(250,204,21,0.15)]'
+                    : 'text-slate-400 bg-white/5 border-white/10 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                <Bell className={`h-3.5 w-3.5 ${isNotified ? 'fill-yellow-400' : ''}`} />
+                <span>{isNotified ? 'Notificaciones Activas' : 'Recibir Notificaciones'}</span>
+              </button>
             )}
           </div>
 
