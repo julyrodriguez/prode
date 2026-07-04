@@ -15,6 +15,8 @@ import MatchGoalsCollapsible from '../../components/MatchGoalsCollapsible';
 import MatchSkeleton from '../../components/MatchSkeleton';
 import TeamLogo from '../../components/TeamLogo';
 import DatePicker from '../../components/DatePicker';
+import { Bell } from 'lucide-react';
+import { toggleMatchNotification, toggleCompetitionNotification, getUserNotificationPreferences } from '../../lib/notifications';
 
 const translateTeamToSpanish = (name: string): string => {
   if (!name) return '';
@@ -250,6 +252,8 @@ interface MatchRowProps {
   viewMode: string;
   onPredictionChange: (matchId: number, side: 'home' | 'away', value: string) => void;
   onStepScore: (matchId: number, side: 'home' | 'away', delta: number) => void;
+  isNotified: boolean;
+  onToggleNotification: (matchId: number) => void;
 }
 
 const MatchRow = memo(({
@@ -259,7 +263,9 @@ const MatchRow = memo(({
   user,
   viewMode,
   onPredictionChange,
-  onStepScore
+  onStepScore,
+  isNotified,
+  onToggleNotification
 }: MatchRowProps) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -340,7 +346,27 @@ const MatchRow = memo(({
       </div>
 
       {/* Columna Derecha: Equipos, Score y Prode */}
-      <div className="flex flex-col py-1.5 px-2 md:px-3 justify-center relative">
+      <div className="flex flex-col py-1.5 pl-2 pr-10 md:pl-3 md:pr-12 justify-center relative">
+        {user && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleNotification(match.id);
+            }}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-xl transition-all duration-150 cursor-pointer ${
+              isNotified
+                ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
+                : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+            }`}
+            title={
+              isNotified
+                ? 'Notificaciones activadas para este partido'
+                : 'Activar notificaciones para este partido'
+            }
+          >
+            <Bell className={`h-4 w-4 ${isNotified ? 'fill-yellow-400' : ''}`} />
+          </button>
+        )}
         {(match.round_name || (showGoldStyle && isPredictionMode)) && (
           <div className="w-full text-center text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1 opacity-80 flex items-center justify-center gap-1.5">
             {match.round_name && <span>{match.round_name}</span>}
@@ -516,6 +542,33 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
   const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
   const [mounted, setMounted] = useState(false);
   const [showOnlyLive, setShowOnlyLive] = useState(false);
+  const [notifiedMatches, setNotifiedMatches] = useState<number[]>([]);
+  const [notifiedCompetitions, setNotifiedCompetitions] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      getUserNotificationPreferences(user.uid).then((prefs) => {
+        setNotifiedMatches(prefs.notifiedMatches || []);
+        setNotifiedCompetitions(prefs.notifiedCompetitions || []);
+      });
+    }
+  }, [user]);
+
+  const handleToggleMatchNotification = useCallback(async (matchId: number) => {
+    if (!user) return;
+    const active = await toggleMatchNotification(user.uid, matchId);
+    setNotifiedMatches(prev => 
+      active ? [...prev, matchId] : prev.filter(id => id !== matchId)
+    );
+  }, [user]);
+
+  const handleToggleCompetitionNotification = useCallback(async (competitionId: number) => {
+    if (!user) return;
+    const active = await toggleCompetitionNotification(user.uid, competitionId);
+    setNotifiedCompetitions(prev => 
+      active ? [...prev, competitionId] : prev.filter(id => id !== competitionId)
+    );
+  }, [user]);
 
   useEffect(() => {
     setMounted(true);
@@ -1178,6 +1231,23 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
       {selectedDate && (
         <div className="flex justify-center w-full my-1 relative z-40">
           <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center justify-center gap-3 shadow-lg shadow-black/30 w-fit">
+            {user && (
+              <button
+                onClick={() => handleToggleCompetitionNotification(16)}
+                className={`p-1.5 rounded-full transition-all duration-150 cursor-pointer ${
+                  notifiedCompetitions.includes(16)
+                    ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20 border border-yellow-500/20 shadow-[0_0_10px_rgba(250,204,21,0.15)]'
+                    : 'text-slate-400 hover:text-white border border-transparent hover:bg-white/5'
+                }`}
+                title={
+                  notifiedCompetitions.includes(16)
+                    ? 'Notificaciones activadas para el Mundial'
+                    : 'Activar notificaciones para el Mundial'
+                }
+              >
+                <Bell className={`h-4 w-4 ${notifiedCompetitions.includes(16) ? 'fill-yellow-400' : ''}`} />
+              </button>
+            )}
             
             <button
               onClick={() => { setAllMatches([]); setLoading(true); setViewMode(prev => prev === 'day' ? 'week' : 'day'); }}
@@ -1293,6 +1363,8 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
                 viewMode={viewMode}
                 onPredictionChange={handlePredictionChange}
                 onStepScore={stepScore}
+                isNotified={notifiedMatches.includes(match.id)}
+                onToggleNotification={handleToggleMatchNotification}
               />
             ))}
           </div>
