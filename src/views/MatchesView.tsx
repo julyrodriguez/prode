@@ -846,26 +846,30 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
 
                         {/* Columna Derecha: Equipos, Score y Prode */}
                         <div className="flex flex-col py-1.5 pl-2 pr-10 md:pl-3 md:pr-12 justify-center relative">
-                          {user && !status.isFinished && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleMatchNotification(match.id);
-                              }}
-                              className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-xl transition-all duration-150 cursor-pointer ${
-                                notifiedMatches.includes(match.id)
-                                  ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
-                                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                              }`}
-                              title={
-                                notifiedMatches.includes(match.id)
-                                  ? 'Notificaciones activadas para este partido'
-                                  : 'Activar notificaciones para este partido'
-                              }
-                            >
-                              <Bell className={`h-4 w-4 ${notifiedMatches.includes(match.id) ? 'fill-yellow-400' : ''}`} />
-                            </button>
-                          )}
+                          {user && !status.isFinished && (() => {
+                            const isMatchNotified = notifiedMatches.includes(match.id) || 
+                              (match.tournament?.id && notifiedCompetitions.includes(match.tournament.id));
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleMatchNotification(match.id);
+                                }}
+                                className={`absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-xl transition-all duration-150 cursor-pointer ${
+                                  isMatchNotified
+                                    ? 'text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20'
+                                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                                }`}
+                                title={
+                                  isMatchNotified
+                                    ? 'Notificaciones activadas para este partido'
+                                    : 'Activar notificaciones para este partido'
+                                }
+                              >
+                                <Bell className={`h-4 w-4 ${isMatchNotified ? 'fill-yellow-400' : ''}`} />
+                              </button>
+                            );
+                          })()}
                           {(match.round_name || (match as any).worldCupGroupLabel || (showGoldStyle && isPredictionMode)) && (
                             <div className="w-full text-center text-[8px] md:text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1 opacity-80 flex items-center justify-center gap-1.5">
                               {match.round_name && <span>{match.round_name}</span>}

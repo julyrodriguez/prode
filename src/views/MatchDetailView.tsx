@@ -430,11 +430,13 @@ export default function MatchDetailView() {
   const [elninePlayers, setElninePlayers] = useState<any[] | null>(null);
   const [loadingElnine, setLoadingElnine] = useState<boolean>(false);
   const [isNotified, setIsNotified] = useState(false);
+  const [notifiedCompetitions, setNotifiedCompetitions] = useState<number[]>([]);
 
   useEffect(() => {
     if (user && id) {
       getUserNotificationPreferences(user.uid).then((prefs) => {
         setIsNotified((prefs.notifiedMatches || []).includes(Number(id)));
+        setNotifiedCompetitions(prefs.notifiedCompetitions || []);
       });
     }
   }, [user, id]);
@@ -2083,19 +2085,24 @@ export default function MatchDetailView() {
               </div>
             )}
 
-            {user && !isFinished && (
-              <button
-                onClick={handleToggleNotification}
-                className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 border cursor-pointer ${
-                  isNotified
-                    ? 'text-yellow-400 bg-yellow-400/10 border-yellow-500/20 hover:bg-yellow-400/20 shadow-[0_0_10px_rgba(250,204,21,0.15)]'
-                    : 'text-slate-400 bg-white/5 border-white/10 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Bell className={`h-3.5 w-3.5 ${isNotified ? 'fill-yellow-400' : ''}`} />
-                <span>{isNotified ? 'Notificaciones Activas' : 'Recibir Notificaciones'}</span>
-              </button>
-            )}
+            {(() => {
+              const isMatchNotified = isNotified || 
+                (match?.tournament?.id && notifiedCompetitions.includes(match.tournament.id)) || 
+                (match?.tournament_id && notifiedCompetitions.includes(match.tournament_id));
+              return user && !isFinished && (
+                <button
+                  onClick={handleToggleNotification}
+                  className={`mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 border cursor-pointer ${
+                    isMatchNotified
+                      ? 'text-yellow-400 bg-yellow-400/10 border-yellow-500/20 hover:bg-yellow-400/20 shadow-[0_0_10px_rgba(250,204,21,0.15)]'
+                      : 'text-slate-400 bg-white/5 border-white/10 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Bell className={`h-3.5 w-3.5 ${isMatchNotified ? 'fill-yellow-400' : ''}`} />
+                  <span>{isMatchNotified ? 'Notificaciones Activas' : 'Recibir Notificaciones'}</span>
+                </button>
+              );
+            })()}
           </div>
 
           {/* AWAY */}

@@ -1363,7 +1363,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
                 viewMode={viewMode}
                 onPredictionChange={handlePredictionChange}
                 onStepScore={stepScore}
-                isNotified={notifiedMatches.includes(match.id)}
+                isNotified={notifiedMatches.includes(match.id) || notifiedCompetitions.includes(16)}
                 onToggleNotification={handleToggleMatchNotification}
               />
             ))}

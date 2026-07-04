@@ -2032,7 +2032,7 @@ export default function LeagueMatchesView({ isPredictionMode = false }: { isPred
                 viewMode={viewMode}
                 onPredictionChange={handlePredictionChange}
                 onStepScore={stepScore}
-                isNotified={notifiedMatches.includes(match.id)}
+                isNotified={notifiedMatches.includes(match.id) || (match.tournament?.id ? notifiedCompetitions.includes(match.tournament.id) : (tournamentId ? notifiedCompetitions.includes(tournamentId) : false))}
                 onToggleNotification={handleToggleMatchNotification}
               />
             ))}
