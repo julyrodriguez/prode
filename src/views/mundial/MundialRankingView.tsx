@@ -146,18 +146,22 @@ function getPointsForPrediction(
     ).toLowerCase();
 
     // 1. FINAL
-    if (roundName.includes('final') && !roundName.includes('semi') && !roundName.includes('quarter') && !roundName.includes('eighth') && !roundName.includes('16')) {
+    if (roundName.includes('final') && !roundName.includes('semi') && !roundName.includes('quarter') && !roundName.includes('cuart') && !roundName.includes('eighth') && !roundName.includes('octav') && !roundName.includes('16')) {
       return (result === 'exact' ? 20 : 10) * multiplier;
     }
     // 2. SEMIFINAL
     else if (roundName.includes('semi')) {
       return (result === 'exact' ? 14 : 7) * multiplier;
     }
-    // 3. Octavos a Cuartos (16avos, Round of 16, Quarter finals, Eighth finals)
-    else if (roundName.includes('16') || roundName.includes('eighth') || roundName.includes('quarter') || roundName.includes('round of 16') || roundName.includes('octav') || roundName.includes('cuart') || roundName.includes('dieciseis')) {
+    // 3. CUARTOS (12 exacto, 6 tendencia)
+    else if (roundName.includes('quarter') || roundName.includes('cuart')) {
+      return (result === 'exact' ? 12 : 6) * multiplier;
+    }
+    // 4. Octavos (16avos, Round of 16, Eighth finals, Octavos, Dieciseisavos)
+    else if (roundName.includes('16') || roundName.includes('eighth') || roundName.includes('round of 16') || roundName.includes('octav') || roundName.includes('dieciseis')) {
       return (result === 'exact' ? 8 : 4) * multiplier;
     }
-    // 4. FASE DE GRUPOS (4 puntos exacto, 2 puntos tendencia)
+    // 5. FASE DE GRUPOS (4 puntos exacto, 2 puntos tendencia)
     else {
       return (result === 'exact' ? 4 : 2) * multiplier;
     }
@@ -1681,9 +1685,14 @@ export default function MundialRankingView() {
                     <span className="text-center font-bold text-emerald-400">4 pts</span>
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
-                    <span className="font-semibold text-slate-300">16avos a 4tos</span>
+                    <span className="font-semibold text-slate-300">16avos a Octavos</span>
                     <span className="text-center font-bold text-indigo-400">4 pts</span>
                     <span className="text-center font-bold text-emerald-400">8 pts</span>
+                  </div>
+                  <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
+                    <span className="font-semibold text-slate-300">Cuartos</span>
+                    <span className="text-center font-bold text-indigo-400">6 pts</span>
+                    <span className="text-center font-bold text-emerald-400">12 pts</span>
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
                     <span className="font-semibold text-slate-300">Semifinal</span>

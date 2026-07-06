@@ -63,17 +63,18 @@ function getPointsForPrediction(
     if (isGroup) {
       basePoints = result === 'exact' ? 4 : 2;
     } else {
-      // Knockout phases (16avos, Octavos, Cuartos):
-      const is16avosTo4tos = 
+      // Knockout phases:
+      const isCuartos = stage.includes('quarter') || stage.includes('cuart');
+      const is16avosToOctavos = 
         stage.includes('32') || 
         stage.includes('16') || 
         stage.includes('octav') || 
         stage.includes('dieciseis') || 
-        stage.includes('16av') || 
-        stage.includes('quarter') || 
-        stage.includes('cuart');
+        stage.includes('16av');
 
-      if (is16avosTo4tos) {
+      if (isCuartos) {
+        basePoints = result === 'exact' ? 12 : 6;
+      } else if (is16avosToOctavos) {
         basePoints = result === 'exact' ? 8 : 4;
       } else {
         const isSemi = stage.includes('semi');

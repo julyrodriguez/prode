@@ -78,16 +78,17 @@ function getPointsForPrediction(
     }
 
     // Knockout phases
-    const is16avosTo4tos = 
+    const isCuartos = stage.includes('quarter') || stage.includes('cuart');
+    const is16avosToOctavos = 
       stage.includes('32') || 
       stage.includes('16') || 
       stage.includes('octav') || 
       stage.includes('dieciseis') || 
-      stage.includes('16av') || 
-      stage.includes('quarter') || 
-      stage.includes('cuart');
+      stage.includes('16av');
 
-    if (is16avosTo4tos) {
+    if (isCuartos) {
+      return (result === 'exact' ? 12 : 6) * multiplier;
+    } else if (is16avosToOctavos) {
       return (result === 'exact' ? 8 : 4) * multiplier;
     }
 
@@ -1142,9 +1143,14 @@ export default function LeagueRankingView() {
                     <span className="text-center font-bold text-emerald-400">4 pts</span>
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
-                    <span className="font-semibold text-slate-300">16avos a 4tos</span>
+                    <span className="font-semibold text-slate-300">16avos a Octavos</span>
                     <span className="text-center font-bold text-indigo-400">4 pts</span>
                     <span className="text-center font-bold text-emerald-400">8 pts</span>
+                  </div>
+                  <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
+                    <span className="font-semibold text-slate-300">Cuartos</span>
+                    <span className="text-center font-bold text-indigo-400">6 pts</span>
+                    <span className="text-center font-bold text-emerald-400">12 pts</span>
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
                     <span className="font-semibold text-slate-300">Semifinal</span>
