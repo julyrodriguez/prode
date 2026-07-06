@@ -94,7 +94,7 @@ function getPointsForPrediction(
 
     const isSemi = stage.includes('semi');
     if (isSemi) {
-      return (result === 'exact' ? 14 : 7) * multiplier;
+      return (result === 'exact' ? 16 : 8) * multiplier;
     }
 
     const isFinal = stage.includes('final');
@@ -1154,8 +1154,8 @@ export default function LeagueRankingView() {
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
                     <span className="font-semibold text-slate-300">Semifinal</span>
-                    <span className="text-center font-bold text-indigo-400">7 pts</span>
-                    <span className="text-center font-bold text-emerald-400">14 pts</span>
+                    <span className="text-center font-bold text-indigo-400">8 pts</span>
+                    <span className="text-center font-bold text-emerald-400">16 pts</span>
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
                     <span className="font-semibold text-slate-300">Final</span>

@@ -79,7 +79,7 @@ function getPointsForPrediction(
       } else {
         const isSemi = stage.includes('semi');
         if (isSemi) {
-          basePoints = result === 'exact' ? 14 : 7;
+          basePoints = result === 'exact' ? 16 : 8;
         } else {
           const isFinal = stage.includes('final');
           if (isFinal) {
