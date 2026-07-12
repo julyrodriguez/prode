@@ -20,6 +20,7 @@ interface RankingEntry {
   totalPoints: number;
   tournamentName: string;
   avatarUrl?: string;
+  podiumPointsSimulated?: number;
 }
 
 const MEDAL: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' };
@@ -199,6 +200,17 @@ export default function MundialRankingView() {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [isCensoredUnlocked, setIsCensoredUnlocked] = useState(false);
   const [showCensorConfirmModal, setShowCensorConfirmModal] = useState(false);
+
+  // Estados para simulación del podio del Mundial
+  const [simulatedPodium, setSimulatedPodium] = useState<{
+    champion: string;
+    runnerUp: string;
+    thirdPlace: string;
+  }>({
+    champion: '',
+    runnerUp: '',
+    thirdPlace: '',
+  });
 
   // Lock body scroll when rules modal is open
   useEffect(() => {
@@ -667,7 +679,66 @@ export default function MundialRankingView() {
     return calculatedStats;
   }, [showLivePoints, predictionsData, matches, statsData, tournamentId, activeRanking]);
 
-  const displayRanking = showLivePoints ? liveRanking : activeRanking;
+  // Helper to normalize team names for robust comparison
+  const normalizeTeamName = (name: string): string => {
+    if (!name) return '';
+    let n = name.trim().toLowerCase();
+    if (n === 'espana' || n === 'españa') return 'españa';
+    if (n === 'argentina') return 'argentina';
+    if (n === 'francia') return 'francia';
+    if (n === 'inglaterra') return 'inglaterra';
+    return n;
+  };
+
+  // List of teams for simulating podium (restricted to Argentina, España, Francia, Inglaterra)
+  const worldCupTeamsList = ['Argentina', 'España', 'Francia', 'Inglaterra'];
+
+  const displayRanking = useMemo(() => {
+    const baseRanking = showLivePoints ? liveRanking : activeRanking;
+    
+    if (activeLeague.id !== 'mundial' || (!simulatedPodium.champion && !simulatedPodium.runnerUp && !simulatedPodium.thirdPlace)) {
+      return baseRanking;
+    }
+
+    const simulatedEntries = baseRanking.map(entry => {
+      const userPred = podiumPredictions.find(p => p.userId === entry.userId || p.user_id === entry.userId);
+      let extraPoints = 0;
+      
+      if (userPred) {
+        const userChamp = normalizeTeamName(userPred.champion || '');
+        const userRunner = normalizeTeamName(userPred.runnerUp || '');
+        const userThird = normalizeTeamName(userPred.thirdPlace || '');
+        
+        const simChamp = normalizeTeamName(simulatedPodium.champion);
+        const simRunner = normalizeTeamName(simulatedPodium.runnerUp);
+        const simThird = normalizeTeamName(simulatedPodium.thirdPlace);
+
+        if (simChamp && userChamp === simChamp) {
+          extraPoints += 40;
+        }
+        if (simRunner && userRunner === simRunner) {
+          extraPoints += 25;
+        }
+        if (simThird && userThird === simThird) {
+          extraPoints += 20;
+        }
+      }
+
+      return {
+        ...entry,
+        totalPoints: entry.totalPoints + extraPoints,
+        podiumPointsSimulated: extraPoints,
+      };
+    });
+
+    return [...simulatedEntries].sort((a, b) => {
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (b.exactResults !== a.exactResults) return b.exactResults - a.exactResults;
+      if (b.correctTendencies !== a.correctTendencies) return b.correctTendencies - a.correctTendencies;
+      return a.name.localeCompare(b.name);
+    });
+  }, [showLivePoints, liveRanking, activeRanking, simulatedPodium, podiumPredictions, activeLeague.id]);
+
   const displayStatsData = showLivePoints ? liveStatsData : statsData;
 
   const myEntry = user ? displayRanking.find((r) => r.userId === user.uid) : null;
@@ -977,6 +1048,101 @@ export default function MundialRankingView() {
         </div>
       )}
 
+      {/* ── Simulador de Podio Final (Mundial) ── */}
+      {!loading && !error && ranking.length > 0 && activeLeague.id === 'mundial' && (
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-white/[0.01] to-white/[0.02] border border-white/10 rounded-[2rem] p-5 backdrop-blur-xl shadow-xl flex flex-col gap-4 mb-2">
+          {/* Subtle Glow */}
+          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+            <div>
+              <h3 className="text-sm font-black text-slate-200 flex items-center gap-2">
+                <span>🎭</span> Simular Podio Final del Mundial
+              </h3>
+              <p className="text-[10px] text-slate-400 font-bold">
+                Elegí las posiciones reales del mundial para proyectar los puntos de podio (+40 pts, +25 pts, +20 pts)
+              </p>
+            </div>
+            {(simulatedPodium.champion || simulatedPodium.runnerUp || simulatedPodium.thirdPlace) && (
+              <button
+                onClick={() => setSimulatedPodium({ champion: '', runnerUp: '', thirdPlace: '' })}
+                className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-[10px] font-black rounded-xl transition-all cursor-pointer"
+              >
+                Limpiar Simulación
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            {/* Campeón Selector */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                🥇 1º Puesto (Campeón)
+              </label>
+              <select
+                value={simulatedPodium.champion}
+                onChange={(e) => setSimulatedPodium(prev => ({ ...prev, champion: e.target.value }))}
+                className="w-full bg-slate-900/60 border border-white/15 text-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-amber-500 transition-all cursor-pointer"
+              >
+                <option value="" className="bg-slate-900 text-slate-400">-- Seleccionar país --</option>
+                {worldCupTeamsList.map(team => {
+                  const isSelectedElsewhere = team === simulatedPodium.runnerUp || team === simulatedPodium.thirdPlace;
+                  return (
+                    <option key={team} value={team} disabled={isSelectedElsewhere} className="bg-slate-900 text-white">
+                      {team}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Subcampeón Selector */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                🥈 2º Puesto (Subcampeón)
+              </label>
+              <select
+                value={simulatedPodium.runnerUp}
+                onChange={(e) => setSimulatedPodium(prev => ({ ...prev, runnerUp: e.target.value }))}
+                className="w-full bg-slate-900/60 border border-white/15 text-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-slate-500 transition-all cursor-pointer"
+              >
+                <option value="" className="bg-slate-900 text-slate-400">-- Seleccionar país --</option>
+                {worldCupTeamsList.map(team => {
+                  const isSelectedElsewhere = team === simulatedPodium.champion || team === simulatedPodium.thirdPlace;
+                  return (
+                    <option key={team} value={team} disabled={isSelectedElsewhere} className="bg-slate-900 text-white">
+                      {team}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Tercer Puesto Selector */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black text-amber-700 uppercase tracking-wider flex items-center gap-1">
+                🥉 3º Puesto (Tercero)
+              </label>
+              <select
+                value={simulatedPodium.thirdPlace}
+                onChange={(e) => setSimulatedPodium(prev => ({ ...prev, thirdPlace: e.target.value }))}
+                className="w-full bg-slate-900/60 border border-white/15 text-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-amber-700 transition-all cursor-pointer"
+              >
+                <option value="" className="bg-slate-900 text-slate-400">-- Seleccionar país --</option>
+                {worldCupTeamsList.map(team => {
+                  const isSelectedElsewhere = team === simulatedPodium.champion || team === simulatedPodium.runnerUp;
+                  return (
+                    <option key={team} value={team} disabled={isSelectedElsewhere} className="bg-slate-900 text-white">
+                      {team}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loadingStats && showLivePoints && (
         <div className="w-full flex items-center justify-center gap-2 py-3.5 text-xs text-amber-400 font-black animate-pulse bg-amber-500/5 border border-amber-500/15 rounded-2xl mb-2">
           <div className="animate-spin w-3 h-3 rounded-full border-t border-amber-400 border-r border-transparent" />
@@ -986,145 +1152,389 @@ export default function MundialRankingView() {
 
       {/* ── Podio de Ganadores Showcase ── */}
       {!loading && !error && rankingTab === 'prode' && displayRanking.length >= 2 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
-          
-          {/* 1ER PUESTO (GOLD) */}
-          {displayRanking[0] && (() => {
-            const isCensored = displayRanking[0].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
-            return (
-              <div 
-                onClick={() => {
-                  if (isCensored) return;
-                  setNavigatingUserId(displayRanking[0].userId);
-                  router.push(`/predictions/${displayRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
-                }}
-                className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
-                  isCensored 
-                    ? 'cursor-default bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)]' 
-                    : 'cursor-pointer hover:scale-[1.02] bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/60'
-                }`}
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
-                <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
-                  <span>👑</span> <span>1º PUESTO</span>
-                  {(() => { const c = getPosChangeFor(displayRanking[0].userId, 0); return c > 0 ? <span className="text-black font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-black font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-black/50 font-extrabold text-[9px]">•</span>; })()}
-                </div>
-                
-                <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2.5px] shadow-[0_0_10px_rgba(245,158,11,0.25)] shrink-0">
-                  <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
-                    <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{displayRanking[0].name?.slice(0, 1).toUpperCase()}</span>
-                    <img
-                      src={`https://apivacas.jariel.com.ar/users/${displayRanking[0].userId}.webp`}
-                      alt={displayRanking[0].name}
-                      className="w-full h-full object-cover relative z-10"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+        activeLeague.id === 'mundial' ? (
+          <div className="flex flex-col gap-4 mb-2">
+            {/* 1ER PUESTO (GOLD) - Messi lifting cup card */}
+            {displayRanking[0] && (() => {
+              const isCensored = displayRanking[0].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
+              return (
+                <div 
+                  onClick={() => {
+                    if (isCensored) return;
+                    setNavigatingUserId(displayRanking[0].userId);
+                    router.push(`/predictions/${displayRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                  }}
+                  className={`relative overflow-hidden border rounded-[2rem] p-6 flex flex-col md:flex-row items-center gap-6 transition-all duration-300 group ${
+                    isCensored 
+                      ? 'cursor-default bg-gradient-to-br from-amber-500/20 via-slate-900/70 to-slate-950/90 border-amber-500/50 shadow-[0_12px_36px_rgba(245,158,11,0.2)]' 
+                      : 'cursor-pointer hover:scale-[1.01] bg-gradient-to-br from-amber-500/20 via-slate-900/70 to-slate-950/90 border-amber-500/50 hover:border-amber-500/75 shadow-[0_12px_36px_rgba(245,158,11,0.2)]'
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
+                  <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-4 py-1.5 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
+                    <span>👑</span> <span>1º PUESTO - LÍDER</span>
+                    {(() => { const c = getPosChangeFor(displayRanking[0].userId, 0); return c > 0 ? <span className="text-black font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-black font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-black/50 font-extrabold text-[9px]">•</span>; })()}
+                  </div>
+
+                  {/* Photo of Messi lifting the cup with user avatar overlay */}
+                  <div className="relative w-full max-w-[260px] aspect-square rounded-2xl overflow-hidden border-4 border-amber-500/40 shadow-[0_4px_20px_rgba(0,0,0,0.5)] group-hover:border-amber-500/60 transition-all shrink-0 mx-auto md:mx-0">
+                    <img 
+                      src="/messi_copa.jpg" 
+                      alt="Messi levantando la copa" 
+                      className="w-full h-full object-cover"
                     />
+                    <div 
+                      className={`absolute rounded-full overflow-hidden border-2 border-white bg-slate-950 shadow-md transition-all duration-300 ${isCensored ? 'blur-[5px] select-none' : ''}`}
+                      style={{
+                        left: '50.1%',
+                        top: '38.8%',
+                        width: '11.8%',
+                        height: '11.8%',
+                        transform: 'translate(-50%, -50%)'
+                      }}
+                    >
+                      <img 
+                        src={`https://apivacas.jariel.com.ar/users/${displayRanking[0].userId}.webp`}
+                        alt={displayRanking[0].name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.src = 'https://apivacas.jariel.com.ar/default-avatar.png'; }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Username below/side */}
+                  <div className="flex-1 flex flex-col justify-center items-center md:items-start text-center md:text-left min-w-0">
+                    <h4 className={`text-[10px] font-black uppercase tracking-[0.25em] mb-1.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>Puntero del Prode</h4>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`block font-black text-2xl md:text-3xl leading-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-amber-100 to-amber-300 truncate ${isCensored ? 'blur-[5px] select-none' : ''}`}>
+                        {displayRanking[0].name}
+                      </span>
+                      {isCensored && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setShowCensorConfirmModal(true);
+                          }}
+                          className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
+                          title="Desbloquear nombre"
+                        >
+                          <Eye size={12} />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs font-bold text-slate-350">
+                      <div className="bg-black/30 px-3.5 py-2 rounded-xl border border-white/5">
+                        <span className="text-[10px] uppercase text-slate-500 block">Puntos</span>
+                        <span className="text-lg font-black text-amber-400">{displayRanking[0].totalPoints} pts</span>
+                      </div>
+                      <div className="bg-black/30 px-3.5 py-2 rounded-xl border border-white/5">
+                        <span className="text-[10px] uppercase text-slate-500 block">Exactos</span>
+                        <span className="text-lg font-black text-emerald-400">{displayRanking[0].exactResults} ex.</span>
+                      </div>
+                      {displayRanking[0].podiumPointsSimulated !== undefined && displayRanking[0].podiumPointsSimulated > 0 && (
+                        <div className="bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-500/20 flex flex-col justify-center">
+                          <span className="text-[10px] uppercase text-amber-400 block">Simulación Podio</span>
+                          <span className="text-sm font-black text-amber-300">+{displayRanking[0].podiumPointsSimulated} pts</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+              );
+            })()}
 
-                <div className="flex-1 min-w-0">
-                  <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-amber-450' : 'text-amber-600'}`}>Puntero del Prode</h4>
-                  <span className="inline-flex items-center gap-1.5 leading-tight">
-                    <span className={`block font-black text-base truncate transition-colors ${isDark ? 'text-white group-hover:text-amber-300' : 'text-slate-900 group-hover:text-amber-600'} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
-                      {displayRanking[0].name}
+            {/* 2DO Y 3ER PUESTO (SILVER AND BRONZE) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* 2DO PUESTO */}
+              {displayRanking[1] && (() => {
+                const isCensored = displayRanking[1].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
+                return (
+                  <div 
+                    onClick={() => {
+                      if (isCensored) return;
+                      setNavigatingUserId(displayRanking[1].userId);
+                      router.push(`/predictions/${displayRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                    }}
+                    className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
+                      isCensored
+                        ? `cursor-default ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)]' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)]'}`
+                        : `cursor-pointer hover:scale-[1.02] ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)] hover:border-slate-400/50' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)] hover:border-slate-400/40'}`
+                    }`}
+                  >
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-slate-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
+                    <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
+                      <span>🥈</span> <span>2º PUESTO</span>
+                      {(() => { const c = getPosChangeFor(displayRanking[1].userId, 1); return c > 0 ? <span className="text-emerald-350 font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-red-350 font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[9px]">•</span>; })()}
+                    </div>
+                    
+                    <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[2.5px] shadow-[0_0_10px_rgba(148,163,184,0.15)] shrink-0">
+                      <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+                        <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{displayRanking[1].name?.slice(0, 1).toUpperCase()}</span>
+                        <img
+                          src={`https://apivacas.jariel.com.ar/users/${displayRanking[1].userId}.webp`}
+                          alt={displayRanking[1].name}
+                          className="w-full h-full object-cover relative z-10"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Escolta</h4>
+                      <span className="inline-flex items-center gap-1.5 leading-tight">
+                        <span className={`block font-black text-base truncate transition-colors leading-tight ${isDark ? 'text-white group-hover:text-slate-350' : 'text-slate-900 group-hover:text-slate-650'} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
+                          {displayRanking[1].name}
+                        </span>
+                        {isCensored && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setShowCensorConfirmModal(true);
+                            }}
+                            className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
+                            title="Desbloquear nombre"
+                          >
+                            <Eye size={12} />
+                          </button>
+                        )}
+                      </span>
+                      <div className={`flex items-center gap-3 mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[1].totalPoints}</b> PTS</span>
+                        <span className={isDark ? 'text-slate-700' : 'text-slate-300'}>·</span>
+                        <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[1].exactResults}</b> exactos</span>
+                      </div>
+                      {displayRanking[1].podiumPointsSimulated !== undefined && displayRanking[1].podiumPointsSimulated > 0 && (
+                        <span className="text-[9px] font-bold text-amber-400 block mt-0.5">
+                          🎁 Simulación: +{displayRanking[1].podiumPointsSimulated} pts
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-right shrink-0 pr-1">
+                      <span className="text-2xl filter drop-shadow-md">🥈</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 3ER PUESTO */}
+              {displayRanking[2] && (() => {
+                const isCensored = displayRanking[2].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
+                return (
+                  <div 
+                    onClick={() => {
+                      if (isCensored) return;
+                      setNavigatingUserId(displayRanking[2].userId);
+                      router.push(`/predictions/${displayRanking[2].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                    }}
+                    className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
+                      isCensored
+                        ? `cursor-default ${isDark ? 'bg-gradient-to-br from-amber-700/10 via-slate-900/60 to-slate-950/80 border-amber-700/30 shadow-[0_8px_24px_rgba(180,83,9,0.06)]' : 'bg-gradient-to-br from-amber-700/10 via-white to-white border-amber-700/30 shadow-[0_8px_16px_rgba(180,83,9,0.03)]'}`
+                        : `cursor-pointer hover:scale-[1.02] ${isDark ? 'bg-gradient-to-br from-amber-700/10 via-slate-900/60 to-slate-950/80 border-amber-700/30 shadow-[0_8px_24px_rgba(180,83,9,0.06)] hover:border-amber-700/50' : 'bg-gradient-to-br from-amber-700/10 via-white to-white border-amber-700/30 shadow-[0_8px_16px_rgba(180,83,9,0.03)] hover:border-amber-700/40'}`
+                    }`}
+                  >
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-amber-700/5 rounded-full blur-xl pointer-events-none group-hover:bg-amber-700/15 transition-all" />
+                    <div className="absolute -top-1 -left-1 bg-amber-700 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
+                      <span>🥉</span> <span>3º PUESTO</span>
+                      {(() => { const c = getPosChangeFor(displayRanking[2].userId, 2); return c > 0 ? <span className="text-emerald-350 font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-red-350 font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[9px]">•</span>; })()}
+                    </div>
+                    
+                    <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-amber-700 to-amber-500 p-[2.5px] shadow-[0_0_10px_rgba(180,83,9,0.15)] shrink-0">
+                      <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+                        <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{displayRanking[2].name?.slice(0, 1).toUpperCase()}</span>
+                        <img
+                          src={`https://apivacas.jariel.com.ar/users/${displayRanking[2].userId}.webp`}
+                          alt={displayRanking[2].name}
+                          className="w-full h-full object-cover relative z-10"
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-amber-600/80' : 'text-amber-700'}`}>Tercero</h4>
+                      <span className="inline-flex items-center gap-1.5 leading-tight">
+                        <span className={`block font-black text-base truncate transition-colors leading-tight ${isDark ? 'text-white group-hover:text-amber-200' : 'text-slate-900 group-hover:text-amber-700'} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
+                          {displayRanking[2].name}
+                        </span>
+                        {isCensored && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              setShowCensorConfirmModal(true);
+                            }}
+                            className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
+                            title="Desbloquear nombre"
+                          >
+                            <Eye size={12} />
+                          </button>
+                        )}
+                      </span>
+                      <div className={`flex items-center gap-3 mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                        <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[2].totalPoints}</b> PTS</span>
+                        <span className={isDark ? 'text-slate-700' : 'text-slate-300'}>·</span>
+                        <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[2].exactResults}</b> exactos</span>
+                      </div>
+                      {displayRanking[2].podiumPointsSimulated !== undefined && displayRanking[2].podiumPointsSimulated > 0 && (
+                        <span className="text-[9px] font-bold text-amber-400 block mt-0.5">
+                          🎁 Simulación: +{displayRanking[2].podiumPointsSimulated} pts
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-right shrink-0 pr-1">
+                      <span className="text-2xl filter drop-shadow-md">🥉</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-2">
+            
+            {/* 1ER PUESTO (GOLD) */}
+            {displayRanking[0] && (() => {
+              const isCensored = displayRanking[0].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
+              return (
+                <div 
+                  onClick={() => {
+                    if (isCensored) return;
+                    setNavigatingUserId(displayRanking[0].userId);
+                    router.push(`/predictions/${displayRanking[0].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                  }}
+                  className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
+                    isCensored 
+                      ? 'cursor-default bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)]' 
+                      : 'cursor-pointer hover:scale-[1.02] bg-gradient-to-br from-amber-500/15 via-slate-900/60 to-slate-950/80 border-amber-500/40 shadow-[0_8px_24px_rgba(245,158,11,0.1)] hover:border-amber-500/60'
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none group-hover:bg-amber-500/20 transition-all" />
+                  <div className="absolute -top-1 -left-1 bg-amber-500 text-black font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
+                    <span>👑</span> <span>1º PUESTO</span>
+                    {(() => { const c = getPosChangeFor(displayRanking[0].userId, 0); return c > 0 ? <span className="text-black font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-black font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-black/50 font-extrabold text-[9px]">•</span>; })()}
+                  </div>
+                  
+                  <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 p-[2.5px] shadow-[0_0_10px_rgba(245,158,11,0.25)] shrink-0">
+                    <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+                      <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{displayRanking[0].name?.slice(0, 1).toUpperCase()}</span>
+                      <img
+                        src={`https://apivacas.jariel.com.ar/users/${displayRanking[0].userId}.webp`}
+                        alt={displayRanking[0].name}
+                        className="w-full h-full object-cover relative z-10"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-amber-450' : 'text-amber-600'}`}>Puntero del Prode</h4>
+                    <span className="inline-flex items-center gap-1.5 leading-tight">
+                      <span className={`block font-black text-base truncate transition-colors ${isDark ? 'text-white group-hover:text-amber-300' : 'text-slate-900 group-hover:text-amber-600'} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
+                        {displayRanking[0].name}
+                      </span>
+                      {isCensored && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setShowCensorConfirmModal(true);
+                          }}
+                          className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
+                          title="Desbloquear nombre"
+                        >
+                          <Eye size={12} />
+                        </button>
+                      )}
                     </span>
-                    {isCensored && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setShowCensorConfirmModal(true);
-                        }}
-                        className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
-                        title="Desbloquear nombre"
-                      >
-                        <Eye size={12} />
-                      </button>
-                    )}
-                  </span>
-                  <div className={`flex items-center gap-3 mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[0].totalPoints}</b> PTS</span>
-                    <span className={isDark ? 'text-slate-700' : 'text-slate-300'}>·</span>
-                    <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[0].exactResults}</b> exactos</span>
+                    <div className={`flex items-center gap-3 mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[0].totalPoints}</b> PTS</span>
+                      <span className={isDark ? 'text-slate-700' : 'text-slate-300'}>·</span>
+                      <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[0].exactResults}</b> exactos</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right shrink-0 pr-1">
+                    <span className="text-2xl filter drop-shadow-md">🏆</span>
                   </div>
                 </div>
-                
-                <div className="text-right shrink-0 pr-1">
-                  <span className="text-2xl filter drop-shadow-md">🏆</span>
-                </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
 
-          {/* 2DO PUESTO (SILVER) */}
-          {displayRanking[1] && (() => {
-            const isCensored = displayRanking[1].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
-            return (
-              <div 
-                onClick={() => {
-                  if (isCensored) return;
-                  setNavigatingUserId(displayRanking[1].userId);
-                  router.push(`/predictions/${displayRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
-                }}
-                className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
-                  isCensored
-                    ? `cursor-default ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)]' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)]'}`
-                    : `cursor-pointer hover:scale-[1.02] ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)] hover:border-slate-400/50' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)] hover:border-slate-400/40'}`
-                }`}
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 bg-slate-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
-                <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
-                  <span>🥈</span> <span>2º PUESTO</span>
-                  {(() => { const c = getPosChangeFor(displayRanking[1].userId, 1); return c > 0 ? <span className="text-emerald-300 font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-red-300 font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[9px]">•</span>; })()}
-                </div>
-                
-                <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[2.5px] shadow-[0_0_10px_rgba(148,163,184,0.15)] shrink-0">
-                  <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
-                    <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{displayRanking[1].name?.slice(0, 1).toUpperCase()}</span>
-                    <img
-                      src={`https://apivacas.jariel.com.ar/users/${displayRanking[1].userId}.webp`}
-                      alt={displayRanking[1].name}
-                      className="w-full h-full object-cover relative z-10"
-                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                    />
+            {/* 2DO PUESTO (SILVER) */}
+            {displayRanking[1] && (() => {
+              const isCensored = displayRanking[1].userId === 'POYvW930tTUZZEnfNcIIy8O67692' && !isCensoredUnlocked;
+              return (
+                <div 
+                  onClick={() => {
+                    if (isCensored) return;
+                    setNavigatingUserId(displayRanking[1].userId);
+                    router.push(`/predictions/${displayRanking[1].userId}?tournamentId=${activeLeague.tournamentId}&tournamentName=${encodeURIComponent(activeLeague.name)}`);
+                  }}
+                  className={`relative overflow-hidden border rounded-3xl pt-5 pb-2.5 px-4 flex items-center gap-4 transition-all duration-300 group ${
+                    isCensored
+                      ? `cursor-default ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)]' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)]'}`
+                      : `cursor-pointer hover:scale-[1.02] ${isDark ? 'bg-gradient-to-br from-slate-400/10 via-slate-900/60 to-slate-950/80 border-slate-400/30 shadow-[0_8px_24px_rgba(148,163,184,0.06)] hover:border-slate-400/50' : 'bg-gradient-to-br from-slate-400/10 via-white to-white border-slate-300 shadow-[0_8px_16px_rgba(148,163,184,0.03)] hover:border-slate-400/40'}`
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-20 h-20 bg-slate-400/5 rounded-full blur-xl pointer-events-none group-hover:bg-slate-400/15 transition-all" />
+                  <div className="absolute -top-1 -left-1 bg-slate-500 text-white font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-br-2xl shadow-md flex items-center gap-1.5 z-20">
+                    <span>🥈</span> <span>2º PUESTO</span>
+                    {(() => { const c = getPosChangeFor(displayRanking[1].userId, 1); return c > 0 ? <span className="text-emerald-300 font-black text-[9px]">▲{c}</span> : c < 0 ? <span className="text-red-300 font-black text-[9px]">▼{Math.abs(c)}</span> : <span className="text-white/40 font-extrabold text-[9px]">•</span>; })()}
                   </div>
-                </div>
+                  
+                  <div className="relative w-14 h-14 rounded-full bg-gradient-to-tr from-slate-400 to-slate-200 p-[2.5px] shadow-[0_0_10px_rgba(148,163,184,0.15)] shrink-0">
+                    <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+                      <span className={`absolute z-0 text-base font-black ${isDark ? 'text-slate-700' : 'text-slate-300'}`}>{displayRanking[1].name?.slice(0, 1).toUpperCase()}</span>
+                      <img
+                        src={`https://apivacas.jariel.com.ar/users/${displayRanking[1].userId}.webp`}
+                        alt={displayRanking[1].name}
+                        className="w-full h-full object-cover relative z-10"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                    </div>
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Escolta</h4>
-                  <span className="inline-flex items-center gap-1.5 leading-tight">
-                    <span className={`block font-black text-base truncate transition-colors leading-tight ${isDark ? 'text-white group-hover:text-slate-350' : 'text-slate-900 group-hover:text-slate-600'} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
-                      {displayRanking[1].name}
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`text-[8px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Escolta</h4>
+                    <span className="inline-flex items-center gap-1.5 leading-tight">
+                      <span className={`block font-black text-base truncate transition-colors leading-tight ${isDark ? 'text-white group-hover:text-slate-350' : 'text-slate-900 group-hover:text-slate-600'} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
+                        {displayRanking[1].name}
+                      </span>
+                      {isCensored && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setShowCensorConfirmModal(true);
+                          }}
+                          className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
+                          title="Desbloquear nombre"
+                        >
+                          <Eye size={12} />
+                        </button>
+                      )}
                     </span>
-                    {isCensored && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          setShowCensorConfirmModal(true);
-                        }}
-                        className="inline-flex items-center justify-center p-1 rounded-md bg-white/10 hover:bg-white/20 text-amber-400 cursor-pointer active:scale-95 transition-all shrink-0"
-                        title="Desbloquear nombre"
-                      >
-                        <Eye size={12} />
-                      </button>
-                    )}
-                  </span>
-                  <div className={`flex items-center gap-3 mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[1].totalPoints}</b> PTS</span>
-                    <span className={isDark ? 'text-slate-700' : 'text-slate-300'}>·</span>
-                    <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[1].exactResults}</b> exactos</span>
+                    <div className={`flex items-center gap-3 mt-0.5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[1].totalPoints}</b> PTS</span>
+                      <span className={isDark ? 'text-slate-700' : 'text-slate-300'}>·</span>
+                      <span><b className={isDark ? '' : 'text-slate-800'}>{displayRanking[1].exactResults}</b> exactos</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 pr-1">
+                    <span className="text-2xl filter drop-shadow-md">🥈</span>
                   </div>
                 </div>
+              );
+            })()}
 
-                <div className="text-right shrink-0 pr-1">
-                  <span className="text-2xl filter drop-shadow-md">🥈</span>
-                </div>
-              </div>
-            );
-          })()}
-
-        </div>
+          </div>
+        )
       )}
 
 
@@ -1302,11 +1712,11 @@ export default function MundialRankingView() {
                   </div>
                 );
               })
-            ) : displayRanking.length <= 2 ? (
+            ) : displayRanking.length <= (activeLeague.id === 'mundial' ? 3 : 2) ? (
               <div className="p-8 text-center text-slate-500 italic">No hay más participantes en esta tabla.</div>
             ) : (
-              displayRanking.slice(2).map((entry, sliceIdx) => {
-                const idx = sliceIdx + 2;
+              displayRanking.slice(activeLeague.id === 'mundial' ? 3 : 2).map((entry, sliceIdx) => {
+                const idx = sliceIdx + (activeLeague.id === 'mundial' ? 3 : 2);
                 const isMe = user && entry.userId === user.uid;
                 const isMundial = activeLeague.id === 'mundial';
                 const isTop3 = idx < 3;
@@ -1451,7 +1861,12 @@ export default function MundialRankingView() {
                       </span>
                     </div>
 
-                    <div className="text-right">
+                    <div className="text-right flex items-center justify-end gap-1.5">
+                      {entry.podiumPointsSimulated !== undefined && entry.podiumPointsSimulated > 0 && (
+                        <span className="text-[10px] font-black text-amber-400" title={`Puntos de podio simulados: +${entry.podiumPointsSimulated}`}>
+                          (+{entry.podiumPointsSimulated})
+                        </span>
+                      )}
                       <span className={isLast ? 'text-base font-black text-red-500' : pointsClass}>
                         {entry.totalPoints}
                       </span>
