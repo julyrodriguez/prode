@@ -854,8 +854,8 @@ export default function MundialRankingView() {
 
       {/* ── Carteles SE BUSCA ── */}
       {!loading && !error && ranking.length > 0 && (() => {
-        const wantedUser1 = activeRanking.find(r => r.userId === 'CPJ15xjLbaMJmiEc7fChoFUiDMw2');
         const lastUser = activeRanking.length > 0 ? activeRanking[activeRanking.length - 1] : null;
+        if (!lastUser) return null;
 
         const WantedCard = ({
           entry,
@@ -995,23 +995,17 @@ export default function MundialRankingView() {
         };
 
         return (
-          <div className="grid grid-cols-2 gap-3 mb-4 max-w-sm mx-auto w-full">
-            <WantedCard
-              entry={wantedUser1}
-              debt="$15.000"
-              subtitle="Deudor del Prode"
-              rewardText="Vivo o Muerto"
-              rewardPoints="🎯 15 Puntos"
-              accent="#f59e0b"
-            />
-            <WantedCard
-              entry={lastUser}
-              debt="$10.000"
-              subtitle="Último del Ranking"
-              rewardText="Vivo o Muerto"
-              rewardPoints="🎯 10 Puntos"
-              accent="#ef4444"
-            />
+          <div className="flex justify-center mb-4 w-full">
+            <div className="w-full max-w-[180px]">
+              <WantedCard
+                entry={lastUser}
+                debt="$10.000"
+                subtitle="Último del Ranking"
+                rewardText="Vivo o Muerto"
+                rewardPoints="🎯 10 Puntos"
+                accent="#ef4444"
+              />
+            </div>
           </div>
         );
       })()}
