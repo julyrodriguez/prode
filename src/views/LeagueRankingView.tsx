@@ -108,6 +108,27 @@ function getPointsForPrediction(
   return (result === 'exact' ? 6 : 3) * multiplier;
 }
 
+const isChampionPossible = (countryName: string | undefined | null) => {
+  if (!countryName) return true;
+  const name = countryName.trim().toLowerCase();
+  if (name === 'sin elegir' || name === '—' || name === '') return true;
+  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+};
+
+const isRunnerUpPossible = (countryName: string | undefined | null) => {
+  if (!countryName) return true;
+  const name = countryName.trim().toLowerCase();
+  if (name === 'sin elegir' || name === '—' || name === '') return true;
+  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+};
+
+const isThirdPlacePossible = (countryName: string | undefined | null) => {
+  if (!countryName) return true;
+  const name = countryName.trim().toLowerCase();
+  if (name === 'sin elegir' || name === '—' || name === '') return true;
+  return name === 'francia' || name === 'argentina' || name === 'inglaterra';
+};
+
 export default function LeagueRankingView() {
   const params = useParams();
   const leagueId = (params?.leagueId as string) || 'general';
@@ -1039,7 +1060,7 @@ export default function LeagueRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className="font-extrabold text-slate-300">
+                            <span className={`font-extrabold ${isChampionPossible(pred.champion) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.champion}
                             </span>
                           )}
@@ -1058,7 +1079,7 @@ export default function LeagueRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className="font-extrabold text-slate-300">
+                            <span className={`font-extrabold ${isRunnerUpPossible(pred.runnerUp) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.runnerUp}
                             </span>
                           )}
@@ -1077,7 +1098,7 @@ export default function LeagueRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className="font-extrabold text-slate-300">
+                            <span className={`font-extrabold ${isThirdPlacePossible(pred.thirdPlace) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.thirdPlace}
                             </span>
                           )}

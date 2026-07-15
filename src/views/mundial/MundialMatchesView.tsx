@@ -521,6 +521,27 @@ const MatchRow = memo(({
 
 // Prediction mode is the separate "predicciones" tab, passed via context if needed
 // But here we just need to know if we're in prediction mode based on the URL tab
+const isChampionPossible = (countryName: string | undefined | null) => {
+  if (!countryName) return true;
+  const name = countryName.trim().toLowerCase();
+  if (name === 'sin elegir' || name === '—' || name === '') return true;
+  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+};
+
+const isRunnerUpPossible = (countryName: string | undefined | null) => {
+  if (!countryName) return true;
+  const name = countryName.trim().toLowerCase();
+  if (name === 'sin elegir' || name === '—' || name === '') return true;
+  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+};
+
+const isThirdPlacePossible = (countryName: string | undefined | null) => {
+  if (!countryName) return true;
+  const name = countryName.trim().toLowerCase();
+  if (name === 'sin elegir' || name === '—' || name === '') return true;
+  return name === 'francia' || name === 'argentina' || name === 'inglaterra';
+};
+
 export default function MundialMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
   const leagueId = 'mundial';
   const activeLeague = LEAGUES.find(l => l.id === leagueId) || LEAGUES[0];
@@ -1177,7 +1198,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
               
               {/* 2nd Place (Left) */}
               <div className="flex-1 flex flex-col items-center gap-1.5 max-w-[130px] md:max-w-[140px]">
-                <span className="text-slate-200 font-extrabold text-[11px] md:text-xs truncate text-center w-full px-1 mb-1.5">
+                <span className={`font-extrabold text-[11px] md:text-xs truncate text-center w-full px-1 mb-1.5 ${isRunnerUpPossible(podiumRunnerUp) ? 'text-slate-200' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                   {podiumRunnerUp || '—'}
                 </span>
                 <div className="w-full h-16 md:h-20 rounded-t-2xl bg-gradient-to-t from-slate-900/90 to-slate-800/40 border-t border-x border-slate-500/30 flex flex-col items-center justify-center p-2.5 shadow-lg backdrop-blur-sm group hover:border-slate-400/40 transition-all">
@@ -1188,7 +1209,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
               {/* 1st Place (Middle - Taller) */}
               <div className="flex-1 flex flex-col items-center gap-1.5 max-w-[140px] md:max-w-[150px]">
-                <span className="text-amber-400 font-black text-xs md:text-sm truncate text-center w-full px-1 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)] mb-3.5">
+                <span className={`font-black text-xs md:text-sm truncate text-center w-full px-1 drop-shadow-[0_2px_8px_rgba(245,158,11,0.2)] mb-3.5 ${isChampionPossible(podiumChampion) ? 'text-amber-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                   {podiumChampion || '—'}
                 </span>
                 <div className="w-full h-22 md:h-26 rounded-t-2xl bg-gradient-to-t from-amber-950/70 to-amber-500/10 border-t border-x border-amber-500/40 flex flex-col items-center justify-center p-2.5 shadow-[0_0_20px_rgba(245,158,11,0.1)] backdrop-blur-sm group hover:border-amber-400/50 transition-all relative">
@@ -1203,7 +1224,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
               {/* 3rd Place (Right) */}
               <div className="flex-1 flex flex-col items-center gap-1.5 max-w-[130px] md:max-w-[140px]">
-                <span className="text-orange-300 font-extrabold text-[11px] md:text-xs truncate text-center w-full px-1 mb-1.5">
+                <span className={`font-extrabold text-[11px] md:text-xs truncate text-center w-full px-1 mb-1.5 ${isThirdPlacePossible(podiumThirdPlace) ? 'text-orange-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                   {podiumThirdPlace || '—'}
                 </span>
                 <div className="w-full h-12 md:h-14 rounded-t-2xl bg-gradient-to-t from-orange-950/90 to-orange-900/30 border-t border-x border-orange-700/30 flex flex-col items-center justify-center p-2.5 shadow-lg backdrop-blur-sm group hover:border-orange-500/40 transition-all">
