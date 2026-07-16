@@ -1163,7 +1163,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
             </div>
 
             {/* Footer / Continue button */}
-            <div className="w-full flex justify-center mb-4 md:mb-8 mt-auto">
+            <div className="w-full flex justify-center pb-24 md:pb-8 mt-auto">
               <button 
                 onClick={handleCloseOverlay}
                 className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase py-3 px-8 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.35)] transition-all transform hover:scale-[1.03] active:scale-[0.97] cursor-pointer tracking-widest text-xs md:text-sm"
