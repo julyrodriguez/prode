@@ -572,6 +572,39 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [jumpMsg, setJumpMsg] = useState<string | null>(null);
+  const [showFinalOverlay, setShowFinalOverlay] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const hasShown = sessionStorage.getItem('finalOverlayShown');
+    if (!hasShown) {
+      setShowFinalOverlay(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const targetTime = 1784487600000; // July 19, 2026 16:00 ARG
+    const updateCountdown = () => {
+      const diff = targetTime - Date.now();
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleCloseOverlay = () => {
+    sessionStorage.setItem('finalOverlayShown', 'true');
+    setShowFinalOverlay(false);
+  };
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -1047,6 +1080,97 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
   return (
     <div className="w-full flex flex-col gap-6">
+
+      {/* Final Countdown Overlay */}
+      {showFinalOverlay && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between p-6 md:p-12 text-white bg-black/85 overflow-y-auto">
+          {/* Background image of Messi */}
+          <div 
+            className="absolute inset-0 bg-[url('/messi_copa.jpg')] bg-cover bg-center bg-no-repeat opacity-40 mix-blend-lighten pointer-events-none"
+            style={{ zIndex: -1 }}
+          />
+          
+          {/* Dark gradient mask for legibility */}
+          <div 
+            className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"
+            style={{ zIndex: -1 }}
+          />
+
+          {/* Header Section */}
+          <div className="w-full text-center mt-4 md:mt-8 flex flex-col items-center gap-2">
+            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/25 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.15)] animate-pulse">
+              Gran Final Mundial 2026
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mt-2">
+              La Gran Final
+            </h2>
+            <div className="h-1 w-20 bg-gradient-to-r from-transparent via-amber-500 to-transparent mt-2" />
+          </div>
+
+          {/* Match Card / Teams */}
+          <div className="flex flex-col items-center gap-6 my-auto max-w-2xl w-full">
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 w-full">
+              {/* Team 1: España */}
+              <div className="flex flex-col items-center gap-3 md:w-48 text-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-slate-900/50 backdrop-blur-md border border-white/10 flex items-center justify-center p-4 shadow-2xl shadow-black/50 transition-all hover:scale-105">
+                  <img src="/escudos/4698.png" alt="España" className="w-full h-full object-contain" />
+                </div>
+                <span className="text-xl md:text-2xl font-black tracking-wide bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">España</span>
+              </div>
+
+              {/* VS Separator */}
+              <div className="flex flex-col items-center">
+                <span className="text-3xl md:text-5xl font-black italic text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">VS</span>
+              </div>
+
+              {/* Team 2: Argentina */}
+              <div className="flex flex-col items-center gap-3 md:w-48 text-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 rounded-3xl bg-slate-900/50 backdrop-blur-md border border-amber-400/20 flex items-center justify-center p-4 shadow-2xl shadow-black/50 transition-all hover:scale-105">
+                  <img src="/escudos/4819.png" alt="Argentina" className="w-full h-full object-contain" />
+                </div>
+                <span className="text-xl md:text-2xl font-black tracking-wide bg-gradient-to-b from-amber-300 to-amber-500 bg-clip-text text-transparent">Argentina</span>
+              </div>
+            </div>
+
+            {/* Countdown Timer */}
+            <div className="flex items-center gap-3 md:gap-5 mt-6">
+              {/* Days */}
+              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                <span className="text-2xl md:text-4xl font-black tabular-nums text-white">{timeLeft.days}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-1">Días</span>
+              </div>
+              <span className="text-slate-500 text-xl font-bold">:</span>
+              {/* Hours */}
+              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                <span className="text-2xl md:text-4xl font-black tabular-nums text-white">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-1">Horas</span>
+              </div>
+              <span className="text-slate-500 text-xl font-bold">:</span>
+              {/* Minutes */}
+              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                <span className="text-2xl md:text-4xl font-black tabular-nums text-white">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-1">Min</span>
+              </div>
+              <span className="text-slate-500 text-xl font-bold">:</span>
+              {/* Seconds */}
+              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-2xl p-3 md:p-4 min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                <span className="text-2xl md:text-4xl font-black tabular-nums text-amber-400">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span className="text-[9px] font-bold uppercase tracking-wider text-amber-500 mt-1">Seg</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer / Continue button */}
+          <div className="w-full flex justify-center mb-4 md:mb-8">
+            <button 
+              onClick={handleCloseOverlay}
+              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase py-3 md:py-3.5 px-8 md:px-10 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.35)] transition-all transform hover:scale-[1.03] active:scale-[0.97] cursor-pointer tracking-widest text-xs md:text-sm"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Prediction mode banner */}
       {isPredictionMode && (
