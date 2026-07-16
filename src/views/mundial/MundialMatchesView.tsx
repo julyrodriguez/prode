@@ -1083,91 +1083,94 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
 
       {/* Final Countdown Overlay */}
       {showFinalOverlay && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-between p-4 md:p-12 text-white bg-black/90 overflow-y-auto">
+        <div className="fixed inset-0 z-[9999] overflow-y-auto bg-black/95">
           {/* Background image of Messi */}
           <div 
-            className="absolute inset-0 bg-[url('/messi_copa.jpg')] bg-cover bg-center bg-no-repeat opacity-40 mix-blend-lighten pointer-events-none"
+            className="fixed inset-0 bg-[url('/messi_copa.jpg')] bg-cover bg-center bg-no-repeat opacity-40 mix-blend-lighten pointer-events-none"
             style={{ zIndex: -1 }}
           />
           
           {/* Dark gradient mask for legibility */}
           <div 
-            className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"
+            className="fixed inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90 pointer-events-none"
             style={{ zIndex: -1 }}
           />
 
-          {/* Header Section */}
-          <div className="w-full text-center mt-2 md:mt-8 flex flex-col items-center gap-2">
-            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/25 px-4 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.15)] animate-pulse">
-              Gran Final Mundial 2026
-            </span>
-            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mt-1.5">
-              La Gran Final
-            </h2>
-            <div className="h-1 w-16 bg-gradient-to-r from-transparent via-amber-500 to-transparent mt-1.5" />
-          </div>
+          {/* Content Wrapper */}
+          <div className="flex flex-col items-center justify-between min-h-full w-full max-w-2xl mx-auto p-4 md:p-12 text-white relative z-10 gap-8">
+            {/* Header Section */}
+            <div className="w-full text-center mt-2 md:mt-8 flex flex-col items-center gap-2">
+              <span className="bg-amber-500/10 text-amber-400 border border-amber-500/25 px-4 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest shadow-[0_0_15px_rgba(245,158,11,0.15)] animate-pulse">
+                Gran Final Mundial 2026
+              </span>
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-black uppercase tracking-wider bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent mt-1.5">
+                La Gran Final
+              </h2>
+              <div className="h-1 w-16 bg-gradient-to-r from-transparent via-amber-500 to-transparent mt-1.5" />
+            </div>
 
-          {/* Match Card / Teams (Side by side on mobile) */}
-          <div className="flex flex-col items-center gap-4 md:gap-6 my-auto max-w-2xl w-full">
-            <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
-              {/* Team 1: España */}
-              <div className="flex flex-col items-center gap-2 text-center w-24 sm:w-32 md:w-48">
-                <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 flex items-center justify-center p-3 sm:p-4 shadow-xl transition-all hover:scale-105">
-                  <img src="/escudos/4698.png" alt="España" className="w-full h-full object-contain" />
+            {/* Match Card / Teams */}
+            <div className="flex flex-col items-center gap-4 md:gap-6 my-auto w-full">
+              <div className="flex items-center justify-center gap-4 sm:gap-8 md:gap-12 w-full">
+                {/* Team 1: España */}
+                <div className="flex flex-col items-center gap-2 text-center w-24 sm:w-32 md:w-48">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-white/10 flex items-center justify-center p-3 sm:p-4 shadow-xl transition-all hover:scale-105">
+                    <img src="/escudos/4698.png" alt="España" className="w-full h-full object-contain" />
+                  </div>
+                  <span className="text-sm sm:text-lg md:text-2xl font-black tracking-wide bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">España</span>
                 </div>
-                <span className="text-sm sm:text-lg md:text-2xl font-black tracking-wide bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent">España</span>
+
+                {/* VS Separator */}
+                <div className="flex flex-col items-center">
+                  <span className="text-xl sm:text-3xl md:text-5xl font-black italic text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">VS</span>
+                </div>
+
+                {/* Team 2: Argentina */}
+                <div className="flex flex-col items-center gap-2 text-center w-24 sm:w-32 md:w-48">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-amber-400/20 flex items-center justify-center p-3 sm:p-4 shadow-xl transition-all hover:scale-105">
+                    <img src="/escudos/4819.png" alt="Argentina" className="w-full h-full object-contain" />
+                  </div>
+                  <span className="text-sm sm:text-lg md:text-2xl font-black tracking-wide bg-gradient-to-b from-amber-300 to-amber-500 bg-clip-text text-transparent">Argentina</span>
+                </div>
               </div>
 
-              {/* VS Separator */}
-              <div className="flex flex-col items-center">
-                <span className="text-xl sm:text-3xl md:text-5xl font-black italic text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">VS</span>
-              </div>
-
-              {/* Team 2: Argentina */}
-              <div className="flex flex-col items-center gap-2 text-center w-24 sm:w-32 md:w-48">
-                <div className="w-14 h-14 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-2xl bg-slate-900/50 backdrop-blur-md border border-amber-400/20 flex items-center justify-center p-3 sm:p-4 shadow-xl transition-all hover:scale-105">
-                  <img src="/escudos/4819.png" alt="Argentina" className="w-full h-full object-contain" />
+              {/* Countdown Timer */}
+              <div className="flex items-center gap-2 sm:gap-3 md:gap-5 mt-4 md:mt-6">
+                {/* Days */}
+                <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                  <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-white">{timeLeft.days}</span>
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 md:mt-1">Días</span>
                 </div>
-                <span className="text-sm sm:text-lg md:text-2xl font-black tracking-wide bg-gradient-to-b from-amber-300 to-amber-500 bg-clip-text text-transparent">Argentina</span>
+                <span className="text-slate-500 text-base sm:text-xl font-bold">:</span>
+                {/* Hours */}
+                <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                  <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-white">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 md:mt-1">Horas</span>
+                </div>
+                <span className="text-slate-500 text-base sm:text-xl font-bold">:</span>
+                {/* Minutes */}
+                <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                  <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-white">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 md:mt-1">Min</span>
+                </div>
+                <span className="text-slate-500 text-base sm:text-xl font-bold">:</span>
+                {/* Seconds */}
+                <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
+                  <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-amber-400">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-amber-500 mt-0.5 md:mt-1">Seg</span>
+                </div>
               </div>
             </div>
 
-            {/* Countdown Timer (optimized for mobile) */}
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-5 mt-4 md:mt-6">
-              {/* Days */}
-              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
-                <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-white">{timeLeft.days}</span>
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 md:mt-1">Días</span>
-              </div>
-              <span className="text-slate-500 text-base sm:text-xl font-bold">:</span>
-              {/* Hours */}
-              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
-                <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-white">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 md:mt-1">Horas</span>
-              </div>
-              <span className="text-slate-500 text-base sm:text-xl font-bold">:</span>
-              {/* Minutes */}
-              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
-                <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-white">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5 md:mt-1">Min</span>
-              </div>
-              <span className="text-slate-500 text-base sm:text-xl font-bold">:</span>
-              {/* Seconds */}
-              <div className="bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 min-w-[55px] sm:min-w-[70px] md:min-w-[85px] flex flex-col items-center justify-center shadow-lg">
-                <span className="text-lg sm:text-2xl md:text-4xl font-black tabular-nums text-amber-400">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-amber-500 mt-0.5 md:mt-1">Seg</span>
-              </div>
+            {/* Footer / Continue button */}
+            <div className="w-full flex justify-center mb-4 md:mb-8 mt-auto">
+              <button 
+                onClick={handleCloseOverlay}
+                className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase py-3 px-8 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.35)] transition-all transform hover:scale-[1.03] active:scale-[0.97] cursor-pointer tracking-widest text-xs md:text-sm"
+              >
+                Continuar
+              </button>
             </div>
-          </div>
-
-          {/* Footer / Continue button */}
-          <div className="w-full flex justify-center mb-2 md:mb-8">
-            <button 
-              onClick={handleCloseOverlay}
-              className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black uppercase py-2.5 md:py-3.5 px-6 md:px-10 rounded-xl shadow-[0_4px_25px_rgba(245,158,11,0.35)] transition-all transform hover:scale-[1.03] active:scale-[0.97] cursor-pointer tracking-widest text-[10px] sm:text-xs md:text-sm"
-            >
-              Continuar
-            </button>
           </div>
         </div>
       )}
