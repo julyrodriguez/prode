@@ -104,7 +104,7 @@ function getPointsForPrediction(
       return (result === 'exact' ? 8 : 4) * multiplier;
     }
 
-    const isSemi = stage.includes('semi') || stage.includes('tercer') || stage.includes('third');
+    const isSemi = stage.includes('semi');
     if (isSemi) {
       return (result === 'exact' ? 16 : 8) * multiplier;
     }

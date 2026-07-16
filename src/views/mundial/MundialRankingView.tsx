@@ -162,8 +162,8 @@ function getPointsForPrediction(
     if (roundName.includes('final') && !roundName.includes('semi') && !roundName.includes('quarter') && !roundName.includes('cuart') && !roundName.includes('eighth') && !roundName.includes('octav') && !roundName.includes('16')) {
       return (result === 'exact' ? 20 : 10) * multiplier;
     }
-    // 2. SEMIFINAL o TERCER PUESTO
-    else if (roundName.includes('semi') || roundName.includes('tercer') || roundName.includes('third') || roundName.includes('3er') || roundName.includes('3rd')) {
+    // 2. SEMIFINAL
+    else if (roundName.includes('semi')) {
       return (result === 'exact' ? 16 : 8) * multiplier;
     }
     // 3. CUARTOS (12 exacto, 6 tendencia)

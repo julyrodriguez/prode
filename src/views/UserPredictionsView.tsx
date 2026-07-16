@@ -89,7 +89,7 @@ function getPointsForPrediction(
       } else if (is16avosToOctavos) {
         basePoints = result === 'exact' ? 8 : 4;
       } else {
-        const isSemi = stage.includes('semi') || stage.includes('tercer') || stage.includes('third');
+        const isSemi = stage.includes('semi');
         if (isSemi) {
           basePoints = result === 'exact' ? 16 : 8;
         } else {
