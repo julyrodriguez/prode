@@ -1413,7 +1413,14 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
                 <Bell className={`h-4 w-4 ${notifiedCompetitions.includes(16) ? 'fill-yellow-400' : ''}`} />
               </button>
             )}
-            
+            {/* Countdown Overlay Trigger Button */}
+            <button
+              onClick={() => setShowFinalOverlay(true)}
+              className="px-3.5 py-1.5 rounded-full text-[10px] font-black bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/15 hover:border-amber-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
+            >
+              <span>⏱️</span> Ver Final
+            </button>
+
             <button
               onClick={() => { setAllMatches([]); setLoading(true); setViewMode(prev => prev === 'day' ? 'week' : 'day'); }}
               className="px-3.5 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 hover:border-emerald-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
