@@ -78,6 +78,7 @@ function getPointsForPrediction(
        
     if (isTercerPuesto) {
       stage = 'tercer puesto';
+      return (result === 'exact' ? 18 : 9) * multiplier;
     }
 
     const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();

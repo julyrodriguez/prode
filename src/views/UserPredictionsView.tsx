@@ -65,16 +65,16 @@ function getPointsForPrediction(
        
     if (isTercerPuesto) {
       stage = 'tercer puesto';
-    }
-
-    const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
-
-    // Group stage detection:
-    const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
-
-    if (isGroup) {
-      basePoints = result === 'exact' ? 4 : 2;
+      basePoints = result === 'exact' ? 18 : 9;
     } else {
+      const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
+
+      // Group stage detection:
+      const isGroup = torneo.includes('group') || torneo.includes('grupo') || stage.includes('fecha') || stage.includes('group');
+
+      if (isGroup) {
+        basePoints = result === 'exact' ? 4 : 2;
+      } else {
       // Knockout phases:
       const isCuartos = stage.includes('quarter') || stage.includes('cuart');
       const is16avosToOctavos = 
@@ -102,6 +102,7 @@ function getPointsForPrediction(
           }
         }
       }
+    }
     }
   } else {
     // Fallback for standard tournaments:

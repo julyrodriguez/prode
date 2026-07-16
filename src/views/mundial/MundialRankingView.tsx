@@ -156,6 +156,7 @@ function getPointsForPrediction(
        
     if (isTercerPuesto) {
       roundName = 'tercer puesto';
+      return (result === 'exact' ? 18 : 9) * multiplier;
     }
 
     // 1. FINAL
