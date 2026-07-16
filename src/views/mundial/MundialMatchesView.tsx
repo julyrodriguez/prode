@@ -1398,7 +1398,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
       {/* Date Navigator Header - Compact Centered Pill */}
       {selectedDate && (
         <div className="flex justify-center w-full my-1 relative z-40">
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-full px-4 py-2 flex items-center justify-center gap-3 shadow-lg shadow-black/30 w-fit">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-full px-2.5 sm:px-4 py-2 flex items-center justify-center gap-1.5 sm:gap-3 shadow-lg shadow-black/30 w-fit">
             {user && (
               <button
                 onClick={() => handleToggleCompetitionNotification(16)}
@@ -1419,22 +1419,23 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
             {/* Countdown Overlay Trigger Button */}
             <button
               onClick={() => setShowFinalOverlay(true)}
-              className="px-3.5 py-1.5 rounded-full text-[10px] font-black bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/15 hover:border-amber-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
+              className="px-2 sm:px-3.5 py-1.5 rounded-full text-[10px] font-black bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/15 hover:border-amber-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
+              title="Ver Final"
             >
-              <span>⏱️</span> Ver Final
+              <span>⏱️</span> <span className="hidden sm:inline">Ver Final</span>
             </button>
 
             <button
               onClick={() => { setAllMatches([]); setLoading(true); setViewMode(prev => prev === 'day' ? 'week' : 'day'); }}
-              className="px-3.5 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 hover:border-emerald-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
+              className="px-2 sm:px-3.5 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/15 hover:border-emerald-500/30 transition-all flex items-center gap-1 active:scale-95 transform shrink-0 select-none cursor-pointer"
             >
               {viewMode === 'day' ? (
                 <>
-                  <span>📅</span> Semana
+                  <span>📅</span> <span className="hidden sm:inline">Semana</span>
                 </>
               ) : (
                 <>
-                  <span>📆</span> Día
+                  <span>📆</span> <span className="hidden sm:inline">Día</span>
                 </>
               )}
             </button>
