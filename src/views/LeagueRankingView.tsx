@@ -1212,6 +1212,11 @@ export default function LeagueRankingView() {
                     <span className="text-center font-bold text-emerald-400">16 pts</span>
                   </div>
                   <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
+                    <span className="font-semibold text-slate-300">Tercer puesto</span>
+                    <span className="text-center font-bold text-indigo-400">9 pts</span>
+                    <span className="text-center font-bold text-emerald-400">18 pts</span>
+                  </div>
+                  <div className="grid grid-cols-[1fr_75px_75px] items-center px-4 py-3">
                     <span className="font-semibold text-slate-300">Final</span>
                     <span className="text-center font-bold text-indigo-400">10 pts</span>
                     <span className="text-center font-bold text-emerald-400">20 pts</span>
