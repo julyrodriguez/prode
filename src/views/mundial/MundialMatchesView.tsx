@@ -113,7 +113,7 @@ interface Match {
   tournament?: { name?: string; id?: number; category?: { flag?: string } };
   tournament_name?: string;
   round_name?: string;
-  status?: string | { type?: string; description?: string };
+  status?: string | { type?: string; description?: string; minute?: string | number };
   homeScore?: { current?: number };
   awayScore?: { current?: number };
   odds?: MatchOdds;
@@ -521,25 +521,45 @@ const MatchRow = memo(({
 
 // Prediction mode is the separate "predicciones" tab, passed via context if needed
 // But here we just need to know if we're in prediction mode based on the URL tab
+const sanitizeMatch = (m: any): any => {
+  if (!m) return m;
+  const matchId = (m as any).id || (m as any)._id;
+  const homeName = ((m as any).homeTeam?.name || (m as any).home_team?.name || '').toLowerCase();
+  const awayName = ((m as any).awayTeam?.name || (m as any).away_team?.name || '').toLowerCase();
+  const isTercerPuesto = 
+    matchId === 1775853465 || 
+    ((homeName.includes('france') || homeName.includes('francia')) && 
+     (awayName.includes('england') || awayName.includes('inglaterra')));
+  
+  if (isTercerPuesto) {
+    return {
+      ...m,
+      round_name: 'Tercer puesto',
+      stage: 'Tercer puesto'
+    };
+  }
+  return m;
+};
+
 const isChampionPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+  return name === 'argentina' || name === 'españa' || name === 'espana';
 };
 
 const isRunnerUpPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+  return name === 'argentina' || name === 'españa' || name === 'espana';
 };
 
 const isThirdPlacePossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'francia' || name === 'argentina' || name === 'inglaterra';
+  return name === 'francia' || name === 'france' || name === 'inglaterra' || name === 'england';
 };
 
 export default function MundialMatchesView({ isPredictionMode = false }: { isPredictionMode?: boolean }) {
@@ -711,7 +731,7 @@ export default function MundialMatchesView({ isPredictionMode = false }: { isPre
           events.sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
         }
 
-        events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
+        events = events.map((e: any) => sanitizeMatch({ ...e, id: e.id || e._id }));
 
         // Deduplicar partidos por ID
         const seenIds = new Set<number>();

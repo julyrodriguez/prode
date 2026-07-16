@@ -67,7 +67,19 @@ function getPointsForPrediction(
   const multiplier = esArgentina ? 2 : 1;
 
   if (tournamentId === 16) {
-    const stage = (match?.stage || match?.round_name || pred?.stage || pred?.round_name || '').toLowerCase();
+    let stage = (match?.stage || match?.round_name || pred?.stage || pred?.round_name || '').toLowerCase();
+    const matchId = match?.id || match?._id || pred?.matchId || pred?.match_id;
+    const isTercerPuesto = 
+      matchId === 1775853465 ||
+      ((match?.homeTeam?.name || match?.home_team?.name || pred?.equipoLocal || '').toLowerCase().includes('france') ||
+       (match?.homeTeam?.name || match?.home_team?.name || pred?.equipoLocal || '').toLowerCase().includes('francia')) &&
+      ((match?.awayTeam?.name || match?.away_team?.name || pred?.equipoVisita || '').toLowerCase().includes('england') ||
+       (match?.awayTeam?.name || match?.away_team?.name || pred?.equipoVisita || '').toLowerCase().includes('inglaterra'));
+       
+    if (isTercerPuesto) {
+      stage = 'tercer puesto';
+    }
+
     const torneo = (pred.torneo || match?.tournament_name || '').toLowerCase();
 
     // Group stage detection
@@ -92,7 +104,7 @@ function getPointsForPrediction(
       return (result === 'exact' ? 8 : 4) * multiplier;
     }
 
-    const isSemi = stage.includes('semi');
+    const isSemi = stage.includes('semi') || stage.includes('tercer') || stage.includes('third');
     if (isSemi) {
       return (result === 'exact' ? 16 : 8) * multiplier;
     }
@@ -108,25 +120,45 @@ function getPointsForPrediction(
   return (result === 'exact' ? 6 : 3) * multiplier;
 }
 
+const sanitizeMatch = (m: any): any => {
+  if (!m) return m;
+  const matchId = (m as any).id || (m as any)._id;
+  const homeName = ((m as any).homeTeam?.name || (m as any).home_team?.name || '').toLowerCase();
+  const awayName = ((m as any).awayTeam?.name || (m as any).away_team?.name || '').toLowerCase();
+  const isTercerPuesto = 
+    matchId === 1775853465 || 
+    ((homeName.includes('france') || homeName.includes('francia')) && 
+     (awayName.includes('england') || awayName.includes('inglaterra')));
+  
+  if (isTercerPuesto) {
+    return {
+      ...m,
+      round_name: 'Tercer puesto',
+      stage: 'Tercer puesto'
+    };
+  }
+  return m;
+};
+
 const isChampionPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+  return name === 'argentina' || name === 'españa' || name === 'espana';
 };
 
 const isRunnerUpPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana' || name === 'inglaterra';
+  return name === 'argentina' || name === 'españa' || name === 'espana';
 };
 
 const isThirdPlacePossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'francia' || name === 'argentina' || name === 'inglaterra';
+  return name === 'francia' || name === 'france' || name === 'inglaterra' || name === 'england';
 };
 
 export default function LeagueRankingView() {
@@ -364,7 +396,7 @@ export default function LeagueRankingView() {
         const res = await fetch('https://apivacas.jariel.com.ar/api/matches/all');
         if (res.ok) {
           const data = await res.json();
-          setMatches(data);
+          setMatches(Array.isArray(data) ? data.map(sanitizeMatch) : data);
         }
       } catch (e) {
         console.error("Error fetching matches:", e);

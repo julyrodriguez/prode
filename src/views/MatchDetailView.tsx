@@ -16,6 +16,25 @@ import { elnineMappings } from '../lib/elnineMappings';
 import { toggleMatchNotification, getUserNotificationPreferences } from '../lib/notifications';
 
 
+const sanitizeMatch = (m: any): any => {
+  if (!m) return m;
+  const matchId = m.id || m._id || m.matchId || m.match_id;
+  const homeName = (m.homeTeam?.name || m.home_team?.name || '').toLowerCase();
+  const awayName = (m.awayTeam?.name || m.away_team?.name || '').toLowerCase();
+  const isTercerPuesto = 
+    matchId === 1775853465 || 
+    ((homeName.includes('france') || homeName.includes('francia')) && 
+     (awayName.includes('england') || awayName.includes('inglaterra')));
+  
+  if (isTercerPuesto) {
+    const copy = Object.assign({}, m);
+    copy.round_name = 'Tercer puesto';
+    copy.stage = 'Tercer puesto';
+    return copy;
+  }
+  return m;
+};
+
 const parseStatValue = (val: string | number | undefined): number => {
   if (val === undefined || val === null) return 0;
   if (typeof val === 'number') return val;
@@ -672,7 +691,7 @@ export default function MatchDetailView() {
     const cachedIsStaleForLive = cached && isLive(cached) && !getCachedMatch(id, TTL_LIVE_MS);
     const useCache = cached && !cachedIsStaleForLive;
     if (useCache) {
-      setMatch(cached);
+      setMatch(sanitizeMatch(cached));
       setLoading(false);
     }
 
@@ -685,7 +704,7 @@ export default function MatchDetailView() {
         const matchData = data.events ? data.events[0] : data;
         setCachedMatch(id, matchData);
         if (isMounted) {
-          setMatch(matchData);
+          setMatch(sanitizeMatch(matchData));
         }
       } catch (err: any) {
         if (showLoading && !useCache && isMounted) {

@@ -30,11 +30,31 @@ interface Match {
   tournament?: { name?: string; id?: number; category?: { flag?: string } };
   tournament_name?: string;
   round_name?: string;
-  status?: string | { type?: string; description?: string };
+  status?: string | { type?: string; description?: string; minute?: string | number };
   homeScore?: { current?: number };
   awayScore?: { current?: number };
   odds?: MatchOdds;
 }
+
+const sanitizeMatch = (m: any): any => {
+  if (!m) return m;
+  const matchId = (m as any).id || (m as any)._id;
+  const homeName = ((m as any).homeTeam?.name || (m as any).home_team?.name || '').toLowerCase();
+  const awayName = ((m as any).awayTeam?.name || (m as any).away_team?.name || '').toLowerCase();
+  const isTercerPuesto = 
+    matchId === 1775853465 || 
+    ((homeName.includes('france') || homeName.includes('francia')) && 
+     (awayName.includes('england') || awayName.includes('inglaterra')));
+  
+  if (isTercerPuesto) {
+    return {
+      ...m,
+      round_name: 'Tercer puesto',
+      stage: 'Tercer puesto'
+    };
+  }
+  return m;
+};
 
 /* ─ PenaltyScoreDisplay: obtiene y muestra el resultado de los penales ─ */
 function PenaltyScoreDisplay({ matchId }: { matchId: number }) {
@@ -258,7 +278,7 @@ export default function MatchesView({ isPredictionMode = false }: { isPrediction
           events.sort((a, b) => (a.startTimestamp || 0) - (b.startTimestamp || 0));
         }
 
-        events = events.map((e: any) => ({ ...e, id: e.id || e._id }));
+        events = events.map((e: any) => sanitizeMatch({ ...e, id: e.id || e._id }));
 
         // Deduplicar partidos por ID
         const seenIds = new Set<number>();
