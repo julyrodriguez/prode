@@ -237,7 +237,17 @@ const isThirdPlacePossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'francia' || name === 'france' || name === 'inglaterra' || name === 'england';
+  return name === 'inglaterra' || name === 'england';
+};
+
+const normalizeTeamName = (name: string): string => {
+  if (!name) return '';
+  let n = name.trim().toLowerCase();
+  if (n === 'espana' || n === 'españa') return 'españa';
+  if (n === 'argentina') return 'argentina';
+  if (n === 'francia') return 'francia';
+  if (n === 'inglaterra') return 'inglaterra';
+  return n;
 };
 
 export default function MundialRankingView() {
@@ -263,7 +273,7 @@ export default function MundialRankingView() {
   }>({
     champion: '',
     runnerUp: '',
-    thirdPlace: '',
+    thirdPlace: 'Inglaterra',
   });
 
   // Lock body scroll when rules modal is open
@@ -592,7 +602,31 @@ export default function MundialRankingView() {
     };
   }, [tournamentId, ranking]);
 
-  const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
+  const activeRanking = useMemo(() => {
+    const filtered = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
+    return filtered
+      .map((entry) => {
+        const userPred = podiumPredictions.find(
+          (p) => p.userId === entry.userId || p.user_id === entry.userId
+        );
+        if (userPred) {
+          const userThird = normalizeTeamName(userPred.thirdPlace || '');
+          if (userThird === 'inglaterra') {
+            return {
+              ...entry,
+              totalPoints: entry.totalPoints + 20,
+            };
+          }
+        }
+        return entry;
+      })
+      .sort((a, b) => {
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.exactResults !== a.exactResults) return b.exactResults - a.exactResults;
+        if (b.correctTendencies !== a.correctTendencies) return b.correctTendencies - a.correctTendencies;
+        return a.name.localeCompare(b.name);
+      });
+  }, [ranking, podiumPredictions]);
 
   const liveRanking = useMemo(() => {
     if (!showLivePoints || ranking.length === 0 || matches.length === 0) {
@@ -733,24 +767,13 @@ export default function MundialRankingView() {
     return calculatedStats;
   }, [showLivePoints, predictionsData, matches, statsData, tournamentId, activeRanking]);
 
-  // Helper to normalize team names for robust comparison
-  const normalizeTeamName = (name: string): string => {
-    if (!name) return '';
-    let n = name.trim().toLowerCase();
-    if (n === 'espana' || n === 'españa') return 'españa';
-    if (n === 'argentina') return 'argentina';
-    if (n === 'francia') return 'francia';
-    if (n === 'inglaterra') return 'inglaterra';
-    return n;
-  };
-
   // List of teams for simulating podium (restricted to Argentina, España, Francia, Inglaterra)
   const worldCupTeamsList = ['Argentina', 'España', 'Francia', 'Inglaterra'];
 
   const displayRanking = useMemo(() => {
     const baseRanking = showLivePoints ? liveRanking : activeRanking;
     
-    if (activeLeague.id !== 'mundial' || (!simulatedPodium.champion && !simulatedPodium.runnerUp && !simulatedPodium.thirdPlace)) {
+    if (activeLeague.id !== 'mundial' || (!simulatedPodium.champion && !simulatedPodium.runnerUp)) {
       return baseRanking;
     }
 
@@ -761,20 +784,15 @@ export default function MundialRankingView() {
       if (userPred) {
         const userChamp = normalizeTeamName(userPred.champion || '');
         const userRunner = normalizeTeamName(userPred.runnerUp || '');
-        const userThird = normalizeTeamName(userPred.thirdPlace || '');
         
         const simChamp = normalizeTeamName(simulatedPodium.champion);
         const simRunner = normalizeTeamName(simulatedPodium.runnerUp);
-        const simThird = normalizeTeamName(simulatedPodium.thirdPlace);
 
         if (simChamp && userChamp === simChamp) {
           extraPoints += 40;
         }
         if (simRunner && userRunner === simRunner) {
           extraPoints += 25;
-        }
-        if (simThird && userThird === simThird) {
-          extraPoints += 20;
         }
       }
 
@@ -791,7 +809,7 @@ export default function MundialRankingView() {
       if (b.correctTendencies !== a.correctTendencies) return b.correctTendencies - a.correctTendencies;
       return a.name.localeCompare(b.name);
     });
-  }, [showLivePoints, liveRanking, activeRanking, simulatedPodium, podiumPredictions, activeLeague.id]);
+  }, [showLivePoints, liveRanking, activeRanking, simulatedPodium.champion, simulatedPodium.runnerUp, podiumPredictions, activeLeague.id]);
 
   const displayStatsData = showLivePoints ? liveStatsData : statsData;
 
@@ -1111,9 +1129,9 @@ export default function MundialRankingView() {
                 Elegí las posiciones reales del mundial para proyectar los puntos de podio (+40 pts, +25 pts, +20 pts)
               </p>
             </div>
-            {(simulatedPodium.champion || simulatedPodium.runnerUp || simulatedPodium.thirdPlace) && (
+            {(simulatedPodium.champion || simulatedPodium.runnerUp) && (
               <button
-                onClick={() => setSimulatedPodium({ champion: '', runnerUp: '', thirdPlace: '' })}
+                onClick={() => setSimulatedPodium({ champion: '', runnerUp: '', thirdPlace: 'Inglaterra' })}
                 className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-[10px] font-black rounded-xl transition-all cursor-pointer"
               >
                 Limpiar Simulación
@@ -1172,19 +1190,11 @@ export default function MundialRankingView() {
                 🥉 3º Puesto (Tercero)
               </label>
               <select
-                value={simulatedPodium.thirdPlace}
-                onChange={(e) => setSimulatedPodium(prev => ({ ...prev, thirdPlace: e.target.value }))}
-                className="w-full bg-slate-900/60 border border-white/15 text-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-amber-700 transition-all cursor-pointer"
+                value="Inglaterra"
+                disabled
+                className="w-full bg-slate-900/40 border border-white/10 text-slate-400 rounded-xl px-3 py-2 text-xs font-bold outline-none cursor-not-allowed opacity-80"
               >
-                <option value="" className="bg-slate-900 text-slate-400">-- Seleccionar país --</option>
-                {worldCupTeamsList.map(team => {
-                  const isSelectedElsewhere = team === simulatedPodium.champion || team === simulatedPodium.runnerUp;
-                  return (
-                    <option key={team} value={team} disabled={isSelectedElsewhere} className="bg-slate-900 text-white">
-                      {team}
-                    </option>
-                  );
-                })}
+                <option value="Inglaterra" className="bg-slate-900 text-white">Inglaterra</option>
               </select>
             </div>
           </div>

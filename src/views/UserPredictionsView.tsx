@@ -259,7 +259,7 @@ const isThirdPlacePossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'francia' || name === 'france' || name === 'inglaterra' || name === 'england';
+  return name === 'inglaterra' || name === 'england';
 };
 
 export default function UserPredictionsView({ userId: propUserId }: { userId?: string } = {}) {
