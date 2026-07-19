@@ -145,14 +145,14 @@ const isChampionPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'españa' || name === 'espana' || name === 'spain';
 };
 
 const isRunnerUpPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'argentina';
 };
 
 const isThirdPlacePossible = (countryName: string | undefined | null) => {
@@ -482,7 +482,44 @@ export default function LeagueRankingView() {
     };
   }, [rankingTab, tournamentId, ranking]);
 
-  const activeRanking = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
+  const activeRanking = useMemo(() => {
+    const filtered = ranking.filter((entry) => PRODE_USER_IDS.has(entry.userId));
+    if (activeLeague.id !== 'mundial') return filtered;
+    return filtered
+      .map((entry) => {
+        const userPred = podiumPredictions.find(
+          (p) => p.userId === entry.userId || p.user_id === entry.userId
+        );
+        let extraPoints = 0;
+        if (userPred) {
+          const userChamp = (userPred.champion || '').trim().toLowerCase();
+          const userRunner = (userPred.runnerUp || '').trim().toLowerCase();
+          const userThird = (userPred.thirdPlace || '').trim().toLowerCase();
+
+          if (userChamp.includes('españa') || userChamp.includes('espana') || userChamp.includes('spain')) {
+            extraPoints += 40;
+          }
+          if (userRunner.includes('argentina')) {
+            extraPoints += 25;
+          }
+          if (userThird.includes('inglaterra') || userThird.includes('england')) {
+            extraPoints += 20;
+          }
+        }
+        return {
+          ...entry,
+          totalPoints: entry.totalPoints + extraPoints,
+          podiumPoints: extraPoints,
+          hasPodiumPoints: extraPoints > 0,
+        };
+      })
+      .sort((a, b) => {
+        if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+        if (b.exactResults !== a.exactResults) return b.exactResults - a.exactResults;
+        if (b.correctTendencies !== a.correctTendencies) return b.correctTendencies - a.correctTendencies;
+        return a.name.localeCompare(b.name);
+      });
+  }, [ranking, podiumPredictions, activeLeague.id]);
 
   const myEntry = user ? activeRanking.find((r) => r.userId === user.uid) : null;
   const myPos = myEntry ? activeRanking.indexOf(myEntry) : -1;
@@ -1093,8 +1130,11 @@ export default function LeagueRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className={`font-extrabold ${isChampionPossible(pred.champion) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                            <span className={`font-extrabold ${(pred.champion || '').trim().toLowerCase().includes('españa') || (pred.champion || '').trim().toLowerCase().includes('espana') || (pred.champion || '').trim().toLowerCase().includes('spain') ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.champion}
+                              {((pred.champion || '').trim().toLowerCase().includes('españa') || (pred.champion || '').trim().toLowerCase().includes('espana') || (pred.champion || '').trim().toLowerCase().includes('spain')) && (
+                                <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+40 pts)</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -1112,8 +1152,11 @@ export default function LeagueRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className={`font-extrabold ${isRunnerUpPossible(pred.runnerUp) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                            <span className={`font-extrabold ${(pred.runnerUp || '').trim().toLowerCase().includes('argentina') ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.runnerUp}
+                              {((pred.runnerUp || '').trim().toLowerCase().includes('argentina')) && (
+                                <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+25 pts)</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -1131,8 +1174,11 @@ export default function LeagueRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className={`font-extrabold ${isThirdPlacePossible(pred.thirdPlace) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                            <span className={`font-extrabold ${(pred.thirdPlace || '').trim().toLowerCase().includes('inglaterra') || (pred.thirdPlace || '').trim().toLowerCase().includes('england') ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.thirdPlace}
+                              {((pred.thirdPlace || '').trim().toLowerCase().includes('inglaterra') || (pred.thirdPlace || '').trim().toLowerCase().includes('england')) && (
+                                <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+20 pts)</span>
+                              )}
                             </span>
                           )}
                         </div>

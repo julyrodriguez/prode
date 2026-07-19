@@ -224,14 +224,14 @@ const isChampionPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'españa' || name === 'espana' || name === 'spain';
 };
 
 const isRunnerUpPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'argentina';
 };
 
 const isThirdPlacePossible = (countryName: string | undefined | null) => {
@@ -610,17 +610,28 @@ export default function MundialRankingView() {
         const userPred = podiumPredictions.find(
           (p) => p.userId === entry.userId || p.user_id === entry.userId
         );
+        let extraPoints = 0;
         if (userPred) {
+          const userChamp = normalizeTeamName(userPred.champion || '');
+          const userRunner = normalizeTeamName(userPred.runnerUp || '');
           const userThird = normalizeTeamName(userPred.thirdPlace || '');
+
+          if (userChamp === 'españa') {
+            extraPoints += 40;
+          }
+          if (userRunner === 'argentina') {
+            extraPoints += 25;
+          }
           if (userThird === 'inglaterra') {
-            return {
-              ...entry,
-              totalPoints: entry.totalPoints + 20,
-              hasPodiumPoints: true,
-            };
+            extraPoints += 20;
           }
         }
-        return entry;
+        return {
+          ...entry,
+          totalPoints: entry.totalPoints + extraPoints,
+          podiumPoints: extraPoints,
+          hasPodiumPoints: extraPoints > 0,
+        };
       })
       .sort((a, b) => {
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
@@ -2080,8 +2091,11 @@ export default function MundialRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className={`font-extrabold ${isChampionPossible(pred.champion) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                            <span className={`font-extrabold ${normalizeTeamName(pred.champion || '') === 'españa' ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.champion}
+                              {normalizeTeamName(pred.champion || '') === 'españa' && (
+                                <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+40 pts)</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -2099,8 +2113,11 @@ export default function MundialRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className={`font-extrabold ${isRunnerUpPossible(pred.runnerUp) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                            <span className={`font-extrabold ${normalizeTeamName(pred.runnerUp || '') === 'argentina' ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.runnerUp}
+                              {normalizeTeamName(pred.runnerUp || '') === 'argentina' && (
+                                <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+25 pts)</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -2118,7 +2135,7 @@ export default function MundialRankingView() {
                               </span>
                             </>
                           ) : (
-                            <span className={`font-extrabold ${isThirdPlacePossible(pred.thirdPlace) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                            <span className={`font-extrabold ${normalizeTeamName(pred.thirdPlace || '') === 'inglaterra' ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.thirdPlace}
                               {normalizeTeamName(pred.thirdPlace || '') === 'inglaterra' && (
                                 <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+20 pts)</span>

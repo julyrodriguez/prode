@@ -245,14 +245,14 @@ const isChampionPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'españa' || name === 'espana' || name === 'spain';
 };
 
 const isRunnerUpPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'argentina';
 };
 
 const isThirdPlacePossible = (countryName: string | undefined | null) => {
@@ -666,8 +666,11 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                       </span>
                     </>
                   ) : (
-                    <span className={`text-base font-black ${isRunnerUpPossible(podium.runnerUp) ? (isDark ? 'text-white' : 'text-slate-800') : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                    <span className={`text-base font-black ${isRunnerUpPossible(podium.runnerUp) ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                       {podium.runnerUp || 'Sin elegir'}
+                      {podium.runnerUp && podium.runnerUp.trim().toLowerCase() === 'argentina' && (
+                        <span className="ml-2 text-emerald-400 font-extrabold text-xs">✅ (+25 pts)</span>
+                      )}
                     </span>
                   )}
                 </div>
@@ -703,8 +706,11 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                       </span>
                     </>
                   ) : (
-                    <span className={`text-lg font-black ${isChampionPossible(podium.champion) ? (isDark ? 'text-white' : 'text-slate-800') : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                    <span className={`text-lg font-black ${isChampionPossible(podium.champion) ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                       {podium.champion || 'Sin elegir'}
+                      {podium.champion && (podium.champion.trim().toLowerCase().includes('españa') || podium.champion.trim().toLowerCase().includes('espana') || podium.champion.trim().toLowerCase().includes('spain')) && (
+                        <span className="ml-2 text-emerald-400 font-extrabold text-xs">✅ (+40 pts)</span>
+                      )}
                     </span>
                   )}
                 </div>
@@ -738,7 +744,7 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                       </span>
                     </>
                   ) : (
-                    <span className={`text-base font-black ${isThirdPlacePossible(podium.thirdPlace) ? (isDark ? 'text-white' : 'text-slate-800') : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
+                    <span className={`text-base font-black ${isThirdPlacePossible(podium.thirdPlace) ? 'text-emerald-400' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                       {podium.thirdPlace || 'Sin elegir'}
                       {podium.thirdPlace && (podium.thirdPlace.trim().toLowerCase() === 'inglaterra' || podium.thirdPlace.trim().toLowerCase() === 'england') && (
                         <span className="ml-2 text-emerald-400 font-extrabold text-xs">✅ (+20 pts)</span>

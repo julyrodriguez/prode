@@ -699,14 +699,14 @@ const isChampionPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'españa' || name === 'espana' || name === 'spain';
 };
 
 const isRunnerUpPossible = (countryName: string | undefined | null) => {
   if (!countryName) return true;
   const name = countryName.trim().toLowerCase();
   if (name === 'sin elegir' || name === '—' || name === '') return true;
-  return name === 'argentina' || name === 'españa' || name === 'espana';
+  return name === 'argentina';
 };
 
 const isThirdPlacePossible = (countryName: string | undefined | null) => {
