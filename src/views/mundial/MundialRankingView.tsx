@@ -266,17 +266,6 @@ export default function MundialRankingView() {
   const [isCensoredUnlocked, setIsCensoredUnlocked] = useState(false);
   const [showCensorConfirmModal, setShowCensorConfirmModal] = useState(false);
 
-  // Estados para simulación del podio del Mundial
-  const [simulatedPodium, setSimulatedPodium] = useState<{
-    champion: string;
-    runnerUp: string;
-    thirdPlace: string;
-  }>({
-    champion: '',
-    runnerUp: '',
-    thirdPlace: 'Inglaterra',
-  });
-
   // Lock body scroll when rules modal is open
   useEffect(() => {
     if (showRulesModal) {
@@ -780,50 +769,7 @@ export default function MundialRankingView() {
     return calculatedStats;
   }, [showLivePoints, predictionsData, matches, statsData, tournamentId, activeRanking]);
 
-  // List of teams for simulating podium (restricted to Argentina, España, Francia, Inglaterra)
-  const worldCupTeamsList = ['Argentina', 'España', 'Francia', 'Inglaterra'];
-
-  const displayRanking = useMemo(() => {
-    const baseRanking = showLivePoints ? liveRanking : activeRanking;
-    
-    if (activeLeague.id !== 'mundial' || (!simulatedPodium.champion && !simulatedPodium.runnerUp)) {
-      return baseRanking;
-    }
-
-    const simulatedEntries = baseRanking.map(entry => {
-      const userPred = podiumPredictions.find(p => p.userId === entry.userId || p.user_id === entry.userId);
-      let extraPoints = 0;
-      
-      if (userPred) {
-        const userChamp = normalizeTeamName(userPred.champion || '');
-        const userRunner = normalizeTeamName(userPred.runnerUp || '');
-        
-        const simChamp = normalizeTeamName(simulatedPodium.champion);
-        const simRunner = normalizeTeamName(simulatedPodium.runnerUp);
-
-        if (simChamp && userChamp === simChamp) {
-          extraPoints += 40;
-        }
-        if (simRunner && userRunner === simRunner) {
-          extraPoints += 25;
-        }
-      }
-
-      return {
-        ...entry,
-        totalPoints: entry.totalPoints + extraPoints,
-        podiumPointsSimulated: extraPoints,
-      };
-    });
-
-    return [...simulatedEntries].sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      if (b.exactResults !== a.exactResults) return b.exactResults - a.exactResults;
-      if (b.correctTendencies !== a.correctTendencies) return b.correctTendencies - a.correctTendencies;
-      return a.name.localeCompare(b.name);
-    });
-  }, [showLivePoints, liveRanking, activeRanking, simulatedPodium.champion, simulatedPodium.runnerUp, podiumPredictions, activeLeague.id]);
-
+  const displayRanking = showLivePoints ? liveRanking : activeRanking;
   const displayStatsData = showLivePoints ? liveStatsData : statsData;
 
   const myEntry = user ? displayRanking.find((r) => r.userId === user.uid) : null;
@@ -1127,88 +1073,38 @@ export default function MundialRankingView() {
         </div>
       )}
 
-      {/* ── Simulador de Podio Final (Mundial) ── */}
+      {/* ── Podio Oficial del Mundial Banner ── */}
       {!loading && !error && ranking.length > 0 && activeLeague.id === 'mundial' && (
-        <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/5 via-white/[0.01] to-white/[0.02] border border-white/10 rounded-[2rem] p-5 backdrop-blur-xl shadow-xl flex flex-col gap-4 mb-2">
-          {/* Subtle Glow */}
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+        <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-amber-500/10 border border-amber-500/20 rounded-[2rem] p-5 backdrop-blur-xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 mb-2">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl filter drop-shadow">🏆</span>
             <div>
-              <h3 className="text-sm font-black text-slate-200 flex items-center gap-2">
-                <span>🎭</span> Simular Podio Final del Mundial
+              <h3 className="text-base font-black text-amber-300">
+                Podio Oficial del Mundial 2026
               </h3>
-              <p className="text-[10px] text-slate-400 font-bold">
-                Elegí las posiciones reales del mundial para proyectar los puntos de podio (+40 pts, +25 pts, +20 pts)
+              <p className="text-xs text-slate-300 font-medium mt-0.5">
+                Posiciones definitivas otorgadas a la tabla general de posiciones.
               </p>
             </div>
-            {(simulatedPodium.champion || simulatedPodium.runnerUp) && (
-              <button
-                onClick={() => setSimulatedPodium({ champion: '', runnerUp: '', thirdPlace: 'Inglaterra' })}
-                className="px-3.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 hover:text-red-300 text-[10px] font-black rounded-xl transition-all cursor-pointer"
-              >
-                Limpiar Simulación
-              </button>
-            )}
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            {/* Campeón Selector */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                🥇 1º Puesto (Campeón)
-              </label>
-              <select
-                value={simulatedPodium.champion}
-                onChange={(e) => setSimulatedPodium(prev => ({ ...prev, champion: e.target.value }))}
-                className="w-full bg-slate-900/60 border border-white/15 text-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-amber-500 transition-all cursor-pointer"
-              >
-                <option value="" className="bg-slate-900 text-slate-400">-- Seleccionar país --</option>
-                {worldCupTeamsList.map(team => {
-                  const isSelectedElsewhere = team === simulatedPodium.runnerUp || team === simulatedPodium.thirdPlace;
-                  return (
-                    <option key={team} value={team} disabled={isSelectedElsewhere} className="bg-slate-900 text-white">
-                      {team}
-                    </option>
-                  );
-                })}
-              </select>
+          
+          <div className="flex items-center gap-3 bg-black/40 border border-amber-500/30 px-4 py-2.5 rounded-2xl shrink-0">
+            <div className="flex items-center gap-1.5 text-xs font-black text-white">
+              <span>🥇</span>
+              <span className="text-amber-400">España</span>
+              <span className="text-[10px] text-emerald-400 font-bold">(+40 pts)</span>
             </div>
-
-            {/* Subcampeón Selector */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                🥈 2º Puesto (Subcampeón)
-              </label>
-              <select
-                value={simulatedPodium.runnerUp}
-                onChange={(e) => setSimulatedPodium(prev => ({ ...prev, runnerUp: e.target.value }))}
-                className="w-full bg-slate-900/60 border border-white/15 text-white rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-slate-500 transition-all cursor-pointer"
-              >
-                <option value="" className="bg-slate-900 text-slate-400">-- Seleccionar país --</option>
-                {worldCupTeamsList.map(team => {
-                  const isSelectedElsewhere = team === simulatedPodium.champion || team === simulatedPodium.thirdPlace;
-                  return (
-                    <option key={team} value={team} disabled={isSelectedElsewhere} className="bg-slate-900 text-white">
-                      {team}
-                    </option>
-                  );
-                })}
-              </select>
+            <span className="text-white/20">|</span>
+            <div className="flex items-center gap-1.5 text-xs font-black text-white">
+              <span>🥈</span>
+              <span className="text-slate-300">Argentina</span>
+              <span className="text-[10px] text-emerald-400 font-bold">(+25 pts)</span>
             </div>
-
-            {/* Tercer Puesto Selector */}
-            <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-black text-amber-700 uppercase tracking-wider flex items-center gap-1">
-                🥉 3º Puesto (Tercero)
-              </label>
-              <select
-                value="Inglaterra"
-                disabled
-                className="w-full bg-slate-900/40 border border-white/10 text-slate-400 rounded-xl px-3 py-2 text-xs font-bold outline-none cursor-not-allowed opacity-80"
-              >
-                <option value="Inglaterra" className="bg-slate-900 text-white">Inglaterra</option>
-              </select>
+            <span className="text-white/20">|</span>
+            <div className="flex items-center gap-1.5 text-xs font-black text-white">
+              <span>🥉</span>
+              <span className="text-amber-500">Inglaterra</span>
+              <span className="text-[10px] text-emerald-400 font-bold">(+20 pts)</span>
             </div>
           </div>
         </div>
