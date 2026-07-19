@@ -21,6 +21,7 @@ interface RankingEntry {
   tournamentName: string;
   avatarUrl?: string;
   podiumPointsSimulated?: number;
+  hasPodiumPoints?: boolean;
 }
 
 const MEDAL: Record<number, string> = { 0: '🥇', 1: '🥈', 2: '🥉' };
@@ -615,6 +616,7 @@ export default function MundialRankingView() {
             return {
               ...entry,
               totalPoints: entry.totalPoints + 20,
+              hasPodiumPoints: true,
             };
           }
         }
@@ -1297,6 +1299,12 @@ export default function MundialRankingView() {
                           <span className="text-sm font-black text-amber-300">+{displayRanking[0].podiumPointsSimulated} pts</span>
                         </div>
                       )}
+                      {displayRanking[0].hasPodiumPoints && (
+                        <div className="bg-amber-500/10 px-3.5 py-2 rounded-xl border border-amber-500/25 flex flex-col justify-center" title="Sumó +20 pts por acertar el 3º puesto (Inglaterra)">
+                          <span className="text-[10px] uppercase text-amber-400 block font-bold">Podio (3º Puesto)</span>
+                          <span className="text-sm font-black text-amber-300">+20 pts 🥉</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1367,6 +1375,11 @@ export default function MundialRankingView() {
                       {displayRanking[1].podiumPointsSimulated !== undefined && displayRanking[1].podiumPointsSimulated > 0 && (
                         <span className="text-[9px] font-bold text-amber-400 block mt-0.5">
                           🎁 Simulación: +{displayRanking[1].podiumPointsSimulated} pts
+                        </span>
+                      )}
+                      {displayRanking[1].hasPodiumPoints && (
+                        <span className="text-[9px] font-black text-amber-400 block mt-0.5" title="Sumó +20 pts por acertar el 3º puesto (Inglaterra)">
+                          🥉 +20 pts Podio (3º Puesto)
                         </span>
                       )}
                     </div>
@@ -1440,6 +1453,11 @@ export default function MundialRankingView() {
                       {displayRanking[2].podiumPointsSimulated !== undefined && displayRanking[2].podiumPointsSimulated > 0 && (
                         <span className="text-[9px] font-bold text-amber-400 block mt-0.5">
                           🎁 Simulación: +{displayRanking[2].podiumPointsSimulated} pts
+                        </span>
+                      )}
+                      {displayRanking[2].hasPodiumPoints && (
+                        <span className="text-[9px] font-black text-amber-400 block mt-0.5" title="Sumó +20 pts por acertar el 3º puesto (Inglaterra)">
+                          🥉 +20 pts Podio (3º Puesto)
                         </span>
                       )}
                     </div>
@@ -1890,6 +1908,14 @@ export default function MundialRankingView() {
                         <span className={`truncate ${nameTextClass} ${isCensored ? 'blur-[5px] select-none' : ''}`}>
                           {entry.name || 'Desconocido'}
                         </span>
+                        {entry.hasPodiumPoints && (
+                          <span
+                            className="inline-flex items-center gap-0.5 text-[9px] font-black text-amber-400 bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 rounded-md shrink-0"
+                            title="Sumó +20 pts por acertar 3º puesto (Inglaterra)"
+                          >
+                            🥉 +20 pts
+                          </span>
+                        )}
                         {isMe && <span className="ml-2 text-[10px] font-semibold text-amber-400/70 shrink-0">(vos)</span>}
                         {isCensored && (
                           <button
@@ -2094,6 +2120,9 @@ export default function MundialRankingView() {
                           ) : (
                             <span className={`font-extrabold ${isThirdPlacePossible(pred.thirdPlace) ? 'text-slate-300' : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                               {pred.thirdPlace}
+                              {normalizeTeamName(pred.thirdPlace || '') === 'inglaterra' && (
+                                <span className="ml-1.5 text-emerald-400 font-black text-[10px]">✅ (+20 pts)</span>
+                              )}
                             </span>
                           )}
                         </div>

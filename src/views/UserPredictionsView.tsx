@@ -740,6 +740,9 @@ export default function UserPredictionsView({ userId: propUserId }: { userId?: s
                   ) : (
                     <span className={`text-base font-black ${isThirdPlacePossible(podium.thirdPlace) ? (isDark ? 'text-white' : 'text-slate-800') : 'line-through text-slate-500 decoration-red-500/80 decoration-2'}`}>
                       {podium.thirdPlace || 'Sin elegir'}
+                      {podium.thirdPlace && (podium.thirdPlace.trim().toLowerCase() === 'inglaterra' || podium.thirdPlace.trim().toLowerCase() === 'england') && (
+                        <span className="ml-2 text-emerald-400 font-extrabold text-xs">✅ (+20 pts)</span>
+                      )}
                     </span>
                   )}
                 </div>
